@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "dist/main.js",
   "scripts": {
-    "start": "tsc && electron .",
+    "start": "tsc && npm run copy-html && electron .",
     "build": "tsc",
     "copy-html": "copyfiles -u 1 src/*.html dist/"
   },
