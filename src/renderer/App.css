@@ -2,19 +2,42 @@
  * @NOTE: Prepend a `~` to css file paths that are in your node_modules
  *        See https://github.com/webpack-contrib/sass-loader#imports
  */
-#visual {
-  width: 200px;
-  height: 100px;
-  background-color: lightcoral;
-  color: white;
-  font-size: 24px;
-  display: none;
+#popup {
+  width: 100px;
+  height: 500px;
   position: fixed;
-  top: 20px;
-  right: -220px;
+  top: 100px;
+  right: -200px;
+  flex-direction: column;
+  align-items: flex-end;
   transition: right 0.5s ease;
 }
 
-#visual.visible {
-  right: 20px;
+#popup.visible {
+  right: 0px;
+  transition: right 0.5s ease;
+}
+
+#popup:hover #settings {
+  display: flex;
+  visibility: visible;
+}
+
+#settings {
+  padding: 0 20px 10px 0;
+  display: flex;
+  justify-content: flex-end;
+  visibility: hidden;
+}
+
+#settings-button {
+  width: 20px;
+  height: 20px;
+  padding: 15px;
+  font-size: 15px;
+  border: 2px solid black;
+  border-radius: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }

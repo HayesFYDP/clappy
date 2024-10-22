@@ -12,16 +12,16 @@ window.electron.ipcRenderer.once('ipc-example', (arg) => {
 });
 window.electron.ipcRenderer.sendMessage('ipc-example', ['ping']);
 
-// Listen for the toggle-visual message from the main process
-window.electron.ipcRenderer.on('toggle-visual', () => {
-  const visual = document.getElementById('visual') as HTMLElement;
-  if (visual.style.display === 'none' || !visual.classList.contains('visible')) {
-    visual.style.display = 'block';
-    visual.classList.add('visible');
+// Listen for the toggle-popup message from the main process
+window.electron.ipcRenderer.on('toggle-popup', () => {
+  const popup = document.getElementById('popup') as HTMLElement;
+  if (popup.style.display === 'none' || !popup.classList.contains('visible')) {
+    popup.style.display = 'block';
+    popup.classList.add('visible');
   } else {
-    visual.classList.remove('visible');
+    popup.classList.remove('visible');
     setTimeout(() => {
-      visual.style.display = 'none';
+      popup.style.display = 'none';
     }, 500); // Wait for the transition before hiding
   }
 });

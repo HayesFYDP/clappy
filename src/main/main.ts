@@ -62,13 +62,13 @@ const createWindow = async () => {
 
   mainWindow.loadURL(resolveHtmlPath('index.html'));
 
-  // Make the entire window non-interactive except for the popup
+  // Make the entire window non-interactive
   mainWindow.setIgnoreMouseEvents(true, { forward: true });
 
-  // Send a message to toggle the visual in the renderer every 5 seconds
+  // Send a message to toggle the popup in the renderer every 5 seconds
   setInterval(() => {
     if (mainWindow) {
-      mainWindow.webContents.send('toggle-visual');
+      mainWindow.webContents.send('toggle-popup');
     }
   }, 5000);
 
