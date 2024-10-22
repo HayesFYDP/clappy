@@ -2,7 +2,6 @@ import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import smiskiIcon from '../../assets/smiski.png';
 import './App.css';
 
-
 function Hello() {
   return (
     <div>

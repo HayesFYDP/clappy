@@ -9,9 +9,10 @@
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, desktopCapturer } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
+import * as fs from 'fs';
 import { resolveHtmlPath } from './util';
 
 class AppUpdater {
@@ -35,24 +36,40 @@ if (process.env.NODE_ENV === 'production') {
   sourceMapSupport.install();
 }
 
+async function takeScreenshot() {
+  try {
+    const sources = await desktopCapturer.getSources({
+      types: ['screen'],
+      thumbnailSize: { width: 800, height: 600 },
+    });
+    const entireScreen = sources[0];
+
+    const timestamp = new Date().toISOString().replace(/:/g, '-');
+    const fileName = `screenshot-${timestamp}.png`;
+    const filePath = path.join(app.getPath('downloads'), fileName);
+
+    fs.writeFile(filePath, entireScreen.thumbnail.toPNG(), (err) => {
+      if (err) {
+        console.error('Failed to save screenshot:', err);
+      } else {
+        console.log('Screenshot saved:', filePath);
+      }
+    });
+  } catch (error) {
+    console.error('Error taking screenshot:', error);
+  }
+}
+
 const createWindow = async () => {
-  // const RESOURCES_PATH = app.isPackaged
-  //   ? path.join(process.resourcesPath, 'assets')
-  //   : path.join(__dirname, '../../assets');
-
-  // const getAssetPath = (...paths: string[]): string => {
-  //   return path.join(RESOURCES_PATH, ...paths);
-  // };
-
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
-    fullscreen: true,  // Make the window full-screen
+    fullscreen: true, // Make the window full-screen
     transparent: true, // Transparent background
-    frame: false,      // Remove window borders and title bar
+    frame: false, // Remove window borders and title bar
     alwaysOnTop: true, // Keep the window always on top
     skipTaskbar: true, // Don't show in taskbar
-    hasShadow: false,  // Remove window shadow
+    hasShadow: false, // Remove window shadow
     webPreferences: {
       preload: app.isPackaged
         ? path.join(__dirname, 'preload.js')
@@ -71,6 +88,9 @@ const createWindow = async () => {
       mainWindow.webContents.send('toggle-popup');
     }
   }, 5000);
+
+  // Take screenshots of the screen every 5 seconds
+  setInterval(takeScreenshot, 5000);
 
   mainWindow.on('ready-to-show', () => {
     if (!mainWindow) {
