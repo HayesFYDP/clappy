@@ -6,6 +6,9 @@ function Hello() {
   return (
     <div>
       <div id="popup">
+        <div id="speech-bubble" className="speech-bubble">
+          Test
+        </div>
         <div id="settings">
           <button type="button" id="settings-button">
             ⚙️

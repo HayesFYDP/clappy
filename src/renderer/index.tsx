@@ -5,23 +5,20 @@ const container = document.getElementById('root') as HTMLElement;
 const root = createRoot(container);
 root.render(<App />);
 
-// calling IPC exposed from preload script
-window.electron.ipcRenderer.once('ipc-example', (arg) => {
-  // eslint-disable-next-line no-console
-  console.log(arg);
-});
-window.electron.ipcRenderer.sendMessage('ipc-example', ['ping']);
+// Listen for the open-popup message from the main process
+window.electron.ipcRenderer.on('open-popup', (productive) => {
+  const speechBubble = document.getElementById('speech-bubble') as HTMLElement;
+  speechBubble.textContent = productive ? 'Good job!' : 'GET BACK TO WORK';
 
-// Listen for the toggle-popup message from the main process
-window.electron.ipcRenderer.on('toggle-popup', () => {
   const popup = document.getElementById('popup') as HTMLElement;
-  if (popup.style.display === 'none' || !popup.classList.contains('visible')) {
-    popup.style.display = 'block';
-    popup.classList.add('visible');
-  } else {
-    popup.classList.remove('visible');
-    setTimeout(() => {
-      popup.style.display = 'none';
-    }, 500); // Wait for the transition before hiding
-  }
+  popup.style.display = 'block';
+  popup.classList.add('visible');
+});
+
+window.electron.ipcRenderer.on('close-popup', () => {
+  const popup = document.getElementById('popup') as HTMLElement;
+  popup.classList.remove('visible');
+  setTimeout(() => {
+    popup.style.display = 'none';
+  }, 500); // Wait for the transition before hiding
 });

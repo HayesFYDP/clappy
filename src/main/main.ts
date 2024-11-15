@@ -55,9 +55,20 @@ async function takeScreenshot() {
         console.log('Screenshot saved:', filePath);
       }
     });
+    return filePath;
   } catch (error) {
     console.error('Error taking screenshot:', error);
+    return null;
   }
+}
+
+async function isProductive(screenshotPath: string) {
+  // TODO: Implement prompting
+  return {
+    productive: false,
+    confidence: 0.9,
+    justification: screenshotPath,
+  };
 }
 
 const createWindow = async () => {
@@ -82,15 +93,24 @@ const createWindow = async () => {
   // Make the entire window non-interactive
   mainWindow.setIgnoreMouseEvents(true, { forward: true });
 
-  // Send a message to toggle the popup in the renderer every 5 seconds
-  setInterval(() => {
-    if (mainWindow) {
-      mainWindow.webContents.send('toggle-popup');
-    }
-  }, 5000);
+  // Take screenshots of the screen every 10 seconds and check if the user is productive
+  setInterval(async () => {
+    const screenshotPath = await takeScreenshot();
+    if (screenshotPath) {
+      const productivity = await isProductive(screenshotPath);
+      console.log('Productivity:', productivity);
 
-  // Take screenshots of the screen every 5 seconds
-  setInterval(takeScreenshot, 5000);
+      // Open the popup with the productivity information
+      if (mainWindow) {
+        mainWindow.webContents.send('open-popup', productivity.productive);
+
+        // Close the popup after 5 seconds
+        setTimeout(() => {
+          mainWindow?.webContents.send('close-popup');
+        }, 5000);
+      }
+    }
+  }, 10000);
 
   mainWindow.on('ready-to-show', () => {
     if (!mainWindow) {
