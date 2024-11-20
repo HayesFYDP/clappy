@@ -13,7 +13,23 @@ import { app, BrowserWindow, ipcMain, desktopCapturer } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import * as fs from 'fs';
+import OpenAI from 'openai';
+import os from 'os';
 import { resolveHtmlPath } from './util';
+
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey:
+    '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',
+});
+
+function getClappyTempPath() {
+  const tempDir = path.join(os.tmpdir(), 'clappy');
+  if (!fs.existsSync(tempDir)) {
+    fs.mkdirSync(tempDir, { recursive: true });
+  }
+  return tempDir;
+}
 
 class AppUpdater {
   constructor() {
@@ -46,15 +62,10 @@ async function takeScreenshot() {
 
     const timestamp = new Date().toISOString().replace(/:/g, '-');
     const fileName = `screenshot-${timestamp}.png`;
-    const filePath = path.join(app.getPath('downloads'), fileName);
+    const filePath = path.join(getClappyTempPath(), fileName);
 
-    fs.writeFile(filePath, entireScreen.thumbnail.toPNG(), (err) => {
-      if (err) {
-        console.error('Failed to save screenshot:', err);
-      } else {
-        console.log('Screenshot saved:', filePath);
-      }
-    });
+    await fs.promises.writeFile(filePath, entireScreen.thumbnail.toPNG());
+    console.log('Screenshot saved:', filePath);
     return filePath;
   } catch (error) {
     console.error('Error taking screenshot:', error);
@@ -62,20 +73,62 @@ async function takeScreenshot() {
   }
 }
 
-async function isProductive(screenshotPath: string) {
-  // TODO: Implement prompting
-  return {
-    productive: false,
-    confidence: 0.9,
-    justification: screenshotPath,
-  };
+async function isProductive(screenshotPath: string, userTask: string) {
+  const prompt = `You are a helpful productivity assistant that is observing the user's computer screen. You are asked to analyze the screen contents and make a judgement on whether the user is being productive or not. The screen contents are attached as image context. Even if the user is using a website that is typically distracting, consider whether the content they are reading is relevant to the problem.
+  You are given that the user is currently trying to accomplish: <${userTask}>. Do not ask questions about this objective, simply consider it in light of the screen contents.
+  First, you will start by analyzing these contents and discussing with yourself if the contents of the screen match the user's intended tasks. Then, enclosed in <OUTPUT> </OUTPUT> tags, you will output a JSON response that conforms the following schema
+  { is_user_being_productive: <TRUE/FALSE>, confidence_in_judgement: <float from 0.0->1.0> justification : <concise string justification for decision> }`;
+
+  // Read the screenshot file and convert to base64
+  const imageBuffer = fs.readFileSync(screenshotPath);
+  const base64Image = imageBuffer.toString('base64');
+
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: prompt },
+          {
+            type: 'image_url',
+            image_url: { url: `data:image/png;base64,${base64Image}` },
+          },
+        ],
+      },
+    ],
+    max_tokens: 500,
+  });
+
+  // Extract the response from the chat completion
+  const responseText = response.choices[0].message.content;
+  console.log('RAW RESPONSE:', responseText);
+  if (!responseText) {
+    return {
+      productive: true,
+      confidence: 0.0,
+      justification: 'Failed to analyze screen contents',
+    };
+  }
+  const outputStart = responseText.indexOf('<OUTPUT>') + '<OUTPUT>'.length;
+  const outputEnd = responseText.indexOf('</OUTPUT>');
+
+  const output = responseText.slice(outputStart, outputEnd);
+
+  const outputJson = JSON.parse(output);
+  console.log('JSON PARSED:', outputJson);
+
+  return outputJson;
 }
 
 const createWindow = async () => {
+  const isRunningMacos = process.platform === 'darwin';
+  const screenSize =
+    require('electron').screen.getPrimaryDisplay().workAreaSize;
   mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
-    fullscreen: true, // Make the window full-screen
+    width: screenSize.width,
+    height: screenSize.height,
+    fullscreen: !isRunningMacos, // Make the window full-screen
     transparent: true, // Transparent background
     frame: false, // Remove window borders and title bar
     alwaysOnTop: true, // Keep the window always on top
@@ -97,7 +150,11 @@ const createWindow = async () => {
   setInterval(async () => {
     const screenshotPath = await takeScreenshot();
     if (screenshotPath) {
-      const productivity = await isProductive(screenshotPath);
+      console.log('About to call isproductive');
+      // TODO: Replace hardcoded task with actual task
+      const hardcodedTask =
+        'Working on FYDP presentation (a very cool bicycle)';
+      const productivity = await isProductive(screenshotPath, hardcodedTask);
       console.log('Productivity:', productivity);
 
       // Open the popup with the productivity information
@@ -109,6 +166,8 @@ const createWindow = async () => {
           mainWindow?.webContents.send('close-popup');
         }, 5000);
       }
+    } else {
+      console.log('No screenshot path recevied');
     }
   }, 10000);
 
