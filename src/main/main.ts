@@ -15,12 +15,14 @@ import log from 'electron-log';
 import * as fs from 'fs';
 import OpenAI from 'openai';
 import os from 'os';
+import dotenv from 'dotenv';
 import { resolveHtmlPath } from './util';
+
+dotenv.config();
 
 // Initialize OpenAI client
 const openai = new OpenAI({
-  apiKey:
-    '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',
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 function getClappyTempPath() {
