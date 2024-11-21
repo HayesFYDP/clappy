@@ -98,7 +98,6 @@ async function isProductive(screenshotPath: string, userTask: string) {
 
   // Extract the response from the chat completion
   const responseText = response.choices[0].message.content;
-  console.log('RAW RESPONSE:', responseText);
   if (!responseText) {
     return {
       productive: true,
@@ -112,7 +111,6 @@ async function isProductive(screenshotPath: string, userTask: string) {
   const output = responseText.slice(outputStart, outputEnd);
 
   const outputJson = JSON.parse(output);
-  console.log('JSON PARSED:', outputJson);
 
   return outputJson;
 }
