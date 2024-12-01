@@ -144,6 +144,7 @@ async function selectIntervention(userTask: string, productive: boolean) {
 
   // select an intervention using LLM prompting
   // first, query the database for the last 5 productivity records
+  const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
   const records = await prisma.productivityRecord.findMany({
     take: 5,
     orderBy: {
@@ -151,7 +152,7 @@ async function selectIntervention(userTask: string, productive: boolean) {
     },
     where: {
       date: {
-        gte: new Date(Date.now() - 10 * 60 * 1000), // only consider records from the last 10 minutes
+        gte: tenMinutesAgo,
       },
     },
   });
@@ -163,6 +164,21 @@ async function selectIntervention(userTask: string, productive: boolean) {
     })
     .join('\n');
 
+  const lastIntervention = await prisma.interventionRecord.findFirst({
+    orderBy: {
+      date: 'desc',
+    },
+    where: {
+      date: {
+        gte: tenMinutesAgo,
+      },
+    },
+  });
+
+  const lastInterventionString = lastIntervention
+    ? `The last intervention taken was ${DateTime.fromJSDate(lastIntervention.date).toRelative()} with action ${lastIntervention.intervention}.`
+    : 'No interventions were taken in the last 10 minutes.';
+
   const prompt = `You are a helpful productivity assistant that is observing the user's computer screen. You are given that the user is currently trying to accomplish: <${userTask}>.
     Do not ask questions about this objective, simply consider it in light of the productivity records and justification.
     You are asked to select an intervention to help the user become more productive. You are given the last 5 productivity records, which are as follows:
@@ -173,6 +189,8 @@ async function selectIntervention(userTask: string, productive: boolean) {
     Your options, ordered from most gentle to most extreme are:
     NOTIFY - Display a notification to the user to remind them to stay on task
     MINIMIZE - Minimize the current window to reduce distractions
+
+    ${lastInterventionString}
 
     Enclosed in <OUTPUT> </OUTPUT> tags, you will output a JSON response that conforms the following schema:
     { intervention: "<NOTIFY/MINIMIZE>" }
@@ -204,6 +222,15 @@ async function selectIntervention(userTask: string, productive: boolean) {
   const outputJson = JSON.parse(output);
   const { intervention } = outputJson;
   console.log('Selected intervention: ', intervention);
+
+  if (intervention === 'NOTIFY' || intervention === 'MINIMIZE') {
+    prisma.interventionRecord.create({
+      data: {
+        date: new Date(),
+        intervention,
+      },
+    });
+  }
 
   switch (intervention) {
     case 'NOTIFY':

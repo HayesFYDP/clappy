@@ -17,3 +17,9 @@ model ProductivityRecord {
   confidence    Float
   justification String
 }
+
+model InterventionRecord {
+  id           Int      @id @default(autoincrement())
+  date         DateTime
+  intervention String
+}
