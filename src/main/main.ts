@@ -74,10 +74,7 @@ async function takeScreenshot() {
   }
 }
 
-async function isProductive(
-  screenshotPath: string,
-  userTask: string,
-): Promise<ProductivityAnalysis> {
+async function isProductive(screenshotPath: string, userTask: string): Promise<ProductivityAnalysis> {
   const prompt = `You are a helpful productivity assistant that is observing the user's computer screen. You are asked to analyze the screen contents and make a judgement on whether the user is being productive or not. The screen contents are attached as image context. Even if the user is using a website that is typically distracting, consider whether the content they are reading is relevant to the problem.
   You are given that the user is currently trying to accomplish: <${userTask}>. Do not ask questions about this objective, simply consider it in light of the screen contents.
   First, you will start by analyzing these contents and discussing with yourself if the contents of the screen match the user's intended tasks. Then, enclosed in <OUTPUT> </OUTPUT> tags, you will output a JSON response that conforms the following schema
@@ -125,8 +122,7 @@ async function isProductive(
 
 const createWindow = async () => {
   const isRunningMacos = process.platform === 'darwin';
-  const screenSize =
-    require('electron').screen.getPrimaryDisplay().workAreaSize;
+  const screenSize = require('electron').screen.getPrimaryDisplay().workAreaSize;
   mainWindow = new BrowserWindow({
     width: screenSize.width,
     height: screenSize.height,
@@ -137,9 +133,7 @@ const createWindow = async () => {
     skipTaskbar: true, // Don't show in taskbar
     hasShadow: false, // Remove window shadow
     webPreferences: {
-      preload: app.isPackaged
-        ? path.join(__dirname, 'preload.js')
-        : path.join(__dirname, '../../.erb/dll/preload.js'),
+      preload: app.isPackaged ? path.join(__dirname, 'preload.js') : path.join(__dirname, '../../.erb/dll/preload.js'),
     },
   });
 
@@ -154,8 +148,7 @@ const createWindow = async () => {
     if (screenshotPath) {
       console.log('About to call isproductive');
       // TODO: Replace hardcoded task with actual task
-      const hardcodedTask =
-        'Working on FYDP presentation (a very cool bicycle)';
+      const hardcodedTask = 'Working on FYDP presentation (a very cool bicycle)';
       const productivity = await isProductive(screenshotPath, hardcodedTask);
       console.log('Productivity:', productivity);
 
