@@ -19,6 +19,7 @@ import os from 'os';
 import dotenv from 'dotenv';
 import { resolveHtmlPath } from './util';
 import { ProductivityAnalysis } from './types';
+import { DateTime } from 'luxon';
 
 dotenv.config();
 
@@ -120,6 +121,128 @@ async function isProductive(screenshotPath: string, userTask: string): Promise<P
   return outputJson;
 }
 
+async function popupProductivityIntervention(productive: boolean) {
+  if (mainWindow) {
+    mainWindow.webContents.send('open-popup', productive);
+
+    // Close the popup after 5 seconds
+    setTimeout(() => {
+      mainWindow?.webContents.send('close-popup');
+    }, 5000);
+  }
+}
+
+async function minimizeWindowIntervention(productive: boolean) {
+  // TODO: Implement this
+}
+
+async function selectIntervention(userTask: string, productive: boolean) {
+  if (productive) {
+    console.log('User is currently productive, skipping intervention');
+    return;
+  }
+
+  // select an intervention using LLM prompting
+  // first, query the database for the last 5 productivity records
+  const records = await prisma.productivityRecord.findMany({
+    take: 5,
+    orderBy: {
+      date: 'desc',
+    },
+    where: {
+      date: {
+        gte: new Date(Date.now() - 10 * 60 * 1000), // only consider records from the last 10 minutes
+      },
+    },
+  });
+
+  const prevRecordsString = records
+    .map((record) => {
+      const relDate = DateTime.fromJSDate(record.date).toRelative(); // store date in format of "5 seconds ago" or "2 minutes ago"
+      return `${relDate}: ${record.isProductive ? 'productive' : 'unproductive'} | confidence: ${record.confidence} | justification: ${record.justification}`;
+    })
+    .join('\n');
+
+  const prompt = `You are a helpful productivity assistant that is observing the user's computer screen. You are given that the user is currently trying to accomplish: <${userTask}>.
+    Do not ask questions about this objective, simply consider it in light of the productivity records and justification.
+    You are asked to select an intervention to help the user become more productive. You are given the last 5 productivity records, which are as follows:
+    ${prevRecordsString}
+
+    Your goal is to select an intervention that will help the user become more productive. Choose the most fitting intervention based on the productivity history and previous interventions taken.
+
+    Your options, ordered from most gentle to most extreme are:
+    NOTIFY - Display a notification to the user to remind them to stay on task
+    MINIMIZE - Minimize the current window to reduce distractions
+
+    Enclosed in <OUTPUT> </OUTPUT> tags, you will output a JSON response that conforms the following schema:
+    { intervention: "<NOTIFY/MINIMIZE>" }
+  `;
+
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [
+      {
+        role: 'user',
+        content: [{ type: 'text', text: prompt }],
+      },
+    ],
+    max_tokens: 500,
+  });
+
+  // Extract the response from the chat completion
+  const responseText = response.choices[0].message.content;
+  if (!responseText) {
+    console.log('Failed to select an intervention');
+    return;
+  }
+
+  const outputStart = responseText.indexOf('<OUTPUT>') + '<OUTPUT>'.length;
+  const outputEnd = responseText.indexOf('</OUTPUT>');
+
+  const output = responseText.slice(outputStart, outputEnd);
+
+  const outputJson = JSON.parse(output);
+  const { intervention } = outputJson;
+  console.log('Selected intervention: ', intervention);
+
+  switch (intervention) {
+    case 'NOTIFY':
+      popupProductivityIntervention(productive);
+      break;
+    case 'MINIMIZE':
+      minimizeWindowIntervention(productive);
+      break;
+    default:
+      console.log(`Invalid/unknown intervention selected: "${intervention}"`);
+  }
+}
+
+async function manageProductivity() {
+  const screenshotPath = await takeScreenshot();
+
+  if (screenshotPath) {
+    console.log('About to call isproductive');
+    // TODO: Replace hardcoded task with actual task
+    const hardcodedTask = 'Working on FYDP presentation (a very cool bicycle)';
+    const productivity = await isProductive(screenshotPath, hardcodedTask);
+    console.log('Productivity:', productivity);
+
+    // Save the productivity analysis to the database
+    await prisma.productivityRecord.create({
+      data: {
+        date: new Date(),
+        isProductive: productivity.productive,
+        confidence: productivity.confidence,
+        justification: productivity.justification,
+      },
+    });
+
+    await selectIntervention(hardcodedTask, productivity.productive);
+  } else {
+    console.log('No screenshot path recevied');
+  }
+}
+
 const createWindow = async () => {
   const isRunningMacos = process.platform === 'darwin';
   const screenSize = require('electron').screen.getPrimaryDisplay().workAreaSize;
@@ -143,38 +266,7 @@ const createWindow = async () => {
   mainWindow.setIgnoreMouseEvents(true, { forward: true });
 
   // Take screenshots of the screen every 10 seconds and check if the user is productive
-  setInterval(async () => {
-    const screenshotPath = await takeScreenshot();
-    if (screenshotPath) {
-      console.log('About to call isproductive');
-      // TODO: Replace hardcoded task with actual task
-      const hardcodedTask = 'Working on FYDP presentation (a very cool bicycle)';
-      const productivity = await isProductive(screenshotPath, hardcodedTask);
-      console.log('Productivity:', productivity);
-
-      // Save the productivity analysis to the database
-      await prisma.productivityRecord.create({
-        data: {
-          date: new Date(),
-          isProductive: productivity.productive,
-          confidence: productivity.confidence,
-          justification: productivity.justification,
-        },
-      });
-
-      // Open the popup with the productivity information
-      if (mainWindow) {
-        mainWindow.webContents.send('open-popup', productivity.productive);
-
-        // Close the popup after 5 seconds
-        setTimeout(() => {
-          mainWindow?.webContents.send('close-popup');
-        }, 5000);
-      }
-    } else {
-      console.log('No screenshot path recevied');
-    }
-  }, 10000);
+  setInterval(manageProductivity, 10000);
 
   mainWindow.on('ready-to-show', () => {
     if (!mainWindow) {
