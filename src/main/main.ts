@@ -9,7 +9,8 @@
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
-import { app, BrowserWindow, ipcMain, desktopCapturer } from 'electron';
+import { app, BrowserWindow, desktopCapturer } from 'electron';
+import { PrismaClient } from '@prisma/client';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import * as fs from 'fs';
@@ -17,8 +18,12 @@ import OpenAI from 'openai';
 import os from 'os';
 import dotenv from 'dotenv';
 import { resolveHtmlPath } from './util';
+import { ProductivityAnalysis } from './types';
 
 dotenv.config();
+
+// Initialize Prisma client for database access
+const prisma = new PrismaClient();
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -69,7 +74,10 @@ async function takeScreenshot() {
   }
 }
 
-async function isProductive(screenshotPath: string, userTask: string) {
+async function isProductive(
+  screenshotPath: string,
+  userTask: string,
+): Promise<ProductivityAnalysis> {
   const prompt = `You are a helpful productivity assistant that is observing the user's computer screen. You are asked to analyze the screen contents and make a judgement on whether the user is being productive or not. The screen contents are attached as image context. Even if the user is using a website that is typically distracting, consider whether the content they are reading is relevant to the problem.
   You are given that the user is currently trying to accomplish: <${userTask}>. Do not ask questions about this objective, simply consider it in light of the screen contents.
   First, you will start by analyzing these contents and discussing with yourself if the contents of the screen match the user's intended tasks. Then, enclosed in <OUTPUT> </OUTPUT> tags, you will output a JSON response that conforms the following schema
@@ -150,6 +158,16 @@ const createWindow = async () => {
         'Working on FYDP presentation (a very cool bicycle)';
       const productivity = await isProductive(screenshotPath, hardcodedTask);
       console.log('Productivity:', productivity);
+
+      // Save the productivity analysis to the database
+      await prisma.productivityRecord.create({
+        data: {
+          date: new Date(),
+          isProductive: productivity.productive,
+          confidence: productivity.confidence,
+          justification: productivity.justification,
+        },
+      });
 
       // Open the popup with the productivity information
       if (mainWindow) {
