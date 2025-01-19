@@ -5,6 +5,24 @@ const container = document.getElementById('root') as HTMLElement;
 const root = createRoot(container);
 root.render(<App />);
 
+window.electron.ipcRenderer.on('add-mouse-event-listeners', () => {
+  const popup = document.getElementById('popup');
+  popup?.addEventListener('mouseenter', (): void => {
+    window.electron.ipcRenderer.sendMessage('set-ignore-mouse-events', false);
+  });
+
+  popup?.addEventListener('mouseleave', (): void => {
+    window.electron.ipcRenderer.sendMessage('set-ignore-mouse-events', true, { forward: true });
+  });
+
+  const settingsButton = document.getElementById('settings-button');
+  settingsButton?.addEventListener('click', (): void => {
+    // TODO: implement open settings window
+    console.log('settings button clicked');
+  });
+
+});
+
 // Listen for the open-popup message from the main process
 window.electron.ipcRenderer.on('open-popup', (productive) => {
   const speechBubble = document.getElementById('speech-bubble') as HTMLElement;

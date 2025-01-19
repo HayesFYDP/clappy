@@ -9,7 +9,7 @@
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
-import { app, BrowserWindow, desktopCapturer } from 'electron';
+import { app, BrowserWindow, desktopCapturer, ipcMain } from 'electron';
 import { PrismaClient } from '@prisma/client';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
@@ -17,9 +17,9 @@ import * as fs from 'fs';
 import OpenAI from 'openai';
 import os from 'os';
 import dotenv from 'dotenv';
+import { DateTime } from 'luxon';
 import { resolveHtmlPath } from './util';
 import { ProductivityAnalysis } from './types';
-import { DateTime } from 'luxon';
 
 dotenv.config();
 
@@ -300,6 +300,8 @@ const createWindow = async () => {
       throw new Error('"mainWindow" is not defined');
     }
     mainWindow.show();
+    // Add mouse event listeners
+    mainWindow.webContents.send('add-mouse-event-listeners');
   });
 
   mainWindow.on('closed', () => {
@@ -311,9 +313,10 @@ const createWindow = async () => {
   new AppUpdater();
 };
 
-/**
- * Add event listeners...
- */
+ipcMain.on('set-ignore-mouse-events', (event, ignore, options) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  win?.setIgnoreMouseEvents(ignore, options);
+});
 
 app.on('window-all-closed', () => {
   // Respect the OSX convention of having the application in memory even

@@ -43,6 +43,10 @@
   align-items: center;
 }
 
+#settings-button:hover {
+  cursor: pointer;
+}
+
 #speech-bubble {
   position: absolute;
   top: 40px;
