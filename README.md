@@ -8,3 +8,13 @@ npm run generate
 ```
 
 Make sure the environment variables `DATABASE_URL` and `OPENAI_API_KEY` are set in your .env file.
+
+To build the project, run
+```
+npm run build
+```
+
+To run the project, run
+```
+npm run start
+```
