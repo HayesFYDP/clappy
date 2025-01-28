@@ -119,7 +119,7 @@ async function isProductive(screenshotPath: string, userTask: string): Promise<P
   const responseText = response?.choices[0].message.content;
   if (!responseText) {
     return {
-      productive: false,
+      productive: true,
       confidence: 0.0,
       justification: 'Failed to analyze screen contents',
     };
