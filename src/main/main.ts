@@ -8,28 +8,33 @@
  * When running `npm run build` or `npm run build:main`, this file is compiled to
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
-import path from 'path';
-import { app, BrowserWindow, desktopCapturer, ipcMain } from 'electron';
 import { PrismaClient } from '@prisma/client';
-import { autoUpdater } from 'electron-updater';
+import dotenv from 'dotenv';
+import { app, BrowserWindow, desktopCapturer, ipcMain } from 'electron';
 import log from 'electron-log';
+import { autoUpdater } from 'electron-updater';
 import * as fs from 'fs';
+import { DateTime } from 'luxon';
 import OpenAI from 'openai';
 import os from 'os';
-import dotenv from 'dotenv';
-import { DateTime } from 'luxon';
-import { resolveHtmlPath } from './util';
+import path from 'path';
 import { ProductivityAnalysis } from './types';
+import { resolveHtmlPath } from './util';
 
 dotenv.config();
+
+const IS_DEVELOPMENT = true;
 
 // Initialize Prisma client for database access
 const prisma = new PrismaClient();
 
 // Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+let openai: OpenAI | null = null;
+if (!IS_DEVELOPMENT) {
+  openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+}
 
 function getClappyTempPath() {
   const tempDir = path.join(os.tmpdir(), 'clappy');
@@ -76,6 +81,14 @@ async function takeScreenshot() {
 }
 
 async function isProductive(screenshotPath: string, userTask: string): Promise<ProductivityAnalysis> {
+  if (IS_DEVELOPMENT) {
+    return {
+      productive: false,
+      confidence: 1.0,
+      justification: 'Development mode: always unproductive',
+    };
+  }
+
   const prompt = `You are a helpful productivity assistant that is observing the user's computer screen. You are asked to analyze the screen contents and make a judgement on whether the user is being productive or not. The screen contents are attached as image context. Even if the user is using a website that is typically distracting, consider whether the content they are reading is relevant to the problem.
   You are given that the user is currently trying to accomplish: <${userTask}>. Do not ask questions about this objective, simply consider it in light of the screen contents.
   First, you will start by analyzing these contents and discussing with yourself if the contents of the screen match the user's intended tasks. Then, enclosed in <OUTPUT> </OUTPUT> tags, you will output a JSON response that conforms the following schema
@@ -85,7 +98,7 @@ async function isProductive(screenshotPath: string, userTask: string): Promise<P
   const imageBuffer = fs.readFileSync(screenshotPath);
   const base64Image = imageBuffer.toString('base64');
 
-  const response = await openai.chat.completions.create({
+  const response = await openai?.chat.completions.create({
     model: 'gpt-4o-mini',
     messages: [
       {
@@ -103,10 +116,10 @@ async function isProductive(screenshotPath: string, userTask: string): Promise<P
   });
 
   // Extract the response from the chat completion
-  const responseText = response.choices[0].message.content;
+  const responseText = response?.choices[0].message.content;
   if (!responseText) {
     return {
-      productive: true,
+      productive: false,
       confidence: 0.0,
       justification: 'Failed to analyze screen contents',
     };
@@ -196,7 +209,13 @@ async function selectIntervention(userTask: string, productive: boolean) {
     { intervention: "<NOTIFY/MINIMIZE>" }
   `;
 
-  const response = await openai.chat.completions.create({
+  if (IS_DEVELOPMENT) {
+    // maybe we want to change this but for now nah
+    popupProductivityIntervention(productive);
+    return;
+  }
+
+  const response = await openai?.chat.completions.create({
     model: 'gpt-4o-mini',
     messages: [
       {
@@ -208,7 +227,7 @@ async function selectIntervention(userTask: string, productive: boolean) {
   });
 
   // Extract the response from the chat completion
-  const responseText = response.choices[0].message.content;
+  const responseText = response?.choices[0].message.content;
   if (!responseText) {
     console.log('Failed to select an intervention');
     return;
@@ -245,6 +264,12 @@ async function selectIntervention(userTask: string, productive: boolean) {
 }
 
 async function manageProductivity() {
+  if (IS_DEVELOPMENT) {
+    const hardcodedTask = 'Working on FYDP presentation (a very cool bicycle)';
+    await selectIntervention(hardcodedTask, false);
+    return;
+  }
+
   const screenshotPath = await takeScreenshot();
 
   if (screenshotPath) {
