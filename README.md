@@ -18,3 +18,5 @@ To run the project, run
 ```
 npm run start
 ```
+
+To toggle the Clappy popup, use the keyboard shortcut `F8`.
