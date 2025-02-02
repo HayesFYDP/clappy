@@ -1,6 +1,6 @@
 import { createRoot } from 'react-dom/client';
-import App from './App';
 import { ClappyExpression } from '../main/types';
+import App from './App';
 
 const container = document.getElementById('root') as HTMLElement;
 const root = createRoot(container);
@@ -8,7 +8,7 @@ root.render(<App />);
 
 function openPopup(expression: ClappyExpression, text: string | null): void {
   const speechBubble = document.getElementById('speech-bubble') as HTMLElement;
-  if (text !== null && text !== undefined && text !== '') { 
+  if (text !== null && text !== undefined && text !== '') {
     speechBubble.style.display = 'block';
     speechBubble.textContent = text as string;
   } else {
@@ -44,7 +44,6 @@ window.electron.ipcRenderer.on('add-mouse-event-listeners', () => {
     // TODO: implement open settings window
     console.log('settings button clicked');
   });
-
 });
 
 // Listen for the open-popup message from the main process
