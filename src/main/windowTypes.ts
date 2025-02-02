@@ -6,6 +6,8 @@ type WindowInfo = {
   // the full path to the executable associated with the window
   // for example: "C:\\Users\\micro\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe"
   executablePath: string;
+
+  isFocused: boolean; // whether the window is currently focused
   handle: number; // used to refer to the window for future window operations
 };
 

@@ -10,12 +10,16 @@ from window_util import get_all_important_windows
 class WindowInfo(BaseModel):
     title: str
     executablePath: str
+    isFocused: bool = False
     handle: int
 
 def list_windows() -> list[WindowInfo]:
     windows = get_all_important_windows()
+    active_window: DarwinWindow | Win32Window = Window.get_foreground()
+
     window_info: list[WindowInfo] = []
     for window in windows:
-        window_info.append(WindowInfo(title=window.title, executablePath=window.executable, handle=window.handle))
+        is_focused = active_window is not None and active_window.handle == window.handle
+        window_info.append(WindowInfo(title=window.title, executablePath=window.executable, isFocused=is_focused, handle=window.handle))
 
     return window_info

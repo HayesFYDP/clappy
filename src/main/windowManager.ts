@@ -52,13 +52,4 @@ class WindowManager {
   }
 }
 
-// export default WindowManager;
-
-const wm = new WindowManager();
-wm.listWindows()
-  .then((response) => {
-    console.log(response);
-  })
-  .catch((err) => {
-    console.error(err);
-  });
+export default WindowManager;
