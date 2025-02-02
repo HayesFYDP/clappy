@@ -299,7 +299,7 @@ const createWindow = async () => {
   mainWindow.setIgnoreMouseEvents(true, { forward: true });
 
   // Take screenshots of the screen every 10 seconds and check if the user is productive
-  if (!IS_DEVELOPMENT) { 
+  if (!IS_DEVELOPMENT) {
     setInterval(manageProductivity, 10000);
   }
 
@@ -326,14 +326,38 @@ ipcMain.on('set-ignore-mouse-events', (event, ignore, options) => {
   win?.setIgnoreMouseEvents(ignore, options);
 });
 
+ipcMain.on('open-settings-window', () => {
+  let settingsWindow = new BrowserWindow({
+    width: 600,
+    height: 450,
+    title: 'Clappy Settings',
+    resizable: true,
+    frame: true,
+    roundedCorners: true,
+    autoHideMenuBar: true,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: app.isPackaged ? path.join(__dirname, 'preload.js') : path.join(__dirname, '../../.erb/dll/preload.js'),
+    },
+  });
+
+  settingsWindow.loadURL(decodeURIComponent('index.html#/settings'));
+
+  settingsWindow.once('ready-to-show', () => {
+    settingsWindow?.show();
+  });
+
+  settingsWindow.on('close', () => {
+    settingsWindow = null;
+  });
+});
+
 app.on('will-quit', () => {
-  // Unregister all shortcuts.
   globalShortcut.unregisterAll();
-})
+});
 
 app.on('window-all-closed', () => {
-  // Respect the OSX convention of having the application in memory even
-  // after all windows have been closed
   if (process.platform !== 'darwin') {
     app.quit();
   }

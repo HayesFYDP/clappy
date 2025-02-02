@@ -2,7 +2,13 @@
 /* eslint no-unused-vars: off */
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
-export type Channels = 'open-popup' | 'close-popup' | 'toggle-popup' | 'set-ignore-mouse-events' | 'add-mouse-event-listeners';
+export type Channels =
+  | 'open-popup'
+  | 'close-popup'
+  | 'toggle-popup'
+  | 'set-ignore-mouse-events'
+  | 'add-mouse-event-listeners'
+  | 'open-settings-window';
 
 const electronHandler = {
   ipcRenderer: {

@@ -1,8 +1,13 @@
-import { Route, MemoryRouter as Router, Routes } from 'react-router-dom';
+import { Route, HashRouter as Router, Routes } from 'react-router-dom';
 import smiskiIcon from '../../assets/smiski.png';
 import './App.css';
+import SettingsWindow from './SettingsWindow';
 
 function Hello() {
+  const openSettings = () => {
+    window.electron.ipcRenderer.sendMessage('open-settings-window');
+  };
+
   return (
     <div>
       <div id="popup">
@@ -10,7 +15,7 @@ function Hello() {
         <div id="hover-rows">
           <div id="settings" className="hover-row">
             <span>View settings</span>
-            <button type="button" id="settings-button">
+            <button type="button" id="settings-button" onClick={openSettings}>
               ⚙️
             </button>
           </div>
@@ -38,6 +43,7 @@ export default function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Hello />} />
+        <Route path="/settings" element={<SettingsWindow />} />
       </Routes>
     </Router>
   );
