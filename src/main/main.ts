@@ -10,7 +10,7 @@
  */
 import { PrismaClient } from '@prisma/client';
 import dotenv from 'dotenv';
-import { app, BrowserWindow, desktopCapturer, ipcMain, globalShortcut } from 'electron';
+import { app, BrowserWindow, desktopCapturer, globalShortcut, ipcMain } from 'electron';
 import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
 import * as fs from 'fs';
@@ -18,7 +18,7 @@ import { DateTime } from 'luxon';
 import OpenAI from 'openai';
 import os from 'os';
 import path from 'path';
-import { ProductivityAnalysis, ClappyExpression } from './types';
+import { ClappyExpression, ProductivityAnalysis } from './types';
 import { resolveHtmlPath } from './util';
 
 dotenv.config();
@@ -292,6 +292,11 @@ const createWindow = async () => {
       preload: app.isPackaged ? path.join(__dirname, 'preload.js') : path.join(__dirname, '../../.erb/dll/preload.js'),
     },
   });
+
+  // Make window stay on top even after switching focus
+  // https://github.com/electron/electron/issues/10078
+  mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  mainWindow.setAlwaysOnTop(true, 'screen-saver', 1);
 
   mainWindow.loadURL(resolveHtmlPath('index.html'));
 
