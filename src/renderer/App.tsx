@@ -6,6 +6,14 @@ import './App.css';
 function Hello() {
   const [isTextInputOpen, setIsTextInputOpen] = React.useState(false);
 
+  const onOpenTextInput = () => {
+    setIsTextInputOpen(true);
+  };
+
+  const onSendTextInput = () => {
+    setIsTextInputOpen(false);
+  };
+
   return (
     <div>
       <div id="popup">
@@ -26,7 +34,7 @@ function Hello() {
           {!isTextInputOpen && (
             <div id="talk-to" className="hover-row">
               <span>Talk to Clappy</span>
-              <button type="button" id="talk-to-button" onClick={() => setIsTextInputOpen(true)}>
+              <button type="button" id="talk-to-button" onClick={onOpenTextInput}>
                 💬
               </button>
             </div>
@@ -34,7 +42,7 @@ function Hello() {
           {isTextInputOpen && (
             <div id="text-input-container">
               <input type="text" id="text-input-field" placeholder="Type a reply to Clappy..." />
-              <button type="button" id="text-input-button" onClick={() => setIsTextInputOpen(false)}>
+              <button type="button" id="text-input-button" onClick={onSendTextInput}>
                 Send
               </button>
             </div>
