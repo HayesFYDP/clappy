@@ -295,8 +295,10 @@ const createWindow = async () => {
 
   // Make window stay on top even after switching focus
   // https://github.com/electron/electron/issues/10078
+  app.dock?.hide();
   mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   mainWindow.setAlwaysOnTop(true, 'screen-saver', 1);
+  app.dock?.show();
 
   mainWindow.loadURL(resolveHtmlPath('index.html'));
 
