@@ -1,5 +1,13 @@
 import { PythonShell } from 'python-shell';
-import { IPCResponseType, ListWindowsRequest, WindowIPCRequests, WindowIPCType } from './windowTypes';
+import {
+  FocusWindowRequest,
+  IPCResponseType,
+  ListWindowsRequest,
+  MinimizeWindowRequest,
+  ShakeWindowRequest,
+  WindowIPCRequests,
+  WindowIPCType,
+} from './windowTypes';
 
 class WindowManager {
   private pythonApp: PythonShell;
@@ -49,6 +57,33 @@ class WindowManager {
     };
 
     return this.sendIPC<ListWindowsRequest>(req);
+  }
+
+  async focusWindow(handle: number): Promise<IPCResponseType<FocusWindowRequest>> {
+    const req: FocusWindowRequest = {
+      type: WindowIPCType.FOCUS_WINDOW,
+      payload: { handle },
+    };
+
+    return this.sendIPC<FocusWindowRequest>(req);
+  }
+
+  async minimizeWindow(handle?: number): Promise<IPCResponseType<MinimizeWindowRequest>> {
+    const req: MinimizeWindowRequest = {
+      type: WindowIPCType.MINIMIZE_WINDOW,
+      payload: { handle },
+    };
+
+    return this.sendIPC<MinimizeWindowRequest>(req);
+  }
+
+  async shakeWindow(handle?: number): Promise<IPCResponseType<ShakeWindowRequest>> {
+    const req: ShakeWindowRequest = {
+      type: WindowIPCType.SHAKE_WINDOW,
+      payload: { handle },
+    };
+
+    return this.sendIPC<ShakeWindowRequest>(req);
   }
 }
 

@@ -6,12 +6,12 @@ from pydantic.dataclasses import dataclass
 from enum import Enum
 from logging import getLogger, DEBUG, FileHandler
 from sys import stdout
-from window_controller import list_windows
+from window_controller import focus_windows, list_windows, minimize_window, shake_window
 
 class IPCType(str, Enum):
     LIST_WINDOWS = "LIST_WINDOWS" # request to list all open windows
-    MINIMIZE_ACTIVE_WINDOW = "MINIMIZE_ACTIVE_WINDOW" # request to minimize the active window
-    SHAKE_ACTIVE_WINDOW = "SHAKE_ACTIVE_WINDOW" # request to shake the active window
+    MINIMIZE_WINDOW = "MINIMIZE_WINDOW" # request to minimize a window, picking the active window if no handle is provided
+    SHAKE_WINDOW = "SHAKE_WINDOW" # request to shake the active window
     FOCUS_WINDOW = "FOCUS_WINDOW" # request to focus a specific window
 
 @dataclass
@@ -35,18 +35,20 @@ for line in sys.stdin:
         case IPCType.LIST_WINDOWS:
             windows = list_windows()
             json_windows = [w.model_dump() for w in windows]
-            print(json.dumps(json_windows))
+            print(json.dumps(dict(windows=json_windows)))
 
-        case IPCType.MINIMIZE_ACTIVE_WINDOW:
-            pass
+        case IPCType.MINIMIZE_WINDOW:
+            success = minimize_window(ipc_req.payload.get("handle", None))
+            print(json.dumps(dict(success=success)))
 
-        case IPCType.SHAKE_ACTIVE_WINDOW:
-            pass
+        case IPCType.SHAKE_WINDOW:
+            success = shake_window(ipc_req.payload.get("handle", None))
+            print(json.dumps(dict(success=success)))
 
         case IPCType.FOCUS_WINDOW:
-            pass
+            success = focus_windows(ipc_req.payload["handle"])
+            print(json.dumps(dict(success=success)))
 
         case _:
-            # logger.warning(f"Unknown IPC type: {ipc_req.type}")
-            pass
+            logger.warning(f"Unknown IPC type: {ipc_req.type}")
 

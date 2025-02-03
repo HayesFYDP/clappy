@@ -14,8 +14,8 @@ type WindowInfo = {
 /* Types for IPC communication between the main process and the Python helper */
 enum WindowIPCType {
   LIST_WINDOWS = 'LIST_WINDOWS',
-  MINIMIZE_ACTIVE_WINDOW = 'MINIMIZE_ACTIVE_WINDOW',
-  SHAKE_ACTIVE_WINDOW = 'SHAKE_ACTIVE_WINDOW',
+  MINIMIZE_WINDOW = 'MINIMIZE_WINDOW',
+  SHAKE_WINDOW = 'SHAKE_WINDOW',
   FOCUS_WINDOW = 'FOCUS_WINDOW',
 }
 
@@ -38,14 +38,44 @@ type FocusWindowResponse = {
   success: boolean;
 };
 
-export { WindowIPCType, ListWindowsRequest, ListWindowsResponse, FocusWindowRequest, FocusWindowResponse };
+type MinimizeWindowRequest = {
+  type: WindowIPCType.MINIMIZE_WINDOW;
+  payload: { handle?: number }; // if handle is not provided, minimize the active window
+};
+
+type MinimizeWindowResponse = {
+  success: boolean;
+};
+
+type ShakeWindowRequest = {
+  type: WindowIPCType.SHAKE_WINDOW;
+  payload: { handle?: number };
+};
+
+type ShakeWindowResponse = {
+  success: boolean;
+};
+
+export {
+  WindowIPCType,
+  ListWindowsRequest,
+  ListWindowsResponse,
+  FocusWindowRequest,
+  FocusWindowResponse,
+  MinimizeWindowRequest,
+  MinimizeWindowResponse,
+  ShakeWindowRequest,
+  ShakeWindowResponse,
+};
 
 /* Union types for all possible IPC requests and their responses */
-type WindowIPCRequests = ListWindowsRequest | FocusWindowRequest;
+type WindowIPCRequests = ListWindowsRequest | FocusWindowRequest | MinimizeWindowRequest | ShakeWindowRequest;
 
 type RequestToResponseMap = {
   [WindowIPCType.LIST_WINDOWS]: ListWindowsResponse;
   [WindowIPCType.FOCUS_WINDOW]: FocusWindowResponse;
+  [WindowIPCType.MINIMIZE_WINDOW]: MinimizeWindowResponse;
+  [WindowIPCType.SHAKE_WINDOW]: ShakeWindowResponse;
 };
 
 // infer the response type based on the request type
