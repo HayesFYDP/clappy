@@ -10,7 +10,7 @@
  */
 import { PrismaClient } from '@prisma/client';
 import dotenv from 'dotenv';
-import { app, BrowserWindow, desktopCapturer, ipcMain, globalShortcut } from 'electron';
+import { app, BrowserWindow, desktopCapturer, globalShortcut, ipcMain } from 'electron';
 import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
 import * as fs from 'fs';
@@ -18,7 +18,7 @@ import { DateTime } from 'luxon';
 import OpenAI from 'openai';
 import os from 'os';
 import path from 'path';
-import { ProductivityAnalysis, ClappyExpression } from './types';
+import { ClappyExpression, ProductivityAnalysis } from './types';
 import { resolveHtmlPath } from './util';
 
 dotenv.config();
