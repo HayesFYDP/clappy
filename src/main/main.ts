@@ -293,6 +293,11 @@ const createWindow = async () => {
     },
   });
 
+  // Make window stay on top even after switching focus
+  // https://github.com/electron/electron/issues/10078
+  mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  mainWindow.setAlwaysOnTop(true, 'screen-saver', 1);
+
   mainWindow.loadURL(resolveHtmlPath('index.html'));
 
   // Make the entire window non-interactive
