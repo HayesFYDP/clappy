@@ -299,7 +299,7 @@ const createWindow = async () => {
   mainWindow.setIgnoreMouseEvents(true, { forward: true });
 
   // Take screenshots of the screen every 10 seconds and check if the user is productive
-  if (!IS_DEVELOPMENT) { 
+  if (!IS_DEVELOPMENT) {
     setInterval(manageProductivity, 10000);
   }
 
@@ -329,7 +329,7 @@ ipcMain.on('set-ignore-mouse-events', (event, ignore, options) => {
 app.on('will-quit', () => {
   // Unregister all shortcuts.
   globalShortcut.unregisterAll();
-})
+});
 
 app.on('window-all-closed', () => {
   // Respect the OSX convention of having the application in memory even
