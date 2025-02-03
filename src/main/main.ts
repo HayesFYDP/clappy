@@ -332,7 +332,7 @@ ipcMain.on('set-ignore-mouse-events', (event, ignore, options) => {
 });
 
 ipcMain.on('open-settings-window', () => {
-  let settingsWindow = new BrowserWindow({
+  const settingsWindow = new BrowserWindow({
     width: 600,
     height: 450,
     title: 'Clappy Settings',
@@ -347,14 +347,10 @@ ipcMain.on('open-settings-window', () => {
     },
   });
 
-  settingsWindow.loadURL(decodeURIComponent('index.html#/settings'));
+  settingsWindow.loadURL(`${resolveHtmlPath('index.html')}#/settings`);
 
   settingsWindow.once('ready-to-show', () => {
     settingsWindow?.show();
-  });
-
-  settingsWindow.on('close', () => {
-    settingsWindow = null;
   });
 });
 
