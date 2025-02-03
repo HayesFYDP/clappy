@@ -5,7 +5,6 @@ import './App.css';
 
 function Hello() {
   const [isTextInputOpen, setIsTextInputOpen] = React.useState(false);
-  const showTextInput = () => setIsTextInputOpen(true);
 
   return (
     <div>
@@ -24,16 +23,18 @@ function Hello() {
               🕰️
             </button>
           </div>
-          <div id="talk-to" className="hover-row">
-            <span>Talk to Clappy</span>
-            <button type="button" id="talk-to-button" onClick={showTextInput}>
-              💬
-            </button>
-          </div>
+          {!isTextInputOpen && (
+            <div id="talk-to" className="hover-row">
+              <span>Talk to Clappy</span>
+              <button type="button" id="talk-to-button" onClick={() => setIsTextInputOpen(true)}>
+                💬
+              </button>
+            </div>
+          )}
           {isTextInputOpen && (
-            <div id="text-input">
-              <input type="text" id="text-input-field" />
-              <button type="button" id="text-input-button">
+            <div id="text-input-container">
+              <input type="text" id="text-input-field" placeholder="Type a reply to Clappy..." />
+              <button type="button" id="text-input-button" onClick={() => setIsTextInputOpen(false)}>
                 Send
               </button>
             </div>
