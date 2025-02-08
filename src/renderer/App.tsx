@@ -5,9 +5,12 @@ import './App.css';
 import SettingsWindow from './SettingsWindow';
 
 function Hello() {
-  const openSettings = () => {window.electron.ipcRenderer.sendMessage('open-settings-window');
-  
+  const openSettings = () => {
+    window.electron.ipcRenderer.sendMessage('open-settings-window');
+  };
+
   const [isTextInputOpen, setIsTextInputOpen] = React.useState(false);
+
   const onOpenTextInput = () => {
     setIsTextInputOpen(true);
   };
