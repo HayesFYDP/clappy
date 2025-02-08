@@ -351,8 +351,11 @@ ipcMain.on('open-settings-window', () => {
 
   settingsWindow.loadURL(`${resolveHtmlPath('index.html')}#/settings`);
 
+  // without this, the newly opened settings window requires a click before contents show
+  settingsWindow.webContents.setBackgroundThrottling(false);
+
   settingsWindow.once('ready-to-show', () => {
-    settingsWindow?.show();
+    settingsWindow.show();
   });
 });
 
