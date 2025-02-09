@@ -45,11 +45,17 @@
     "electron-updater": "^6.1.4",
     "loudness": "^0.4.2",
     "luxon": "~3.5.0",
+    "nodejs-whisper": "^0.2.6",
     "openai": "^4.63.0",
     "python-shell": "~5.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.16.0"
+    "react-router-dom": "^6.16.0",
+    "say": "^0.16.0",
+    "shelljs": "^0.8.5",
+    "webpack": "^5.97.1",
+    "webpack-cli": "^6.0.1",
+    "whisper.cpp": "^1.0.3"
   },
   "devDependencies": {
     "@electron/rebuild": "^3.3.0",
@@ -104,9 +110,7 @@
     "tsconfig-paths-webpack-plugin": "^4.1.0",
     "typescript": "^5.2.2",
     "url-loader": "^4.1.1",
-    "webpack": "^5.88.2",
     "webpack-bundle-analyzer": "^4.9.1",
-    "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^4.15.1",
     "webpack-merge": "^5.9.0"
   },

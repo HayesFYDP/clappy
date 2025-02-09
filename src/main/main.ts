@@ -18,8 +18,14 @@ import { DateTime } from 'luxon';
 import OpenAI from 'openai';
 import os from 'os';
 import path from 'path';
+import say from 'say';
+import { spawn, exec } from 'child_process';
+import { ProductivityAnalysis } from './types';
 import { ClappyExpression, ProductivityAnalysis } from './types';
 import { resolveHtmlPath } from './util';
+
+// TODO: move this to env
+const WHISPER_PATH = '/Users/yashmulki/school/se490/clappy/whisper.cpp';
 
 dotenv.config();
 
@@ -41,7 +47,68 @@ function getClappyTempPath() {
   if (!fs.existsSync(tempDir)) {
     fs.mkdirSync(tempDir, { recursive: true });
   }
+  console.log(tempDir);
   return tempDir;
+}
+
+// Add recording function
+async function recordAudioAndTranscribe(durationS: number): Promise<string[]> {
+  return new Promise((resolve) => {
+    const timestamp = new Date().toISOString().replace(/:/g, '-');
+    const outputPath = path.join(getClappyTempPath(), `recording-${timestamp}.wav`);
+
+    // Use sox for recording
+    const args = [
+      '-d',
+      '-c',
+      '1',
+      '-r',
+      '16000',
+      '-b',
+      '16',
+      '-e',
+      'signed-integer',
+      outputPath,
+      'trim',
+      '0',
+      durationS.toString(),
+    ];
+    const recordProcess = spawn('sox', args);
+
+    recordProcess.on('exit', async () => {
+      try {
+        // Save current working directory
+        const currentDir = process.cwd();
+        // Change to whisper directory
+        process.chdir(WHISPER_PATH);
+
+        const whisperArgs = ['-f', outputPath, '-otxt'];
+        const whisperProcess = spawn('./build/bin/whisper-cli', whisperArgs);
+
+        whisperProcess.on('exit', async () => {
+          console.log('finished whisper');
+          // Change back to original directory
+          process.chdir(currentDir);
+          // Read the generated .txt file
+          const txtPath = `${outputPath}.txt`;
+          const transcript = await fs.promises.readFile(txtPath, 'utf8');
+          console.log('Transcription text:', transcript);
+
+          // Clean up files
+          fs.unlinkSync(txtPath);
+
+          resolve([transcript]);
+        });
+
+
+
+
+      } catch (err) {
+        console.error('Error transcribing audio:', err);
+        resolve([]);
+      }
+    });
+  });
 }
 
 class AppUpdater {
@@ -304,6 +371,18 @@ const createWindow = async () => {
 
   // Make the entire window non-interactive
   mainWindow.setIgnoreMouseEvents(true, { forward: true });
+
+  // Test speech and transcription on startup
+  const testSpeechAndTranscription = async () => {
+    // First test with duration argument
+    console.log('Starting first test with duration...');
+    await say.speak('say something for 5 seconds');
+    const transcriptPromise = await recordAudioAndTranscribe(5);
+    const result1 = await transcriptPromise;
+    console.log('First transcript:', result1);
+  };
+
+  testSpeechAndTranscription();
 
   // Take screenshots of the screen every 10 seconds and check if the user is productive
   if (!IS_DEVELOPMENT) {
