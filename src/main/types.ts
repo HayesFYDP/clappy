@@ -4,5 +4,11 @@ type ProductivityAnalysis = {
   justification: string;
 };
 
+enum ClappyExpression {
+  Happy = 'happy',
+  Sad = 'sad',
+  Angry = 'angry',
+}
+
 // eslint-disable-next-line import/prefer-default-export
-export { ProductivityAnalysis };
+export { ProductivityAnalysis, ClappyExpression };

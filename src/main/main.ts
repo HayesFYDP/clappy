@@ -10,7 +10,7 @@
  */
 import { PrismaClient } from '@prisma/client';
 import dotenv from 'dotenv';
-import { app, BrowserWindow, desktopCapturer, ipcMain } from 'electron';
+import { app, BrowserWindow, desktopCapturer, globalShortcut, ipcMain } from 'electron';
 import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
 import * as fs from 'fs';
@@ -18,16 +18,20 @@ import { DateTime } from 'luxon';
 import OpenAI from 'openai';
 import os from 'os';
 import path from 'path';
+<<<<<<< HEAD
 import say from 'say';
 import { spawn } from 'child_process';
 import { ProductivityAnalysis } from './types';
+=======
+import { ClappyExpression, ProductivityAnalysis } from './types';
+>>>>>>> main
 import { resolveHtmlPath } from './util';
 
 const { nodewhisper } = require('nodejs-whisper');
 
 dotenv.config();
 
-const IS_DEVELOPMENT = true;
+const IS_DEVELOPMENT = true; // TODO: Set this to false when deploying or take as an arg
 
 // Initialize Prisma client for database access
 const prisma = new PrismaClient();
@@ -152,14 +156,6 @@ async function takeScreenshot() {
 }
 
 async function isProductive(screenshotPath: string, userTask: string): Promise<ProductivityAnalysis> {
-  if (IS_DEVELOPMENT) {
-    return {
-      productive: false,
-      confidence: 1.0,
-      justification: 'Development mode: always unproductive',
-    };
-  }
-
   const prompt = `You are a helpful productivity assistant that is observing the user's computer screen. You are asked to analyze the screen contents and make a judgement on whether the user is being productive or not. The screen contents are attached as image context. Even if the user is using a website that is typically distracting, consider whether the content they are reading is relevant to the problem.
   You are given that the user is currently trying to accomplish: <${userTask}>. Do not ask questions about this objective, simply consider it in light of the screen contents.
   First, you will start by analyzing these contents and discussing with yourself if the contents of the screen match the user's intended tasks. Then, enclosed in <OUTPUT> </OUTPUT> tags, you will output a JSON response that conforms the following schema
@@ -205,18 +201,19 @@ async function isProductive(screenshotPath: string, userTask: string): Promise<P
   return outputJson;
 }
 
-async function popupProductivityIntervention(productive: boolean) {
+async function popupClappy(expression: ClappyExpression, popupText: string | null, closePopupIn5Seconds: boolean) {
   if (mainWindow) {
-    mainWindow.webContents.send('open-popup', productive);
+    mainWindow.webContents.send('open-popup', expression, popupText);
 
-    // Close the popup after 5 seconds
-    setTimeout(() => {
-      mainWindow?.webContents.send('close-popup');
-    }, 5000);
+    if (closePopupIn5Seconds) {
+      setTimeout(() => {
+        mainWindow?.webContents.send('close-popup');
+      }, 5000);
+    }
   }
 }
 
-async function minimizeWindowIntervention(productive: boolean) {
+async function minimizeWindowIntervention() {
   // TODO: Implement this
 }
 
@@ -280,12 +277,6 @@ async function selectIntervention(userTask: string, productive: boolean) {
     { intervention: "<NOTIFY/MINIMIZE>" }
   `;
 
-  if (IS_DEVELOPMENT) {
-    // maybe we want to change this but for now nah
-    popupProductivityIntervention(productive);
-    return;
-  }
-
   const response = await openai?.chat.completions.create({
     model: 'gpt-4o-mini',
     messages: [
@@ -324,10 +315,10 @@ async function selectIntervention(userTask: string, productive: boolean) {
 
   switch (intervention) {
     case 'NOTIFY':
-      popupProductivityIntervention(productive);
+      popupClappy(ClappyExpression.Angry, 'GET BACK TO WORK', true);
       break;
     case 'MINIMIZE':
-      minimizeWindowIntervention(productive);
+      minimizeWindowIntervention();
       break;
     default:
       console.log(`Invalid/unknown intervention selected: "${intervention}"`);
@@ -335,12 +326,6 @@ async function selectIntervention(userTask: string, productive: boolean) {
 }
 
 async function manageProductivity() {
-  if (IS_DEVELOPMENT) {
-    const hardcodedTask = 'Working on FYDP presentation (a very cool bicycle)';
-    await selectIntervention(hardcodedTask, false);
-    return;
-  }
-
   const screenshotPath = await takeScreenshot();
 
   if (screenshotPath) {
@@ -383,6 +368,13 @@ const createWindow = async () => {
     },
   });
 
+  // Make window stay on top even after switching focus
+  // https://github.com/electron/electron/issues/10078
+  app.dock?.hide();
+  mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  mainWindow.setAlwaysOnTop(true, 'screen-saver', 1);
+  app.dock?.show();
+
   mainWindow.loadURL(resolveHtmlPath('index.html'));
 
   // Make the entire window non-interactive
@@ -414,7 +406,9 @@ const createWindow = async () => {
   testSpeechAndTranscription();
 
   // Take screenshots of the screen every 10 seconds and check if the user is productive
-  setInterval(manageProductivity, 10000);
+  if (!IS_DEVELOPMENT) {
+    setInterval(manageProductivity, 10000);
+  }
 
   mainWindow.on('ready-to-show', () => {
     if (!mainWindow) {
@@ -439,6 +433,37 @@ ipcMain.on('set-ignore-mouse-events', (event, ignore, options) => {
   win?.setIgnoreMouseEvents(ignore, options);
 });
 
+ipcMain.on('open-settings-window', () => {
+  const settingsWindow = new BrowserWindow({
+    width: 600,
+    height: 450,
+    title: 'Clappy Settings',
+    resizable: true,
+    frame: true,
+    roundedCorners: true,
+    autoHideMenuBar: true,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: app.isPackaged ? path.join(__dirname, 'preload.js') : path.join(__dirname, '../../.erb/dll/preload.js'),
+    },
+  });
+
+  settingsWindow.loadURL(`${resolveHtmlPath('index.html')}#/settings`);
+
+  // without this, the newly opened settings window requires a click before contents show
+  settingsWindow.webContents.setBackgroundThrottling(false);
+
+  settingsWindow.once('ready-to-show', () => {
+    settingsWindow.show();
+  });
+});
+
+app.on('will-quit', () => {
+  // Unregister all shortcuts.
+  globalShortcut.unregisterAll();
+});
+
 app.on('window-all-closed', () => {
   // Respect the OSX convention of having the application in memory even
   // after all windows have been closed
@@ -450,6 +475,12 @@ app.on('window-all-closed', () => {
 app
   .whenReady()
   .then(() => {
+    const shortcutSuccess = globalShortcut.register('F8', () => {
+      mainWindow?.webContents.send('toggle-popup');
+    });
+    if (!shortcutSuccess) {
+      console.error('Failed to register global shortcut');
+    }
     createWindow();
     app.on('activate', () => {
       // On macOS it's common to re-create a window in the app when the

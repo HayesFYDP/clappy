@@ -1,0 +1,189 @@
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.settings-container {
+  background: #f9fbea;
+  box-shadow: none;
+  font-family: 'Arial', sans-serif;
+  color: #3d4b2f;
+  width: auto;
+  padding: 20px;
+  display: flex;
+  height: 100vh;
+  flex-direction: column;
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.settings-header {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.save-button {
+  background: #d9e6b5;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  color: #3d4b2f;
+  text-transform: lowercase;
+}
+
+.settings-content {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.setting-group {
+  margin-bottom: 15px;
+}
+
+.setting-label {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 5px;
+  display: block;
+}
+
+.setting-dropdown {
+  width: 100%;
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #c5d1a3;
+  background: #f9fbea;
+  font-size: 14px;
+}
+
+.list-section {
+  margin-top: 5px;
+}
+
+.list-container {
+  background: white;
+  border: 1px solid #3d4b2f;
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  min-height: 80px;
+}
+
+.list-textarea {
+  flex-grow: 1;
+  font-size: 14px;
+  color: #3d4b2f;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  line-height: 1.5;
+  padding: 6px;
+}
+
+.list-title {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 4px;
+  color: #5b6d3b;
+}
+
+.list-item {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  gap: 6px;
+}
+
+.list-group {
+  padding-bottom: 18px;
+}
+
+.delete-button {
+  background: #ff6b6b;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 12px;
+  font-weight: bold;
+  color: white;
+  cursor: pointer;
+  margin-bottom: 4px;
+}
+
+.list-add {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+  gap: 8px;
+  width: 100%;
+}
+
+.list-input {
+  flex-grow: 1;
+  padding: 8px;
+  border: 1px solid #3d4b2f;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+}
+
+.add-button {
+  cursor: pointer;
+  background: #d9e6b5;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #3d4b2f;
+}
+
+.permission-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+input[type='checkbox'] {
+  accent-color: #5b6d3b;
+  width: 16px;
+  height: 16px;
+}
+
+.changed {
+  background-color: #fff9db;
+}
+
+.changed label {
+  color: #d4a017;
+}
+
+.changed select,
+.changed input[type='checkbox'] {
+  border-color: #d4a017;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
