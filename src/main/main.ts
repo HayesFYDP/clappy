@@ -18,8 +18,12 @@ import { DateTime } from 'luxon';
 import OpenAI from 'openai';
 import os from 'os';
 import path from 'path';
+import say from 'say';
+import { spawn } from 'child_process';
 import { ProductivityAnalysis } from './types';
 import { resolveHtmlPath } from './util';
+
+const { nodewhisper } = require('nodejs-whisper');
 
 dotenv.config();
 
@@ -42,6 +46,73 @@ function getClappyTempPath() {
     fs.mkdirSync(tempDir, { recursive: true });
   }
   return tempDir;
+}
+
+// Add recording function
+async function recordAudioAndTranscribe(
+  durationMs?: number,
+): Promise<{ stop: () => void; transcriptPromise: Promise<string[]> }> {
+  return new Promise((resolve) => {
+    const timestamp = new Date().toISOString().replace(/:/g, '-');
+    const outputPath = path.join(getClappyTempPath(), `recording-${timestamp}.wav`);
+
+    // Use sox for recording
+    const args = ['-d', '-t', 'wav', outputPath];
+    const recordProcess = spawn('rec', args);
+
+    let stopped = false;
+
+    const stop = () => {
+      if (!stopped) {
+        stopped = true;
+        recordProcess.kill();
+      }
+    };
+
+    // If duration specified, stop after that time
+    if (durationMs) {
+      setTimeout(stop, durationMs);
+    }
+
+    const transcriptPromise = new Promise<string[]>((_resolve) => {
+      recordProcess.on('exit', async () => {
+        try {
+          await nodewhisper(outputPath, {
+            modelName: 'base.en', // Specify the downloaded model name
+            autoDownloadModelName: 'base.en', // (Optional) Auto-download the model if not present
+            removeWavFileAfterTranscription: false, // (Optional) Remove WAV file after transcription
+            withCuda: false, // (Optional) Use CUDA for faster processing if available
+            logger: console, // (Optional) Logging instance, defaults to console
+            whisperOptions: {
+              outputInCsv: false, // Output result in CSV file
+              outputInJson: false, // Output result in JSON file
+              outputInJsonFull: false, // Output result in JSON file with detailed information
+              outputInLrc: false, // Output result in LRC file
+              outputInSrt: false, // Output result in SRT file
+              outputInText: true, // Output result in TXT file
+              outputInVtt: false, // Output result in VTT file
+              outputInWords: false, // Output result in WTS file for karaoke
+              translateToEnglish: false, // Translate from source language to English
+              wordTimestamps: false, // Enable word-level timestamps
+              timestamps_length: 20, // Amount of dialogue per timestamp pair
+              splitOnWord: true, // Split on word rather than on token
+            },
+          });
+
+          // Clean up the temp file
+          fs.unlinkSync(outputPath);
+        } catch (err) {
+          console.error('Error transcribing audio:', err);
+          _resolve([]);
+        }
+      });
+    });
+
+    resolve({
+      stop,
+      transcriptPromise,
+    });
+  });
 }
 
 class AppUpdater {
@@ -316,6 +387,31 @@ const createWindow = async () => {
 
   // Make the entire window non-interactive
   mainWindow.setIgnoreMouseEvents(true, { forward: true });
+
+  // Test speech and transcription on startup
+  const testSpeechAndTranscription = async () => {
+    // First test with duration argument
+    console.log('Starting first test with duration...');
+    say.speak('say something for 5 seconds');
+    const { transcriptPromise: transcript1 } = await recordAudioAndTranscribe(5000);
+    const result1 = await transcript1;
+    console.log('First transcript:', result1);
+
+    // Second test with manual stop
+    console.log('Starting second test with manual stop...');
+    say.speak('say something for 5 seconds');
+    const { stop, transcriptPromise: transcript2 } = await recordAudioAndTranscribe();
+
+    // Stop after 5 seconds
+    setTimeout(() => {
+      stop();
+    }, 5000);
+
+    const result2 = await transcript2;
+    console.log('Second transcript:', result2);
+  };
+
+  testSpeechAndTranscription();
 
   // Take screenshots of the screen every 10 seconds and check if the user is productive
   setInterval(manageProductivity, 10000);

@@ -45,10 +45,14 @@
     "electron-updater": "^6.1.4",
     "loudness": "^0.4.2",
     "luxon": "~3.5.0",
+    "nodejs-whisper": "^0.2.6",
     "openai": "^4.63.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.16.0"
+    "react-router-dom": "^6.16.0",
+    "say": "^0.16.0",
+    "shelljs": "^0.8.5",
+    "whisper.cpp": "^1.0.3"
   },
   "devDependencies": {
     "@electron/rebuild": "^3.3.0",
