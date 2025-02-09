@@ -333,6 +333,32 @@ ipcMain.on('set-ignore-mouse-events', (event, ignore, options) => {
   win?.setIgnoreMouseEvents(ignore, options);
 });
 
+ipcMain.on('open-settings-window', () => {
+  const settingsWindow = new BrowserWindow({
+    width: 600,
+    height: 450,
+    title: 'Clappy Settings',
+    resizable: true,
+    frame: true,
+    roundedCorners: true,
+    autoHideMenuBar: true,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: app.isPackaged ? path.join(__dirname, 'preload.js') : path.join(__dirname, '../../.erb/dll/preload.js'),
+    },
+  });
+
+  settingsWindow.loadURL(`${resolveHtmlPath('index.html')}#/settings`);
+
+  // without this, the newly opened settings window requires a click before contents show
+  settingsWindow.webContents.setBackgroundThrottling(false);
+
+  settingsWindow.once('ready-to-show', () => {
+    settingsWindow.show();
+  });
+});
+
 app.on('will-quit', () => {
   // Unregister all shortcuts.
   globalShortcut.unregisterAll();
