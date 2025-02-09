@@ -18,16 +18,14 @@ import { DateTime } from 'luxon';
 import OpenAI from 'openai';
 import os from 'os';
 import path from 'path';
-<<<<<<< HEAD
 import say from 'say';
-import { spawn } from 'child_process';
+import { spawn, exec } from 'child_process';
 import { ProductivityAnalysis } from './types';
-=======
 import { ClappyExpression, ProductivityAnalysis } from './types';
->>>>>>> main
 import { resolveHtmlPath } from './util';
 
-const { nodewhisper } = require('nodejs-whisper');
+// TODO: move this to env
+const WHISPER_PATH = '/Users/yashmulki/school/se490/clappy/whisper.cpp';
 
 dotenv.config();
 
@@ -49,72 +47,66 @@ function getClappyTempPath() {
   if (!fs.existsSync(tempDir)) {
     fs.mkdirSync(tempDir, { recursive: true });
   }
+  console.log(tempDir);
   return tempDir;
 }
 
 // Add recording function
-async function recordAudioAndTranscribe(
-  durationMs?: number,
-): Promise<{ stop: () => void; transcriptPromise: Promise<string[]> }> {
+async function recordAudioAndTranscribe(durationS: number): Promise<string[]> {
   return new Promise((resolve) => {
     const timestamp = new Date().toISOString().replace(/:/g, '-');
     const outputPath = path.join(getClappyTempPath(), `recording-${timestamp}.wav`);
 
     // Use sox for recording
-    const args = ['-d', '-t', 'wav', outputPath];
-    const recordProcess = spawn('rec', args);
+    const args = [
+      '-d',
+      '-c',
+      '1',
+      '-r',
+      '16000',
+      '-b',
+      '16',
+      '-e',
+      'signed-integer',
+      outputPath,
+      'trim',
+      '0',
+      durationS.toString(),
+    ];
+    const recordProcess = spawn('sox', args);
 
-    let stopped = false;
+    recordProcess.on('exit', async () => {
+      try {
+        // Save current working directory
+        const currentDir = process.cwd();
+        // Change to whisper directory
+        process.chdir(WHISPER_PATH);
 
-    const stop = () => {
-      if (!stopped) {
-        stopped = true;
-        recordProcess.kill();
+        const whisperArgs = ['-f', outputPath, '-otxt'];
+        const whisperProcess = spawn('./build/bin/whisper-cli', whisperArgs);
+
+        whisperProcess.on('exit', async () => {
+          console.log('finished whisper');
+          // Change back to original directory
+          process.chdir(currentDir);
+          // Read the generated .txt file
+          const txtPath = `${outputPath}.txt`;
+          const transcript = await fs.promises.readFile(txtPath, 'utf8');
+          console.log('Transcription text:', transcript);
+
+          // Clean up files
+          fs.unlinkSync(txtPath);
+
+          resolve([transcript]);
+        });
+
+
+
+
+      } catch (err) {
+        console.error('Error transcribing audio:', err);
+        resolve([]);
       }
-    };
-
-    // If duration specified, stop after that time
-    if (durationMs) {
-      setTimeout(stop, durationMs);
-    }
-
-    const transcriptPromise = new Promise<string[]>((_resolve) => {
-      recordProcess.on('exit', async () => {
-        try {
-          await nodewhisper(outputPath, {
-            modelName: 'base.en', // Specify the downloaded model name
-            autoDownloadModelName: 'base.en', // (Optional) Auto-download the model if not present
-            removeWavFileAfterTranscription: false, // (Optional) Remove WAV file after transcription
-            withCuda: false, // (Optional) Use CUDA for faster processing if available
-            logger: console, // (Optional) Logging instance, defaults to console
-            whisperOptions: {
-              outputInCsv: false, // Output result in CSV file
-              outputInJson: false, // Output result in JSON file
-              outputInJsonFull: false, // Output result in JSON file with detailed information
-              outputInLrc: false, // Output result in LRC file
-              outputInSrt: false, // Output result in SRT file
-              outputInText: true, // Output result in TXT file
-              outputInVtt: false, // Output result in VTT file
-              outputInWords: false, // Output result in WTS file for karaoke
-              translateToEnglish: false, // Translate from source language to English
-              wordTimestamps: false, // Enable word-level timestamps
-              timestamps_length: 20, // Amount of dialogue per timestamp pair
-              splitOnWord: true, // Split on word rather than on token
-            },
-          });
-
-          // Clean up the temp file
-          fs.unlinkSync(outputPath);
-        } catch (err) {
-          console.error('Error transcribing audio:', err);
-          _resolve([]);
-        }
-      });
-    });
-
-    resolve({
-      stop,
-      transcriptPromise,
     });
   });
 }
@@ -384,23 +376,10 @@ const createWindow = async () => {
   const testSpeechAndTranscription = async () => {
     // First test with duration argument
     console.log('Starting first test with duration...');
-    say.speak('say something for 5 seconds');
-    const { transcriptPromise: transcript1 } = await recordAudioAndTranscribe(5000);
-    const result1 = await transcript1;
+    await say.speak('say something for 5 seconds');
+    const transcriptPromise = await recordAudioAndTranscribe(5);
+    const result1 = await transcriptPromise;
     console.log('First transcript:', result1);
-
-    // Second test with manual stop
-    console.log('Starting second test with manual stop...');
-    say.speak('say something for 5 seconds');
-    const { stop, transcriptPromise: transcript2 } = await recordAudioAndTranscribe();
-
-    // Stop after 5 seconds
-    setTimeout(() => {
-      stop();
-    }, 5000);
-
-    const result2 = await transcript2;
-    console.log('Second transcript:', result2);
   };
 
   testSpeechAndTranscription();
