@@ -42,7 +42,6 @@ window.electron.ipcRenderer.on('add-mouse-event-listeners', () => {
   const settingsButton = document.getElementById('settings-button');
   settingsButton?.addEventListener('click', (): void => {
     // TODO: implement open settings window
-    console.log('settings button clicked');
   });
 });
 
