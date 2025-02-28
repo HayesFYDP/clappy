@@ -13,6 +13,9 @@ module.exports = {
     '@typescript-eslint/no-shadow': 'error',
     'no-unused-vars': 'off',
     '@typescript-eslint/no-unused-vars': 'error',
+    'prettier/prettier': 0, // exclude prettier from eslint because it distracts from actual problems
+    'lines-between-class-members': 'off', // this rule is kinda silly and makes things harder to read
+    'class-methods-use-this': 'off', // this rule is also annoying
   },
   parserOptions: {
     ecmaVersion: 2022,
