@@ -62,7 +62,7 @@ function Hello() {
             </div>
           )}
         </div>
-        <img src={smiskiIcon} alt="Character" />
+        <img src={smiskiIcon} alt="Character" id="main-character-image" />
       </div>
     </div>
   );
