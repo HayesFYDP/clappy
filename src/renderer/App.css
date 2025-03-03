@@ -38,13 +38,17 @@
   color: #3F5F13;
 }
 
+.hover-row-no-display {
+  display: none;
+}
+
 .hover-row > span { 
   margin: 0 10px;
   cursor: pointer;
   background-color: #EEFAB8;
   text-align: center;
   font-weight: bold;
-  padding: 2px;
+  padding: 2px 10px;
   border-radius: 5px;
   min-width: 120px;
   display: flex;
@@ -74,13 +78,28 @@
   position: absolute;
   top: 140px;
   right: 110px;
-  background-color: white;
-  border: 2px solid black;
+  background-color: #EEFAB8;
+  border-color: #3F5F13;
+  color: #3F5F13;
+  font-weight: bold;
   border-radius: 20px;
   padding: 10px;
   max-width: 200px;
   min-width: 100px;
   text-align: center;
+}
+
+/* Triangle part of the speech bubble */
+#speech-bubble::after {
+  content: '';
+  position: absolute;
+  top: 30px;
+  right: -17px;
+  width: 0;
+  height: 0;
+  border-width: 10px;
+  border-style: solid;
+  border-color: transparent transparent transparent #EEFAB8;
 }
 
 #text-input-container {

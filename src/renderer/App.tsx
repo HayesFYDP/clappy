@@ -19,26 +19,35 @@ function Hello() {
     setIsTextInputOpen(false);
   };
 
+  const hoverClass = !isTextInputOpen ? 'hover-row' : 'hover-row-no-display';
+
   return (
     <div>
       <div id="popup">
         <div id="speech-bubble">Hi!</div>
         <div id="hover-rows">
-          <div id="settings" className="hover-row">
+          <div id="settings" className={hoverClass}>
             <span>View settings</span>
             <button type="button" id="settings-button" onClick={openSettings}>
               ⚙️
             </button>
           </div>
-          <div id="history" className="hover-row">
+          <div id="history" className={hoverClass}>
             <span>View history</span>
             <button type="button" id="history-button">
               🕰️
             </button>
           </div>
-          {!isTextInputOpen && (
-            <div id="talk-to" className="hover-row">
+          {!isTextInputOpen ? (
+            <div id="talk-to" className={hoverClass}>
               <span>Talk to Clappy</span>
+              <button type="button" id="talk-to-button" onClick={onOpenTextInput}>
+                💬
+              </button>
+            </div>
+          ) : (
+            <div id="talk-to" className={hoverClass}>
+              <span>to Clappy</span>
               <button type="button" id="talk-to-button" onClick={onOpenTextInput}>
                 💬
               </button>
