@@ -79,14 +79,20 @@
   top: 140px;
   right: 110px;
   background-color: #EEFAB8;
-  border-color: #3F5F13;
-  color: #3F5F13;
+  border: 2px solid #3F5F13; /* Added border width */
+  color: #3F5F13;;
   font-weight: bold;
   border-radius: 20px;
   padding: 10px;
-  max-width: 200px;
-  min-width: 100px;
+  min-width: 120px;
+  max-width: 250px;
+  min-height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   text-align: center;
+  line-height: 1.2;
+  box-sizing: border-box;
 }
 
 /* Triangle part of the speech bubble */
@@ -94,7 +100,7 @@
   content: '';
   position: absolute;
   top: 30px;
-  right: -17px;
+  right: -16px;
   width: 0;
   height: 0;
   border-width: 10px;

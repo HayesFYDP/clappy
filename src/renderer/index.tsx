@@ -6,7 +6,7 @@ const container = document.getElementById('root') as HTMLElement;
 const root = createRoot(container);
 root.render(<App />);
 
-function openPopup(expression: ClappyExpression, text: string | null): void {
+export default function openPopup(expression: ClappyExpression, text: string | null): void {
   const speechBubble = document.getElementById('speech-bubble') as HTMLElement;
   if (text !== null && text !== undefined && text !== '') {
     speechBubble.style.display = 'block';
@@ -19,6 +19,11 @@ function openPopup(expression: ClappyExpression, text: string | null): void {
   const popup = document.getElementById('popup') as HTMLElement;
   popup.style.display = 'block';
   popup.classList.add('visible');
+}
+
+export function closeSpeechBubble(): void {
+  const speechBubble = document.getElementById('speech-bubble') as HTMLElement;
+  speechBubble.style.display = 'none';
 }
 
 function closePopup(): void {
