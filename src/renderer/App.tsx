@@ -1,6 +1,8 @@
 import React from 'react';
 import { Route, HashRouter as Router, Routes } from 'react-router-dom';
+import openPopup, { closeSpeechBubble } from '.';
 import bufoHelloIcon from '../../assets/bufo-hello.gif';
+import { ClappyExpression } from '../main/types';
 import './App.css';
 import SettingsWindow from './SettingsWindow';
 
@@ -12,10 +14,13 @@ function Hello() {
   const [isTextInputOpen, setIsTextInputOpen] = React.useState(false);
 
   const onOpenTextInput = () => {
+    closeSpeechBubble();
+    openPopup(ClappyExpression.Happy, "I'm listening..."); // TODO: idk feed the response here or something
     setIsTextInputOpen(true);
   };
 
   const onSendTextInput = () => {
+    openPopup(ClappyExpression.Happy, "I see! I'll remember that!"); // TODO: idk feed the response here or something
     setIsTextInputOpen(false);
   };
 
@@ -24,7 +29,7 @@ function Hello() {
   return (
     <div>
       <div id="popup">
-        <div id="speech-bubble">Hi!</div>
+        <div id="speech-bubble" />
         <div id="hover-rows">
           <div id="settings" className={hoverClass}>
             <span>View settings</span>
@@ -62,7 +67,7 @@ function Hello() {
             </div>
           )}
         </div>
-        <img id="clappy-icon" src={bufoHelloIcon} alt="Character" />
+        <img src={bufoHelloIcon} alt="Character" id="main-character-image" />
       </div>
     </div>
   );
