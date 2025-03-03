@@ -9,6 +9,7 @@
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
 import { PrismaClient } from '@prisma/client';
+import { spawn } from 'child_process';
 import dotenv from 'dotenv';
 import { app, BrowserWindow, desktopCapturer, globalShortcut, ipcMain } from 'electron';
 import * as fs from 'fs';
@@ -16,7 +17,6 @@ import { DateTime } from 'luxon';
 import OpenAI from 'openai';
 import os from 'os';
 import path from 'path';
-import { spawn } from 'child_process';
 import { ClappyExpression, ProductivityAnalysis } from './types';
 import { resolveHtmlPath } from './util';
 
@@ -62,6 +62,32 @@ class Clappy {
 
       settingsWindow.once('ready-to-show', () => {
         settingsWindow.show();
+      });
+    });
+
+    ipcMain.on('open-analytics-window', () => {
+      const analyticsWindow = new BrowserWindow({
+        width: 800,
+        height: 600,
+        title: 'Clappy Analytics',
+        resizable: true,
+        frame: true,
+        roundedCorners: true,
+        autoHideMenuBar: true,
+        webPreferences: {
+          nodeIntegration: false,
+          contextIsolation: true,
+          preload: app.isPackaged ? path.join(__dirname, 'preload.js') : path.join(__dirname, '../../.erb/dll/preload.js'),
+        },
+      });
+
+      analyticsWindow.loadURL(`${resolveHtmlPath('index.html')}#/analytics`);
+
+      // without this, the newly opened analytics window requires a click before contents show
+      analyticsWindow.webContents.setBackgroundThrottling(false);
+
+      analyticsWindow.once('ready-to-show', () => {
+        analyticsWindow.show();
       });
     });
 
