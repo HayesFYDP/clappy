@@ -1,6 +1,6 @@
 import React from 'react';
 import { Route, HashRouter as Router, Routes } from 'react-router-dom';
-import smiskiIcon from '../../assets/smiski.png';
+import bufoHelloIcon from '../../assets/bufo-hello.gif';
 import './App.css';
 import SettingsWindow from './SettingsWindow';
 
@@ -62,7 +62,7 @@ function Hello() {
             </div>
           )}
         </div>
-        <img src={smiskiIcon} alt="Character" />
+        <img id="clappy-icon" src={bufoHelloIcon} alt="Character" />
       </div>
     </div>
   );

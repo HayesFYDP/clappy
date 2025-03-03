@@ -393,7 +393,7 @@ class Clappy {
 
     switch (intervention) {
       case 'NOTIFY':
-        this.popupClappyIntervention(ClappyExpression.Angry, 'GET BACK TO WORK', true);
+        this.popupClappyIntervention(ClappyExpression.Enraged, 'GET BACK TO WORK', true);
         break;
       case 'MINIMIZE':
         this.minimizeWindowIntervention();

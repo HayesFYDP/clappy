@@ -6,8 +6,10 @@ type ProductivityAnalysis = {
 
 enum ClappyExpression {
   Happy = 'happy',
-  Sad = 'sad',
-  Angry = 'angry',
+  Crying = 'crying',
+  Disappointed = 'disappointed',
+  Enraged = 'enraged',
+  Hello = 'hello',
 }
 
 // eslint-disable-next-line import/prefer-default-export
