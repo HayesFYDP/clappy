@@ -41,11 +41,13 @@ class Clappy {
 
     ipcMain.on('open-settings-window', () => {
       const settingsWindow = new BrowserWindow({
-        width: 600,
-        height: 450,
+        width: 650,
+        height: 600,
         title: 'Clappy Settings',
-        resizable: true,
+        resizable: false,
         frame: true,
+        movable: true,
+        titleBarStyle: 'hidden',
         roundedCorners: true,
         autoHideMenuBar: true,
         webPreferences: {
