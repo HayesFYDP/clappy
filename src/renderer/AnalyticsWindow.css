@@ -1,8 +1,9 @@
 .container {
-  font-family: sans-serif;
-  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 10px;
   max-width: 700px;
   margin: 0 auto;
+  color: #3F5F13;
 }
 
 .title {
@@ -14,8 +15,8 @@
 }
 
 .link {
-  color: #007BFF;
-  text-decoration: none;
+  color: #3F5F13;
+  text-decoration: underline;
   margin: 0 5px;
 }
 
@@ -24,6 +25,10 @@
   flex-wrap: wrap;
   align-items: center;
   margin-bottom: 20px;
+  padding: 10px;
+  border-radius: 10px;
+  background-color: #EEFAB8;
+  border: 1px solid #3F5F13;
 }
 
 .label {
@@ -37,7 +42,8 @@
 .filters {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .dayContainer {
@@ -68,4 +74,69 @@
 .segment {
   height: 100%;
   cursor: pointer;
+}
+
+.legend-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  padding: 8px;
+  font-size: 14px;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  margin-right: 2px;
+}
+
+.color-box {
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  margin-right: 4px;
+}
+
+.legend-text {
+  font-weight: 600;
+  /* lol */
+  background-color: white !important; 
+}
+
+.very-productive {
+  background-color: #4CAF50;
+  color: #4CAF50;
+}
+
+.productive {
+  background-color: #81C784;
+  color: #81C784;
+}
+
+.somewhat-productive {
+  background-color: #FFC107;
+  color: #FFC107;
+}
+
+.uncertain {
+  background-color: #BDBDBD;
+  color: #BDBDBD;
+}
+
+.not-productive {
+  background-color: #E57373;
+  color: #E57373;
+}
+
+.statCheckbox {
+  margin-right: 10px;
+  background-color: #3F5F13;
+}
+
+label {
+  display: flex;
+  align-items: center;
 }

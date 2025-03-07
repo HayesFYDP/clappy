@@ -55,10 +55,36 @@ function AnalyticsWindow() {
         </label>
         <div className="filters">
           <span>Filters: </span>
-          <input type="checkbox" id="productive" />
-          {/* <label htmlFor="productive">Only Productive Time</label> */}
-          <input type="checkbox" id="sortByTask" />
-          {/* <label htmlFor="sortByTask">Sort by Task</label> */}
+          <label htmlFor="productive-filter">
+            <input type="checkbox" id="productive" name="productive-filter" className="statCheckbox" />
+            Only Productive Time
+          </label>
+          <label htmlFor="sortByTask">
+            <input type="checkbox" id="sortByTask" className="statCheckbox" />
+            Sort by Task
+          </label>
+        </div>
+      </div>
+      <div className="legend-container">
+        <div className="legend-item">
+          <span className="color-box very-productive" />
+          <span className="legend-text very-productive">Very Productive</span>
+        </div>
+        <div className="legend-item">
+          <span className="color-box productive" />
+          <span className="legend-text productive">Productive</span>
+        </div>
+        <div className="legend-item">
+          <span className="color-box somewhat-productive" />
+          <span className="legend-text somewhat-productive">Somewhat Productive</span>
+        </div>
+        <div className="legend-item">
+          <span className="color-box uncertain" />
+          <span className="legend-text uncertain">Uncertain</span>
+        </div>
+        <div className="legend-item">
+          <span className="color-box not-productive" />
+          <span className="legend-text not-productive">Not Productive</span>
         </div>
       </div>
       {statsData.map((dayData) => (
