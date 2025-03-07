@@ -19,7 +19,8 @@ import os from 'os';
 import path from 'path';
 import { ProductivityAnalysis } from './types';
 import { resolveHtmlPath } from './util';
-import { Interventions, InterventionHandler, INTERVENTION_HANDLERS, createInterventionHandler } from './interventions/types';
+import { Interventions, InterventionHandler, createInterventionHandler } from './interventions/types';
+import INTERVENTION_HANDLERS from './interventions/interventionHandlers';
 
 // TODO: move this to env
 const WHISPER_PATH = '/Users/yashmulki/school/se490/clappy/whisper.cpp';
