@@ -15,7 +15,7 @@ export enum Interventions {
   FOCUS_WINDOW = 'FOCUS_WINDOW',
 }
 
-// descriptions of each intervention used for LLM reasoning
+// descriptions of each intervention used for LLM reasoning, ordered from least to most intense
 export const InterventionDescriptions: Record<Interventions, string> = {
   [Interventions.POPUP_CLAPPY]: "Have a character appear on the right side of the user's screen with an expression and message reminding them to be productive.",
   [Interventions.SHAKE_WINDOW]: "Shake the user's current active window.",
