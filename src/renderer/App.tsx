@@ -3,12 +3,17 @@ import { Route, HashRouter as Router, Routes } from 'react-router-dom';
 import openPopup, { closeSpeechBubble } from '.';
 import bufoHelloIcon from '../../assets/bufo-hello.gif';
 import { ClappyExpression } from '../main/types';
+import AnalyticsWindow from './AnalyticsWindow';
 import './App.css';
 import SettingsWindow from './SettingsWindow';
 
 function Hello() {
   const openSettings = () => {
     window.electron.ipcRenderer.sendMessage('open-settings-window');
+  };
+
+  const openAnalytics = () => {
+    window.electron.ipcRenderer.sendMessage('open-analytics-window');
   };
 
   const [isTextInputOpen, setIsTextInputOpen] = React.useState(false);
@@ -39,7 +44,7 @@ function Hello() {
           </div>
           <div id="history" className={hoverClass}>
             <span>View history</span>
-            <button type="button" id="history-button">
+            <button type="button" id="history-button" onClick={openAnalytics}>
               🕰️
             </button>
           </div>
@@ -79,6 +84,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Hello />} />
         <Route path="/settings" element={<SettingsWindow />} />
+        <Route path="/analytics" element={<AnalyticsWindow />} />
       </Routes>
     </Router>
   );

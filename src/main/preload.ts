@@ -8,7 +8,8 @@ export type Channels =
   | 'toggle-popup'
   | 'set-ignore-mouse-events'
   | 'add-mouse-event-listeners'
-  | 'open-settings-window';
+  | 'open-settings-window'
+  | 'open-analytics-window';
 
 const electronHandler = {
   ipcRenderer: {
