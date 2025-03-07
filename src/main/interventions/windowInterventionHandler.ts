@@ -1,12 +1,15 @@
-import { InterventionHandler, Interventions, InterventionPayloadMap, MinimizeWindowPayload, ShakeWindowPayload, FocusWindowPayload } from './types';
+import {
+  InterventionHandler,
+  Interventions,
+  InterventionPayloadMap,
+  MinimizeWindowPayload,
+  ShakeWindowPayload,
+  FocusWindowPayload,
+} from './types';
 import WindowManager from './windowManager';
 
 export default class WindowInterventionHandler implements InterventionHandler {
-  supportedInterventions = [
-    Interventions.MINIMIZE_WINDOW,
-    Interventions.SHAKE_WINDOW,
-    Interventions.FOCUS_WINDOW,
-  ] as const;
+  supportedInterventions = [Interventions.MINIMIZE_WINDOW, Interventions.SHAKE_WINDOW, Interventions.FOCUS_WINDOW] as const;
 
   windowManager: WindowManager;
 
@@ -49,7 +52,7 @@ export default class WindowInterventionHandler implements InterventionHandler {
       return this.windowManager.focusWindow(handle);
     }
 
-    // todo: list all windows, ask LLM what window should be focused
+    // TODO: list all windows, ask LLM what window should be focused
     return undefined;
   }
 }
