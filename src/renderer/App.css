@@ -77,7 +77,7 @@
 #speech-bubble {
   position: absolute;
   top: 140px;
-  right: 110px;
+  right: 100px;
   background-color: #EEFAB8;
   border: 2px solid #3F5F13; /* Added border width */
   color: #3F5F13;;

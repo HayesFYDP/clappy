@@ -1,5 +1,10 @@
 import { createRoot } from 'react-dom/client';
 import { ClappyExpression } from '../main/types';
+import bufoHelloIcon from '../../assets/bufo-hello.gif';
+import bufoCryingIcon from '../../assets/bufo-crying.gif';
+import bufoDisappointedIcon from '../../assets/bufo-disappointed.png';
+import bufoEnragedIcon from '../../assets/bufo-enraged.png';
+import bufoHappyIcon from '../../assets/bufo-happy.png';
 import App from './App';
 
 const container = document.getElementById('root') as HTMLElement;
@@ -15,7 +20,28 @@ export default function openPopup(expression: ClappyExpression, text: string | n
     speechBubble.style.display = 'none';
   }
 
-  // TODO: change Clappy image based on expression
+  // Change Clappy image based on expression
+  const clappyIcon = document.getElementById('main-character-image') as HTMLImageElement;
+  switch (expression) {
+    case ClappyExpression.Happy:
+      clappyIcon.src = bufoHappyIcon;
+      break;
+    case ClappyExpression.Crying:
+      clappyIcon.src = bufoCryingIcon;
+      break;
+    case ClappyExpression.Disappointed:
+      clappyIcon.src = bufoDisappointedIcon;
+      break;
+    case ClappyExpression.Enraged:
+      clappyIcon.src = bufoEnragedIcon;
+      break;
+    case ClappyExpression.Hello:
+      clappyIcon.src = bufoHelloIcon;
+      break;
+    default:
+      clappyIcon.src = bufoHelloIcon;
+  }
+
   const popup = document.getElementById('popup') as HTMLElement;
   popup.style.display = 'block';
   popup.classList.add('visible');
@@ -64,6 +90,6 @@ window.electron.ipcRenderer.on('toggle-popup', () => {
   if (popup.classList.contains('visible')) {
     closePopup();
   } else {
-    openPopup(ClappyExpression.Happy, 'GET BACK TO WORK');
+    openPopup(ClappyExpression.Hello, 'GET BACK TO WORK');
   }
 });

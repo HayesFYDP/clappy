@@ -1,7 +1,7 @@
 import React from 'react';
 import { Route, HashRouter as Router, Routes } from 'react-router-dom';
 import openPopup, { closeSpeechBubble } from '.';
-import smiskiIcon from '../../assets/smiski.png';
+import bufoHelloIcon from '../../assets/bufo-hello.gif';
 import { ClappyExpression } from '../main/types';
 import AnalyticsWindow from './AnalyticsWindow';
 import './App.css';
@@ -72,7 +72,7 @@ function Hello() {
             </div>
           )}
         </div>
-        <img src={smiskiIcon} alt="Character" id="main-character-image" />
+        <img src={bufoHelloIcon} alt="Character" id="main-character-image" />
       </div>
     </div>
   );
