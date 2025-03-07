@@ -31,13 +31,13 @@ export default class PopupClappyInterventionHandler implements InterventionHandl
     }
 
     // TODO: otherwise, use the LLM to determine Clappy's expression
-    return undefined;
+    return this.popupClappySpecified(ClappyExpression.Enraged, "GET BACK TO WORK", timeoutMs);
   }
 
   // make Clappy appear on the right side of a user's screen with a specific expression and text
   async popupClappySpecified(expression: ClappyExpression, text: string, timeoutMs = 5000) {
     const mainWindow = this.getMainWindow();
-    if (!mainWindow) {
+    if (mainWindow === null) {
       console.error('Main window is not available, cannot popup clappy');
       return;
     }
