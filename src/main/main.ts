@@ -24,7 +24,7 @@ import { Interventions, InterventionHandler, INTERVENTION_HANDLERS, createInterv
 // TODO: move this to env
 const WHISPER_PATH = '/Users/yashmulki/school/se490/clappy/whisper.cpp';
 const IS_DEVELOPMENT = true; // TODO: Set this to false when deploying or take as an arg
-const DEVELOPMENT_INTERVENTION_ENABLED = true; // if set to true, will randomly select interventions; otherwise, no interventions will be taken
+const DEVELOPMENT_INTERVENTION_ENABLED = false; // if set to true, will randomly select interventions; otherwise, no interventions will be taken
 dotenv.config();
 
 const ENABLED_INTERVENTIONS = [
