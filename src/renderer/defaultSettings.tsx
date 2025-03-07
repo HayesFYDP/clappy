@@ -16,13 +16,6 @@ const DefaultSettings = [
     options: ['Take Screenshots', 'Listen to user microphone'],
     values: ['Take Screenshots', 'Listen to user microphone'],
   },
-
-  {
-    category: 'Clappy Permissions 2',
-    type: 'checkbox',
-    options: ['Take Screenshots', 'Listen to user microphone'],
-    values: ['Take Screenshots', 'Listen to user microphone'],
-  },
 ];
 
 export default DefaultSettings;

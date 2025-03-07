@@ -6,7 +6,40 @@ const STORAGE_KEY = 'clappy_settings';
 
 const getStoredSettings = () => {
   const stored = localStorage.getItem(STORAGE_KEY);
-  return stored ? JSON.parse(stored) : DefaultSettings;
+  if (!stored) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(DefaultSettings));
+    return DefaultSettings;
+  }
+
+  const storedSettings = JSON.parse(stored);
+
+  const mergedSettings = DefaultSettings.map((defaultSetting) => {
+    const storedSetting = storedSettings.find(
+      (s) =>
+        s.category === defaultSetting.category &&
+        s.type === defaultSetting.type &&
+        (s.options?.toString() === defaultSetting.options?.toString() || JSON.stringify(s.items) === JSON.stringify(defaultSetting.items)),
+    );
+
+    if (!storedSetting) return defaultSetting;
+
+    if (defaultSetting.type === 'list' && typeof defaultSetting.items === 'object') {
+      const mergedItems = {};
+      Object.keys(defaultSetting.items).forEach((key) => {
+        if (storedSetting.items?.hasOwnProperty(key)) {
+          mergedItems[key] = storedSetting.items[key];
+        } else {
+          mergedItems[key] = defaultSetting.items[key];
+        }
+      });
+      return { ...defaultSetting, items: mergedItems };
+    }
+
+    return { ...defaultSetting, value: storedSetting.value, values: storedSetting.values };
+  });
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(mergedSettings));
+  return mergedSettings;
 };
 
 export default function SettingsWindow() {
@@ -25,9 +58,7 @@ export default function SettingsWindow() {
 
   const updateSetting = (category, newValue) => {
     markChanged(category);
-    setTempSettings((prev) =>
-      prev.map((setting) => (setting.category === category ? { ...setting, value: newValue } : setting)),
-    );
+    setTempSettings((prev) => prev.map((setting) => (setting.category === category ? { ...setting, value: newValue } : setting)));
   };
 
   const removeListItem = (category, subCategory, index) => {
@@ -78,9 +109,7 @@ export default function SettingsWindow() {
         setting.category === category && Array.isArray(setting.values)
           ? {
               ...setting,
-              values: setting.values.includes(option)
-                ? setting.values.filter((item) => item !== option)
-                : [...setting.values, option],
+              values: setting.values.includes(option) ? setting.values.filter((item) => item !== option) : [...setting.values, option],
             }
           : setting,
       ),
@@ -104,19 +133,12 @@ export default function SettingsWindow() {
 
       <div className="settings-content">
         {tempSettings.map((setting) => (
-          <div
-            key={setting.category}
-            className={`setting-group ${changedSettings.has(setting.category) ? 'changed' : ''}`}
-          >
+          <div key={setting.category} className={`setting-group ${changedSettings.has(setting.category) ? 'changed' : ''}`}>
             <label className="setting-label">{setting.category}</label>
 
             {/* Dropdown */}
             {setting.type === 'dropdown' && (
-              <select
-                className="setting-dropdown"
-                value={setting.value}
-                onChange={(e) => updateSetting(setting.category, e.target.value)}
-              >
+              <select className="setting-dropdown" value={setting.value} onChange={(e) => updateSetting(setting.category, e.target.value)}>
                 {setting.options.map((option, index) => (
                   <option key={index} value={option}>
                     {option}
@@ -135,10 +157,7 @@ export default function SettingsWindow() {
                         <span className="list-title">{subCategory}</span>
                         {items.map((item, index) => (
                           <div key={index} className="list-item">
-                            <button
-                              className="delete-button"
-                              onClick={() => removeListItem(setting.category, subCategory, index)}
-                            >
+                            <button className="delete-button" onClick={() => removeListItem(setting.category, subCategory, index)}>
                               X
                             </button>
                             {item}

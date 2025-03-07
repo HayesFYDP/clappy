@@ -32,7 +32,7 @@ function Hello() {
         <div id="speech-bubble" />
         <div id="hover-rows">
           <div id="settings" className={hoverClass}>
-            <span>View settings</span>
+            <span onClick={openSettings}>View settings</span>
             <button type="button" id="settings-button" onClick={openSettings}>
               ⚙️
             </button>
