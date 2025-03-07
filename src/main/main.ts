@@ -430,7 +430,8 @@ class Clappy {
     const selectedIntervention = await (async () => {
       // if LLM is enabled, first attempt to select an intervention using LLM
       if (this.openai) {
-        const llmIntervention = await this.selectIntervention(userTask);
+        const llmIntervention = null;
+        // const llmIntervention = await this.selectIntervention(userTask);
         if (llmIntervention) {
           return llmIntervention;
         }
