@@ -370,7 +370,7 @@ export default function ClappySettingsWindow() {
                             key={subCategory}
                             className={`clappy-list-wrapper ${changedItems.has(`${setting.category}-${subCategory}`) ? 'clappy-changed-item' : ''}`}
                           >
-                            <div className="clappy-list-subtitle">{subCategory}</div>
+                            <div className="clappy-setting-label">{subCategory}</div>
                             <div className="clappy-list-container">
                               {Array.isArray(items) && items.length > 0 ? (
                                 items.map((item, index) => (
@@ -429,15 +429,6 @@ export default function ClappySettingsWindow() {
                     )}
                   </div>
                 ))}
-
-              {activeCategory === 'Blacklist' && (
-                <div className="clappy-setting-group">
-                  <div className="clappy-setting-control">
-                    <label className="clappy-setting-label">Clear all blacklist items</label>
-                    <button className="clappy-danger-button">Clear all</button>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>

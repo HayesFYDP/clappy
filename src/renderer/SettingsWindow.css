@@ -2,15 +2,14 @@
   font-family: sans-serif;
   box-sizing: border-box;
 }
-
 .clappy-settings-window {
   display: flex;
   flex-direction: column;
   height: 100vh;
   width: 100%;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+  background-color: #f5f9ed;
 }
-
 .clappy-header-container {
   -webkit-app-region: drag;
   user-select: none;
@@ -20,22 +19,20 @@
   width: 100%;
   padding: 20px 20px 16px 20px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  background: white;
+  background: #e8f0d6;
   z-index: 10;
 }
-
 .clappy-settings-header {
   font-size: 32px;
   font-weight: 600;
-  color: #333;
+  color: #2c3e2e;
 }
-
 .clappy-close-button {
   background: transparent;
   border: none;
   cursor: pointer;
   font-size: 18px;
-  color: #666;
+  color: #2c3e2e;
   width: 32px;
   height: 32px;
   display: flex;
@@ -43,58 +40,48 @@
   justify-content: center;
   border-radius: 4px;
 }
-
 .clappy-close-button:hover {
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(44, 62, 46, 0.1);
 }
-
 .clappy-content-container {
   display: flex;
   flex: 1;
   overflow: hidden;
 }
-
 .clappy-settings-navigation {
   user-select: none;
   width: 200px;
-  background: white;
+  background: #f5f9ed;
   display: flex;
   flex-direction: column;
   height: 100%;
 }
-
 .clappy-nav-items {
   padding: 12px 0;
   overflow-y: auto;
   flex: 1;
 }
-
 .clappy-nav-item {
   margin: 4px 8px;
   padding: 10px 16px;
   font-size: 16px;
-  color: #333;
+  color: #3a523e;
   cursor: pointer;
-  transition: all 0.2s ease;
   border-radius: 8px;
   display: flex;
   align-items: center;
   gap: 10px;
 }
-
 .clappy-nav-item:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: rgba(44, 62, 46, 0.08);
 }
-
 .clappy-nav-item.clappy-active {
-  background-color: rgba(0, 0, 0, 0.08);
+  background-color: #e8f0d6;
   font-weight: 500;
 }
-
 .clappy-changed-nav {
   position: relative;
 }
-
 .clappy-changed-nav::after {
   content: '';
   position: absolute;
@@ -103,14 +90,12 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background-color: #888;
+  background-color: #7a9c69;
   transform: translateY(-50%);
 }
-
 .clappy-changed-item {
   position: relative;
 }
-
 .clappy-changed-item::before {
   content: '';
   position: absolute;
@@ -119,34 +104,30 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background-color: #888;
+  background-color: #7a9c69;
   transform: translateY(-50%);
 }
-
 .clappy-save-container {
   padding: 16px;
   border-top: 1px solid rgba(0, 0, 0, 0.1);
-  background: #f5f5f5;
+  background: #e8f0d6;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-
 .clappy-save-count {
   font-size: 12px;
-  color: #666;
+  color: #3a523e;
   text-align: center;
 }
-
 .clappy-save-indicator {
   font-size: 12px;
-  color: #10a37f;
+  color: #4b7a3c;
   text-align: center;
   font-weight: 500;
 }
-
 .clappy-save-button {
-  background: #10a37f;
+  background: #7a9c69;
   border: none;
   border-radius: 4px;
   padding: 8px 16px;
@@ -154,129 +135,102 @@
   font-size: 16px;
   font-weight: 500;
   color: white;
-  transition: all 0.2s ease;
   width: 100%;
 }
-
 .clappy-save-button:hover {
-  background: #0d8c6e;
+  background: #617b53;
 }
-
 .clappy-settings-container {
-  background: white;
-  color: #333;
+  background: #f5f9ed;
+  color: #3a523e;
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
-
 .clappy-settings-content {
   flex-grow: 1;
   overflow-y: auto;
   padding: 0 24px 24px 24px;
 }
-
 .clappy-setting-group {
   margin-bottom: 20px;
   padding: 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
-
 .clappy-setting-control {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 16px 0;
   padding-left: 16px;
+  border-bottom: 1px solid rgba(44, 62, 46, 0.1) !important;
 }
-
 .clappy-setting-label {
   font-size: 16px;
-  font-weight: 400;
-  color: #333;
+  font-weight: 700;
+  margin-top: 16px;
+  margin-bottom: 16px;
+  color: #3a523e;
 }
-
 .clappy-setting-dropdown {
-  width: 150px;
-  padding: 8px 12px;
-  border-radius: 4px;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  background: white;
+  width: 160px;
+  padding: 10px;
+  border-radius: 6px;
+  text-align: left;
+  border: none;
+  background: #f5f9ed;
   font-size: 16px;
-  color: #333;
-  transition: all 0.2s ease;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 14px;
+  color: #3a523e;
 }
-
 .clappy-setting-dropdown:focus {
   outline: none;
-  border-color: #10a37f;
 }
-
 .clappy-list-section {
   margin: 16px 0;
 }
-
-.clappy-list-subtitle {
-  font-size: 16px;
-  color: #666;
-  margin-bottom: 8px;
-}
-
 .clappy-list-wrapper {
   margin-bottom: 20px;
   position: relative;
   padding-left: 16px;
+  border-bottom: 1px solid rgba(44, 62, 46, 0.1) !important;
+  padding-bottom: 16px;
 }
-
 .clappy-list-container {
-  background: white;
-  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: #f5f9ed;
+  border: 1px solid #b8cc95;
   border-radius: 6px;
   padding: 8px;
   display: flex;
   flex-direction: column;
   min-height: 100px;
 }
-
 .clappy-list-item {
   display: flex;
   align-items: center;
   font-size: 16px;
   gap: 8px;
   padding: 10px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+  border-bottom: 1px solid rgba(44, 62, 46, 0.07);
 }
-
 .clappy-list-item:last-child {
   border-bottom: none;
 }
-
 .clappy-delete-button {
-  background: #f0f0f0;
+  background: #e8f0d6;
   border: none;
   border-radius: 4px;
   height: 24px;
   width: 24px;
   font-size: 16px;
-  color: #666;
+  color: #3a523e;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
 }
-
 .clappy-delete-button:hover {
-  background: #e0e0e0;
-  color: #333;
+  background: #e8f0d6;
+  color: #2c3e2e;
 }
-
 .clappy-list-add {
   display: flex;
   align-items: center;
@@ -284,36 +238,31 @@
   gap: 8px;
   width: 100%;
 }
-
 .clappy-list-input {
   flex-grow: 1;
   padding: 10px 12px;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
+  border: 1px solid #b8cc95;
+  border-radius: 6px;
   font-size: 16px;
-  background: white;
-  transition: all 0.2s ease;
+  background: #f5f9ed;
 }
-
 .clappy-list-input:focus {
   outline: none;
-  border-color: #10a37f;
+  border-color: #7a9c69;
+  box-shadow: 0 0 0 2px rgba(122, 156, 105, 0.2);
 }
-
 .clappy-add-button {
   cursor: pointer;
-  background: #10a37f;
+  background: #7a9c69;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   padding: 10px 14px;
   font-size: 16px;
   font-weight: 500;
   color: white;
-  transition: all 0.2s ease;
 }
-
 .clappy-add-button:hover {
-  background: #0d8c6e;
+  background: #617b53;
 }
 .clappy-toggle {
   position: relative;
@@ -321,13 +270,11 @@
   width: 48px;
   height: 24px;
 }
-
 .clappy-toggle input {
   opacity: 0;
   width: 0;
   height: 0;
 }
-
 .clappy-toggle-slider {
   position: absolute;
   cursor: pointer;
@@ -335,11 +282,11 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #ccc;
-  transition: 0.4s;
+  background-color: #b8cc95;
+  transition: 0.2s;
   border-radius: 34px;
+  opacity: 0.5;
 }
-
 .clappy-toggle-slider:before {
   position: absolute;
   content: '';
@@ -348,79 +295,65 @@
   left: 3px;
   bottom: 3px;
   background-color: white;
-  transition: 0.4s;
+  transition: 0.2s;
   border-radius: 50%;
 }
-
 input:checked + .clappy-toggle-slider {
-  background-color: #10a37f;
+  opacity: 1;
+  background-color: #7a9c69;
 }
-
 input:checked + .clappy-toggle-slider:before {
   transform: translateX(24px);
 }
-
 .clappy-manage-button {
-  background: white;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
+  background: #f5f9ed;
+  border: 1px solid #b8cc95;
+  border-radius: 6px;
   padding: 6px 12px;
   cursor: pointer;
   font-size: 16px;
-  color: #333;
-  transition: all 0.2s ease;
+  color: #3a523e;
 }
-
 .clappy-manage-button:hover {
-  background: #f5f5f5;
+  background: #e8f0d6;
 }
-
 .clappy-danger-button {
-  background: #ff4d4f;
+  background: #e05252;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   padding: 6px 12px;
   cursor: pointer;
   font-size: 16px;
   color: white;
-  transition: all 0.2s ease;
 }
-
 .clappy-danger-button:hover {
-  background: #cf1322;
+  background: #c23434;
 }
-
 .clappy-icon {
-  color: #666;
+  color: #3a523e;
   width: 18px;
   height: 18px;
 }
-
 .clappy-list-empty {
   font-style: italic;
-  color: #999;
+  color: #7c8d7e;
   padding: 12px;
   text-align: center;
 }
-
 ::-webkit-scrollbar {
   width: 8px;
 }
-
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(44, 62, 46, 0.05);
   border-radius: 3px;
 }
-
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(44, 62, 46, 0.15);
   border-radius: 6px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(44, 62, 46, 0.25);
 }
-
 html,
 body {
   overflow: auto;
@@ -430,7 +363,6 @@ body {
   width: 100%;
   scrollbar-width: none;
 }
-
 button {
   -webkit-app-region: no-drag !important;
 }
