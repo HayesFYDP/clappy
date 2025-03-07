@@ -1,5 +1,5 @@
 import { BrowserWindow } from 'electron';
-import { InterventionHandler, Interventions } from './types';
+import { InterventionHandler, Interventions, InterventionPayloadMap, PopupClappyPayload } from './types';
 import { ClappyExpression } from '../types';
 
 export default class PopupClappyInterventionHandler implements InterventionHandler {
@@ -10,10 +10,10 @@ export default class PopupClappyInterventionHandler implements InterventionHandl
     this.mainWindow = mainWindow;
   }
 
-  async handleIntervention(intervention: Interventions): Promise<void> {
+  async handleIntervention<T extends Interventions>(intervention: T, payload?: InterventionPayloadMap[T]): Promise<void> {
     switch (intervention) {
       case Interventions.POPUP_CLAPPY:
-        await this.popupClappyReasoning();
+        await this.popupClappy(payload as PopupClappyPayload);
         break;
       default:
         throw new Error(`PopupClappyInterventionHandler received unsupported intervention: ${intervention}`);
@@ -21,16 +21,20 @@ export default class PopupClappyInterventionHandler implements InterventionHandl
   }
 
   // make Clappy appear on the right side of a user's screen, using an LLM to determine Clappy's expression
-  async popupClappyReasoning() {
-    // TODO: make this configurable, use LLM to determine expression and possibly text
-    const expression = ClappyExpression.Enraged;
-    const popupText = 'GET BACK TO WORK';
+  async popupClappy(payload?: PopupClappyPayload) {
+    const timeoutMs = payload?.timeoutMs ?? 5000;
 
-    await this.popupClappy(expression, popupText, 5000);
+    if (payload?.expression && payload?.message) {
+      const { expression, message } = payload;
+      return this.popupClappySpecified(expression, message, timeoutMs);
+    }
+
+    // TODO: otherwise, use the LLM to determine Clappy's expression
+    return undefined;
   }
 
   // make Clappy appear on the right side of a user's screen with a specific expression and text
-  async popupClappy(expression: ClappyExpression, text: string, timeoutMs = 5000) {
+  async popupClappySpecified(expression: ClappyExpression, text: string, timeoutMs = 5000) {
     this.mainWindow.webContents.send('open-popup', expression, text);
 
     setTimeout(() => {

@@ -1,4 +1,4 @@
-import { InterventionHandler, Interventions } from './types';
+import { InterventionHandler, Interventions, InterventionPayloadMap, MinimizeWindowPayload, ShakeWindowPayload, FocusWindowPayload } from './types';
 import WindowManager from './windowManager';
 
 export default class WindowInterventionHandler implements InterventionHandler {
@@ -14,31 +14,42 @@ export default class WindowInterventionHandler implements InterventionHandler {
     this.windowManager = new WindowManager();
   }
 
-  async handleIntervention(intervention: Interventions): Promise<void> {
+  async handleIntervention<T extends Interventions>(intervention: T, payload?: InterventionPayloadMap[T]): Promise<void> {
     switch (intervention) {
       case Interventions.MINIMIZE_WINDOW:
-        await this.minimizeActiveWindow();
+        await this.minimizeActiveWindow(payload as MinimizeWindowPayload);
         break;
       case Interventions.SHAKE_WINDOW:
-        await this.shakeActiveWindow();
+        await this.shakeActiveWindow(payload as ShakeWindowPayload);
         break;
       case Interventions.FOCUS_WINDOW:
-        await this.focusWindow();
+        await this.focusWindow(payload as FocusWindowPayload);
         break;
       default:
         throw new Error(`WindowInterventionHandler received unsupported intervention: ${intervention}`);
     }
   }
 
-  async minimizeActiveWindow() {
-    return this.windowManager.minimizeWindow();
+  async minimizeActiveWindow(payload?: MinimizeWindowPayload) {
+    const handle = payload?.windowHandle;
+
+    return this.windowManager.minimizeWindow(handle);
   }
 
-  async shakeActiveWindow() {
-    return this.windowManager.shakeWindow();
+  async shakeActiveWindow(payload?: ShakeWindowPayload) {
+    const handle = payload?.windowHandle;
+
+    return this.windowManager.shakeWindow(handle);
   }
 
-  async focusWindow() {
-    // todo: list all, ask LLM what window should be focused
+  async focusWindow(payload?: FocusWindowPayload) {
+    const handle = payload?.windowHandle;
+
+    if (handle) {
+      return this.windowManager.focusWindow(handle);
+    }
+
+    // todo: list all windows, ask LLM what window should be focused
+    return undefined;
   }
 }
