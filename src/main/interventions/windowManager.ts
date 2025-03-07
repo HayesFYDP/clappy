@@ -59,6 +59,7 @@ class WindowManager {
     return this.sendIPC<ListWindowsRequest>(req);
   }
 
+  // Focus the window with the given handle. Handles can be obtained from the listWindows method.
   async focusWindow(handle: number): Promise<IPCResponseType<FocusWindowRequest>> {
     const req: FocusWindowRequest = {
       type: WindowIPCType.FOCUS_WINDOW,
@@ -68,6 +69,7 @@ class WindowManager {
     return this.sendIPC<FocusWindowRequest>(req);
   }
 
+  // Minimize the window with the given handle. If no handle is provided, minimize the active window.
   async minimizeWindow(handle?: number): Promise<IPCResponseType<MinimizeWindowRequest>> {
     const req: MinimizeWindowRequest = {
       type: WindowIPCType.MINIMIZE_WINDOW,
@@ -77,6 +79,7 @@ class WindowManager {
     return this.sendIPC<MinimizeWindowRequest>(req);
   }
 
+  // Shake the window with the given handle. If no handle is provided, shake the active window.
   async shakeWindow(handle?: number): Promise<IPCResponseType<ShakeWindowRequest>> {
     const req: ShakeWindowRequest = {
       type: WindowIPCType.SHAKE_WINDOW,

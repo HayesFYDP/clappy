@@ -15,7 +15,8 @@ module.exports = {
     '@typescript-eslint/no-unused-vars': 'error',
     'prettier/prettier': 0, // exclude prettier from eslint because it distracts from actual problems
     'lines-between-class-members': 'off', // this rule is kinda silly and makes things harder to read
-    'class-methods-use-this': 'off', // this rule is also annoying
+    'class-methods-use-this': 'off', // this rule is also annoying'
+    'no-console': 'off', // we want to allow console.log
   },
   parserOptions: {
     ecmaVersion: 2022,
