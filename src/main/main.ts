@@ -19,15 +19,25 @@ import os from 'os';
 import path from 'path';
 import { ClappyExpression, ProductivityAnalysis } from './types';
 import { resolveHtmlPath } from './util';
+import { Interventions, InterventionHandler, INTERVENTION_HANDLERS, createInterventionHandler } from './interventions/types';
 
 // TODO: move this to env
 const WHISPER_PATH = '/Users/yashmulki/school/se490/clappy/whisper.cpp';
 const IS_DEVELOPMENT = true; // TODO: Set this to false when deploying or take as an arg
 dotenv.config();
+
+const ENABLED_INTERVENTIONS = [
+  Interventions.POPUP_CLAPPY,
+  Interventions.MINIMIZE_WINDOW,
+  Interventions.SHAKE_WINDOW,
+  Interventions.FOCUS_WINDOW,
+]
+
 class Clappy {
   prisma: PrismaClient;
   openai: OpenAI | null;
   mainWindow: BrowserWindow | null = null;
+  interventionHandlers: { [key in Interventions]: InterventionHandler } = {};
 
   constructor() {
     // Initialize Prisma client for database access
@@ -122,6 +132,17 @@ class Clappy {
           // dock icon is clicked and there are no other windows open.
           if (this.mainWindow === null) this.createWindow();
         });
+
+        // Initialize the intervention handlers after the main window is created
+        INTERVENTION_HANDLERS.forEach((HandlerType) => {
+          const handler = createInterventionHandler(HandlerType, this.getMainWindow, this.openai);
+          handler.supportedInterventions.forEach((intervention) => {
+            if (ENABLED_INTERVENTIONS.includes(intervention)) {
+              this.interventionHandlers[intervention] = handler;
+            }
+          });
+        });
+
       })
       .catch(console.log);
   }
@@ -186,6 +207,10 @@ class Clappy {
     });
 
     this.mainWindow = mainWindow;
+  }
+
+  getMainWindow() {
+    return this.mainWindow;
   }
 
   getClappyTempPath(): string {
@@ -306,23 +331,6 @@ class Clappy {
     return outputJson;
   }
 
-  /* === Intervention Options === */
-  async popupClappyIntervention(expression: ClappyExpression, popupText: string | null, closePopupIn5Seconds: boolean) {
-    if (this.mainWindow) {
-      this.mainWindow.webContents.send('open-popup', expression, popupText);
-
-      if (closePopupIn5Seconds) {
-        setTimeout(() => {
-          this.mainWindow?.webContents.send('close-popup');
-        }, 5000);
-      }
-    }
-  }
-
-  async minimizeWindowIntervention() {
-    // TODO: Implement this
-  }
-
   async selectIntervention(userTask: string, productive: boolean) {
     if (productive) {
       console.log('User is currently productive, skipping intervention');
@@ -417,17 +425,6 @@ class Clappy {
           intervention,
         },
       });
-    }
-
-    switch (intervention) {
-      case 'NOTIFY':
-        this.popupClappyIntervention(ClappyExpression.Enraged, 'GET BACK TO WORK', true);
-        break;
-      case 'MINIMIZE':
-        this.minimizeWindowIntervention();
-        break;
-      default:
-        console.log(`Invalid/unknown intervention selected: "${intervention}"`);
     }
   }
 

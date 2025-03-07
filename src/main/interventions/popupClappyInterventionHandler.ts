@@ -4,10 +4,11 @@ import { ClappyExpression } from '../types';
 
 export default class PopupClappyInterventionHandler implements InterventionHandler {
   supportedInterventions = [Interventions.POPUP_CLAPPY] as const;
-  mainWindow: BrowserWindow;
 
-  constructor(mainWindow: BrowserWindow) {
-    this.mainWindow = mainWindow;
+  getMainWindow: () => BrowserWindow | null;
+
+  constructor(getMainWindow: () => BrowserWindow | null) {
+    this.getMainWindow = getMainWindow;
   }
 
   async handleIntervention<T extends Interventions>(intervention: T, payload?: InterventionPayloadMap[T]): Promise<void> {
@@ -35,10 +36,16 @@ export default class PopupClappyInterventionHandler implements InterventionHandl
 
   // make Clappy appear on the right side of a user's screen with a specific expression and text
   async popupClappySpecified(expression: ClappyExpression, text: string, timeoutMs = 5000) {
-    this.mainWindow.webContents.send('open-popup', expression, text);
+    const mainWindow = this.getMainWindow();
+    if (!mainWindow) {
+      console.error('Main window is not available, cannot popup clappy');
+      return;
+    }
+
+    mainWindow.webContents.send('open-popup', expression, text);
 
     setTimeout(() => {
-      this.mainWindow?.webContents.send('close-popup');
+      mainWindow.webContents.send('close-popup');
     }, timeoutMs);
   }
 }

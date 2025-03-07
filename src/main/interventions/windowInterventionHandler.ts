@@ -1,3 +1,5 @@
+import { BrowserWindow } from "electron";
+import OpenAI from 'openai';
 import {
   InterventionHandler,
   Interventions,
@@ -11,10 +13,14 @@ import WindowManager from './windowManager';
 export default class WindowInterventionHandler implements InterventionHandler {
   supportedInterventions = [Interventions.MINIMIZE_WINDOW, Interventions.SHAKE_WINDOW, Interventions.FOCUS_WINDOW] as const;
 
+  getMainWindow: () => BrowserWindow | null;
+  openai: OpenAI | null;
   windowManager: WindowManager;
 
-  constructor() {
+  constructor(getMainWindow: () => BrowserWindow | null, openai: OpenAI | null) {
     this.windowManager = new WindowManager();
+    this.getMainWindow = getMainWindow;
+    this.openai = openai;
   }
 
   async handleIntervention<T extends Interventions>(intervention: T, payload?: InterventionPayloadMap[T]): Promise<void> {
