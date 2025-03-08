@@ -27,7 +27,7 @@ class WindowManager {
         this.pythonApp.removeListener('message', () => {});
         this.pythonApp.removeListener('stderr', () => {});
         reject(new Error('Python helper took too long to respond. It may be frozen.'));
-      }, 2000);
+      }, 100000);
 
       // if the Python script raises an exception, we should reject the promise
       this.pythonApp.once('stderr', (err: Error) => {

@@ -4,7 +4,6 @@ import time
 from dragonfly import Window
 from dragonfly.windows.rectangle import Rectangle
 from dragonfly.windows.darwin_window import DarwinWindow
-from dragonfly.windows.win32_window import Win32Window
 from pydantic import BaseModel
 from enum import Enum
 
@@ -20,7 +19,7 @@ class WindowInfo(BaseModel):
 
 def list_windows() -> list[WindowInfo]:
     windows = get_all_important_windows()
-    active_window: DarwinWindow | Win32Window = Window.get_foreground()
+    active_window: DarwinWindow = DarwinWindow.get_foreground()
 
     window_info: list[WindowInfo] = []
     for window in windows:
