@@ -1,10 +1,7 @@
 import sys, json
-from dragonfly import Window
-from dragonfly.windows.win32_window import Win32Window
 from pydantic.dataclasses import dataclass
 from enum import Enum
 from logging import getLogger, DEBUG, FileHandler
-from sys import stdout
 from window_controller import focus_windows, list_windows, minimize_window, shake_window
 
 class IPCType(str, Enum):

@@ -1,12 +1,8 @@
 import random
-import sys, json
 import time
-from dragonfly import Window
 from dragonfly.windows.rectangle import Rectangle
-from dragonfly.windows.darwin_window import DarwinWindow
 from dragonfly.windows.win32_window import Win32Window
 from pydantic import BaseModel
-from enum import Enum
 
 from window_util import get_all_important_windows
 
@@ -20,7 +16,7 @@ class WindowInfo(BaseModel):
 
 def list_windows() -> list[WindowInfo]:
     windows = get_all_important_windows()
-    active_window: DarwinWindow | Win32Window = Window.get_foreground()
+    active_window: Win32Window = Win32Window.get_foreground()
 
     window_info: list[WindowInfo] = []
     for window in windows:
@@ -48,7 +44,7 @@ def focus_windows(handle: int) -> bool:
 
 def minimize_window(handle: int | None) -> bool:
     if handle is None:
-        active_window = Window.get_foreground()
+        active_window = Win32Window.get_foreground()
         if active_window is not None:
             active_window.minimize()
             return True
@@ -64,7 +60,7 @@ def minimize_window(handle: int | None) -> bool:
 def shake_window(handle: int | None) -> bool:
     window = None
     if handle is None:
-        window = Window.get_foreground()
+        window = Win32Window.get_foreground()
     else:
         for w in get_all_important_windows():
             if w.handle == handle:
