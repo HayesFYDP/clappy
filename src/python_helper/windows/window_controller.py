@@ -11,7 +11,7 @@ class WindowInfo(BaseModel):
     title: str
     executablePath: str
     isFocused: bool = False
-    handle: int
+    id: int
 
 
 def list_windows() -> list[WindowInfo]:
@@ -20,50 +20,50 @@ def list_windows() -> list[WindowInfo]:
 
     window_info: list[WindowInfo] = []
     for window in windows:
-        is_focused = active_window is not None and active_window.handle == window.handle
+        is_focused = active_window is not None and active_window.id == window.id
         window_info.append(
             WindowInfo(
                 title=window.title,
                 executablePath=window.executable,
                 isFocused=is_focused,
-                handle=window.handle,
+                id=window.id,
             )
         )
 
     return window_info
 
 
-def focus_windows(handle: int) -> bool:
+def focus_windows(id: int) -> bool:
     for window in get_all_important_windows():
-        if window.handle == handle:
+        if window.id == id:
             window.set_foreground()
             return True
 
     return False
 
 
-def minimize_window(handle: int | None) -> bool:
-    if handle is None:
+def minimize_window(id: int | None) -> bool:
+    if id is None:
         active_window = Win32Window.get_foreground()
         if active_window is not None:
             active_window.minimize()
             return True
     else:
         for window in get_all_important_windows():
-            if window.handle == handle:
+            if window.id == id:
                 window.minimize()
                 return True
 
     return False
 
 
-def shake_window(handle: int | None) -> bool:
+def shake_window(id: int | None) -> bool:
     window = None
-    if handle is None:
+    if id is None:
         window = Win32Window.get_foreground()
     else:
         for w in get_all_important_windows():
-            if w.handle == handle:
+            if w.id == id:
                 window = w
                 break
 

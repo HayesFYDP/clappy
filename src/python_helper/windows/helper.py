@@ -34,15 +34,15 @@ for line in sys.stdin:
             print(json.dumps(dict(windows=json_windows)))
 
         case IPCType.MINIMIZE_WINDOW:
-            success = minimize_window(ipc_req.payload.get("handle", None))
+            success = minimize_window(ipc_req.payload.get("id", None))
             print(json.dumps(dict(success=success)))
 
         case IPCType.SHAKE_WINDOW:
-            success = shake_window(ipc_req.payload.get("handle", None))
+            success = shake_window(ipc_req.payload.get("id", None))
             print(json.dumps(dict(success=success)))
 
         case IPCType.FOCUS_WINDOW:
-            success = focus_windows(ipc_req.payload["handle"])
+            success = focus_windows(ipc_req.payload["id"])
             print(json.dumps(dict(success=success)))
 
         case _:

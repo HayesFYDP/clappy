@@ -9,22 +9,23 @@ async function run() {
 
   const someOtherWindow = allWindows.windows.find((w) => w.isFocused === false);
   if (someOtherWindow) {
-    await wm.focusWindow(someOtherWindow.handle);
+    // ignore type error for testinig
+    await wm.focusWindow(someOtherWindow.id);
     await new Promise((resolve) => {
       setTimeout(resolve, 2000);
     });
 
-    await wm.minimizeWindow(someOtherWindow.handle);
+    await wm.minimizeWindow(someOtherWindow.id);
     await new Promise((resolve) => {
       setTimeout(resolve, 2000);
     });
 
-    await wm.focusWindow(someOtherWindow.handle);
+    await wm.focusWindow(someOtherWindow.id);
     await new Promise((resolve) => {
       setTimeout(resolve, 2000);
     });
 
-    await wm.shakeWindow(someOtherWindow.handle);
+    await wm.shakeWindow(someOtherWindow.id);
   }
 }
 
