@@ -1,6 +1,5 @@
 import sys, json
 from dragonfly import Window
-from dragonfly.windows.darwin_window import DarwinWindow
 from dragonfly.windows.win32_window import Win32Window
 from pydantic.dataclasses import dataclass
 from enum import Enum

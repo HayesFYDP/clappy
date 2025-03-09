@@ -1,3 +1,4 @@
+import { platform } from 'node:process';
 import { PythonShell } from 'python-shell';
 import {
   FocusWindowRequest,
@@ -9,15 +10,29 @@ import {
   WindowIPCType,
 } from './windowTypes';
 
+
 class WindowManager {
   private pythonApp: PythonShell;
 
   constructor() {
-    this.pythonApp = new PythonShell('helper.py', {
-      scriptPath: 'src/python_helper',
-      mode: 'json',
-      pythonOptions: ['-u'], // get print results in real-time
-    });
+    switch (platform) {
+      case 'win32':
+        this.pythonApp = new PythonShell('helper.py', {
+          scriptPath: 'src/python_helper/windows',
+          mode: 'json',
+          pythonOptions: ['-u'], // get print results in real-time
+        });
+        break;
+      case 'darwin':
+        this.pythonApp = new PythonShell('helper.py', {
+          scriptPath: 'src/python_helper/darwin',
+          mode: 'json',
+          pythonOptions: ['-u'], // get print results in real-time
+        });
+        break;
+      default:
+        throw new Error(`"${platform}" is an unsupported platform (only win32 and darwin are supported)`);
+    }
   }
 
   private async sendIPC<T extends WindowIPCRequests>(req: WindowIPCRequests): Promise<IPCResponseType<T>> {
