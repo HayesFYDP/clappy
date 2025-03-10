@@ -104,6 +104,18 @@ class Clappy {
       });
     });
 
+    ipcMain.handle('get-settings', () => {
+      return this.prisma.settings.findFirst();
+    })
+
+    ipcMain.handle('set-settings', (event, settings) => {
+      return this.prisma.settings.upsert({
+        where: { id: 1 }, // only one row in the settings table
+        update: settings,
+        create: settings,
+      });
+    })
+
     app.on('will-quit', () => {
       // Unregister all shortcuts.
       globalShortcut.unregisterAll();

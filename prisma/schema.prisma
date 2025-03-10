@@ -23,3 +23,12 @@ model InterventionRecord {
   date         DateTime
   intervention String
 }
+
+model Settings {
+  id           Int      @id @default(autoincrement())
+  communicationIsContinuousInput Boolean
+  blacklistPrograms String
+  blacklistSites String
+  permissionScreenshot Boolean
+  permissionMicrophone Boolean
+}

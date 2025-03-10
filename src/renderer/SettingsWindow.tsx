@@ -2,44 +2,43 @@ import { useState, useEffect, useRef } from 'react';
 import './SettingsWindow.css';
 import DefaultSettings from './DefaultSettings';
 
-const STORAGE_KEY = 'clappy_settings';
+const dbListToString = (dbList: string[]) => {
+  return dbList.join(', ');
+}
 
-const getStoredSettings = () => {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (!stored) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(DefaultSettings));
-    return DefaultSettings;
-  }
+const dbStringToList = (dbString: string) => {
+  return dbString.split(',').map((item) => item.trim());
+}
 
-  const storedSettings = JSON.parse(stored);
-
-  const mergedSettings = DefaultSettings.map((defaultSetting) => {
-    const storedSetting = storedSettings.find(
-      (s) =>
-        s.category === defaultSetting.category &&
-        s.type === defaultSetting.type &&
-        (s.options?.toString() === defaultSetting.options?.toString() || JSON.stringify(s.items) === JSON.stringify(defaultSetting.items)),
-    );
-
-    if (!storedSetting) return defaultSetting;
-
-    if (defaultSetting.type === 'list' && typeof defaultSetting.items === 'object') {
-      const mergedItems = {};
-      Object.keys(defaultSetting.items).forEach((key) => {
-        if (storedSetting.items?.hasOwnProperty(key)) {
-          mergedItems[key] = storedSetting.items[key];
-        } else {
-          mergedItems[key] = defaultSetting.items[key];
-        }
-      });
-      return { ...defaultSetting, items: mergedItems };
-    }
-
-    return { ...defaultSetting, value: storedSetting.value, values: storedSetting.values };
-  });
-
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(mergedSettings));
-  return mergedSettings;
+const getStoredSettings = async () => {
+  const settings: {
+      id: number;
+      communicationIsContinuousInput: boolean;
+      blacklistPrograms: string;
+      blacklistSites: string;
+      permissionScreenshot: boolean;
+      permissionMicrophone: boolean;
+  } | null = await window.electron.ipcRenderer.invoke('get-settings');
+  if (!settings) return DefaultSettings;
+  return [
+    {
+      category: 'Communication',
+      type: 'dropdown',
+      options: ['continuous input', 'push to talk'],
+      value: settings!!.communicationIsContinuousInput ? 'continuous input' : 'push to talk',
+    },
+    {
+      category: 'Blacklist',
+      type: 'list',
+      items: { Programs: dbStringToList(settings!!.blacklistPrograms), Sites: dbStringToList(settings!!.blacklistSites) },
+    },
+    {
+      category: 'Permissions',
+      type: 'checkbox',
+      options: ['Take Screenshots', 'Listen to user microphone'],
+      values: [settings!!.permissionScreenshot ? 'Take Screenshots' : '', settings!!.permissionMicrophone ? 'Listen to user microphone' : ''],
+    },
+  ];
 };
 
 const GeneralIcon = () => (
@@ -119,7 +118,7 @@ const getCategoryIcon = (category) => {
 };
 
 export default function ClappySettingsWindow() {
-  const [settings, setSettings] = useState(getStoredSettings());
+  const [settings, setSettings] = useState(DefaultSettings);
   const [tempSettings, setTempSettings] = useState(JSON.parse(JSON.stringify(settings)));
   const [originalTempSettings, setOriginalTempSettings] = useState(JSON.parse(JSON.stringify(settings)));
   const [changedSettings, setChangedSettings] = useState(new Set());
@@ -131,6 +130,19 @@ export default function ClappySettingsWindow() {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const headerRef = useRef(null);
 
+  // Load settings
+  useEffect(() => {
+    getStoredSettings().then((storedSettings) => {
+      setSettings(storedSettings);
+      setTempSettings(JSON.parse(JSON.stringify(storedSettings)));
+      setOriginalTempSettings(JSON.parse(JSON.stringify(storedSettings)));
+      return null;
+    })
+    .catch((error) => {
+      console.error('Error loading settings:', error);
+    });
+  }, []);
+
   useEffect(() => {
     if (settings.length > 0 && !activeCategory) {
       setActiveCategory(settings[0].category);
@@ -138,7 +150,26 @@ export default function ClappySettingsWindow() {
   }, [settings]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    let newSettings = {
+      id: 1,
+      communicationIsContinuousInput: true,
+      blacklistPrograms: "",
+      blacklistSites: "",
+      permissionScreenshot: true,
+      permissionMicrophone: true,
+    };
+    tempSettings.forEach((setting) => {
+      if (setting.category === 'Communication') {
+        newSettings.communicationIsContinuousInput = setting.value === 'continuous input';
+      } else if (setting.category === 'Blacklist') {
+        newSettings.blacklistPrograms = dbListToString(setting.items.Programs);
+        newSettings.blacklistSites = dbListToString(setting.items.Sites);
+      } else if (setting.category === 'Permissions') {
+        newSettings.permissionScreenshot = setting.values.includes('Take Screenshots');
+        newSettings.permissionMicrophone = setting.values.includes('Listen to user microphone');
+      }
+    });
+    window.electron.ipcRenderer.invoke('set-settings', newSettings);
   }, [settings]);
 
   useEffect(() => {

@@ -9,12 +9,17 @@ export type Channels =
   | 'set-ignore-mouse-events'
   | 'add-mouse-event-listeners'
   | 'open-settings-window'
-  | 'open-analytics-window';
+  | 'open-analytics-window'
+  | 'get-settings'
+  | 'set-settings';
 
 const electronHandler = {
   ipcRenderer: {
     sendMessage(channel: Channels, ...args: unknown[]) {
       ipcRenderer.send(channel, ...args);
+    },
+    invoke(channel: Channels, ...args: unknown[]) {
+      return ipcRenderer.invoke(channel, ...args);
     },
     on(channel: Channels, func: (...args: unknown[]) => void) {
       const subscription = (_event: IpcRendererEvent, ...args: unknown[]) => func(...args);
