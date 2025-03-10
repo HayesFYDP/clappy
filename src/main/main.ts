@@ -38,6 +38,8 @@ class Clappy {
   prisma: PrismaClient;
   openai: OpenAI | null;
   mainWindow: BrowserWindow | null = null;
+  settingsWindow: BrowserWindow | null = null;
+  analyticsWindow: BrowserWindow | null = null;
   interventionHandlers: { [key in Interventions]?: InterventionHandler } = {};
 
   constructor() {
@@ -51,6 +53,10 @@ class Clappy {
     });
 
     ipcMain.on('open-settings-window', () => {
+      if (this.settingsWindow) {
+        this.settingsWindow.focus();
+        return;
+      }
       const settingsWindow = new BrowserWindow({
         width: 650,
         height: 600,
@@ -76,9 +82,18 @@ class Clappy {
       settingsWindow.once('ready-to-show', () => {
         settingsWindow.show();
       });
+
+      this.settingsWindow = settingsWindow;
+      settingsWindow.on('closed', () => {
+        this.settingsWindow = null;
+      });
     });
 
     ipcMain.on('open-analytics-window', () => {
+      if (this.analyticsWindow) {
+        this.analyticsWindow.focus();
+        return;
+      }
       const analyticsWindow = new BrowserWindow({
         width: 800,
         height: 600,
@@ -101,6 +116,11 @@ class Clappy {
 
       analyticsWindow.once('ready-to-show', () => {
         analyticsWindow.show();
+      });
+
+      this.analyticsWindow = analyticsWindow;
+      analyticsWindow.on('closed', () => {
+        this.analyticsWindow = null;
       });
     });
 
