@@ -19,7 +19,8 @@ import os from 'os';
 import path from 'path';
 import { ProductivityAnalysis } from './types';
 import { resolveHtmlPath } from './util';
-import { Interventions, InterventionHandler, INTERVENTION_HANDLERS, createInterventionHandler } from './interventions/types';
+import { Interventions, InterventionHandler, createInterventionHandler, InterventionDescriptions } from './interventions/types';
+import INTERVENTION_HANDLERS from './interventions/interventionHandlers';
 
 // TODO: move this to env
 const WHISPER_PATH = '/Users/yashmulki/school/se490/clappy/whisper.cpp';
@@ -402,6 +403,12 @@ class Clappy {
       ? `The last intervention taken was ${DateTime.fromJSDate(lastIntervention.date).toRelative()} with action ${lastIntervention.intervention}.`
       : 'No interventions were taken in the last 10 minutes.';
 
+    const interventionOptions = Object.keys(InterventionDescriptions).map((intervention) => {
+      return `${intervention}: ${InterventionDescriptions[intervention as keyof typeof InterventionDescriptions]}`;
+    }).join('\n');
+
+    const llmChoices = Object.values(Interventions).join('/');
+
     const prompt = `You are a helpful productivity assistant that is observing the user's computer screen. You are given that the user is currently trying to accomplish: <${userTask}>.
       Do not ask questions about this objective, simply consider it in light of the productivity records and justification.
       You are asked to select an intervention to help the user become more productive. You are given the last 5 productivity records, which are as follows:
@@ -410,13 +417,12 @@ class Clappy {
       Your goal is to select an intervention that will help the user become more productive. Choose the most fitting intervention based on the productivity history and previous interventions taken.
 
       Your options, ordered from most gentle to most extreme are:
-      NOTIFY - Display a notification to the user to remind them to stay on task
-      MINIMIZE - Minimize the current window to reduce distractions
+      ${interventionOptions}
 
       ${lastInterventionString}
 
-      Enclosed in <OUTPUT> </OUTPUT> tags, you will output a JSON response that conforms the following schema:
-      { intervention: "<NOTIFY/MINIMIZE>" }
+      Only select one intervention. Enclosed in <OUTPUT> </OUTPUT> tags, you will output a JSON response that conforms the following schema:
+      { intervention: "<${llmChoices}>" }
     `;
 
     const response = await this.openai?.chat.completions.create({
@@ -447,6 +453,7 @@ class Clappy {
     console.log('LLM selected intervention: ', intervention);
 
     // if interventions isn't in the Interventions enums, return null
+    // TODO: figure out if we want to re-try picking
     if (!Object.values(Interventions).includes(intervention)) {
       return null;
     }
@@ -462,8 +469,7 @@ class Clappy {
     const selectedIntervention = await (async () => {
       // if LLM is enabled, first attempt to select an intervention using LLM
       if (this.openai) {
-        const llmIntervention = null;
-        // const llmIntervention = await this.selectIntervention(userTask);
+        const llmIntervention = await this.selectIntervention(userTask);
         if (llmIntervention) {
           return llmIntervention;
         }
