@@ -12,7 +12,25 @@
 
 .navLinks {
   margin-bottom: 20px;
+  width: 50%;
+  display: flex;
+  justify-content: space-between;
 }
+
+.navLink {
+  padding: 0px 15px;
+  cursor: pointer;
+}
+
+.navLink:hover, .navLink-active {
+  text-decoration: underline;
+}
+
+.navLink:first-child {
+  padding-left: 0px;
+}
+
+.navLink:not(:last-child) { border-right: 1px solid green; }
 
 .link {
   color: #3F5F13;
@@ -139,4 +157,10 @@
 label {
   display: flex;
   align-items: center;
+}
+
+.analytics-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
 }
