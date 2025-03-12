@@ -3,7 +3,7 @@
   padding: 10px;
   max-width: 700px;
   margin: 0 auto;
-  color: #3F5F13;
+  color: #536C3F;
 }
 
 .title {
@@ -33,7 +33,7 @@
 .navLink:not(:last-child) { border-right: 1px solid green; }
 
 .link {
-  color: #3F5F13;
+  color: #536C3F;
   text-decoration: underline;
   margin: 0 5px;
 }
@@ -45,8 +45,8 @@
   margin-bottom: 20px;
   padding: 10px;
   border-radius: 10px;
-  background-color: #EEFAB8;
-  border: 1px solid #3F5F13;
+  background-color: #D7E999;
+  border: 1px solid #536C3F;
 }
 
 .label {
@@ -151,7 +151,7 @@
 
 .statCheckbox {
   margin-right: 10px;
-  background-color: #3F5F13;
+  background-color: #536C3F;
 }
 
 label {

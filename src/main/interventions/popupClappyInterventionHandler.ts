@@ -1,6 +1,6 @@
 import { BrowserWindow } from 'electron';
-import { InterventionHandler, Interventions, InterventionPayloadMap, PopupClappyPayload } from './types';
 import { ClappyExpression } from '../types';
+import { InterventionHandler, InterventionPayloadMap, Interventions, PopupClappyPayload } from './types';
 
 export default class PopupClappyInterventionHandler implements InterventionHandler {
   supportedInterventions = [Interventions.POPUP_CLAPPY] as const;
@@ -31,7 +31,7 @@ export default class PopupClappyInterventionHandler implements InterventionHandl
     }
 
     // TODO: otherwise, use the LLM to determine Clappy's expression
-    return this.popupClappySpecified(ClappyExpression.Enraged, "GET BACK TO WORK", timeoutMs);
+    return this.popupClappySpecified(ClappyExpression.Enraged, 'GET BACK TO WORK', timeoutMs);
   }
 
   // make Clappy appear on the right side of a user's screen with a specific expression and text

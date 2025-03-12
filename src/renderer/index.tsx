@@ -1,10 +1,10 @@
 import { createRoot } from 'react-dom/client';
-import { ClappyExpression } from '../main/types';
-import bufoHelloIcon from '../../assets/bufo-hello.gif';
 import bufoCryingIcon from '../../assets/bufo-crying.gif';
 import bufoDisappointedIcon from '../../assets/bufo-disappointed.png';
 import bufoEnragedIcon from '../../assets/bufo-enraged.png';
 import bufoHappyIcon from '../../assets/bufo-happy.png';
+import bufoHelloIcon from '../../assets/bufo-hello.gif';
+import { ClappyExpression } from '../main/types';
 import App from './App';
 
 const container = document.getElementById('root') as HTMLElement;

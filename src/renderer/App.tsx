@@ -1,4 +1,7 @@
 import React from 'react';
+import { FaClock } from 'react-icons/fa6';
+import { IoMdSettings } from 'react-icons/io';
+import { IoChatbubbleEllipses } from 'react-icons/io5';
 import { Route, HashRouter as Router, Routes } from 'react-router-dom';
 import openPopup, { closeSpeechBubble } from '.';
 import bufoHelloIcon from '../../assets/bufo-hello.gif';
@@ -40,27 +43,35 @@ function Hello() {
           <div id="settings" className={hoverClass}>
             <span onClick={openSettings}>View settings</span>
             <button type="button" id="settings-button" onClick={openSettings}>
-              ⚙️
+              <div className="button-icon">
+                <IoMdSettings />
+              </div>
             </button>
           </div>
           <div id="history" className={hoverClass}>
             <span>View history</span>
             <button type="button" id="history-button" onClick={openAnalytics}>
-              🕰️
+              <div className="button-icon">
+                <FaClock />
+              </div>
             </button>
           </div>
           {!isTextInputOpen ? (
             <div id="talk-to" className={hoverClass}>
               <span>Talk to Clappy</span>
               <button type="button" id="talk-to-button" onClick={onOpenTextInput}>
-                💬
+                <div className="button-icon">
+                  <IoChatbubbleEllipses />
+                </div>
               </button>
             </div>
           ) : (
             <div id="talk-to" className={hoverClass}>
               <span>to Clappy</span>
               <button type="button" id="talk-to-button" onClick={onOpenTextInput}>
-                💬
+                <span className="button-icon">
+                  <IoChatbubbleEllipses />
+                </span>
               </button>
             </div>
           )}
