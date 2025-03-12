@@ -1,3 +1,2 @@
-dragonfly
-applescript
+dragonfly2
 pydantic

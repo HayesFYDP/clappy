@@ -17,17 +17,31 @@ import { DateTime } from 'luxon';
 import OpenAI from 'openai';
 import os from 'os';
 import path from 'path';
-import { ClappyExpression, ProductivityAnalysis } from './types';
+import INTERVENTION_HANDLERS from './interventions/interventionHandlers';
+import { createInterventionHandler, InterventionDescriptions, InterventionHandler, Interventions } from './interventions/types';
+import { ProductivityAnalysis } from './types';
 import { resolveHtmlPath } from './util';
 
 // TODO: move this to env
 const WHISPER_PATH = '/Users/yashmulki/school/se490/clappy/whisper.cpp';
 const IS_DEVELOPMENT = true; // TODO: Set this to false when deploying or take as an arg
+const DEVELOPMENT_INTERVENTION_ENABLED = false; // if set to true, will randomly select interventions; otherwise, no interventions will be taken
 dotenv.config();
+
+const ENABLED_INTERVENTIONS = [
+  Interventions.POPUP_CLAPPY,
+  // Interventions.MINIMIZE_WINDOW,
+  // Interventions.SHAKE_WINDOW,
+  // Interventions.FOCUS_WINDOW,
+];
+
 class Clappy {
   prisma: PrismaClient;
   openai: OpenAI | null;
   mainWindow: BrowserWindow | null = null;
+  settingsWindow: BrowserWindow | null = null;
+  analyticsWindow: BrowserWindow | null = null;
+  interventionHandlers: { [key in Interventions]?: InterventionHandler } = {};
 
   constructor() {
     // Initialize Prisma client for database access
@@ -40,12 +54,18 @@ class Clappy {
     });
 
     ipcMain.on('open-settings-window', () => {
+      if (this.settingsWindow) {
+        this.settingsWindow.focus();
+        return;
+      }
       const settingsWindow = new BrowserWindow({
-        width: 600,
-        height: 450,
+        width: 650,
+        height: 600,
         title: 'Clappy Settings',
-        resizable: true,
+        resizable: false,
         frame: true,
+        movable: true,
+        titleBarStyle: 'hidden',
         roundedCorners: true,
         autoHideMenuBar: true,
         webPreferences: {
@@ -63,9 +83,18 @@ class Clappy {
       settingsWindow.once('ready-to-show', () => {
         settingsWindow.show();
       });
+
+      this.settingsWindow = settingsWindow;
+      settingsWindow.on('closed', () => {
+        this.settingsWindow = null;
+      });
     });
 
     ipcMain.on('open-analytics-window', () => {
+      if (this.analyticsWindow) {
+        this.analyticsWindow.focus();
+        return;
+      }
       const analyticsWindow = new BrowserWindow({
         width: 800,
         height: 600,
@@ -88,6 +117,23 @@ class Clappy {
 
       analyticsWindow.once('ready-to-show', () => {
         analyticsWindow.show();
+      });
+
+      this.analyticsWindow = analyticsWindow;
+      analyticsWindow.on('closed', () => {
+        this.analyticsWindow = null;
+      });
+    });
+
+    ipcMain.handle('get-settings', () => {
+      return this.prisma.settings.findFirst();
+    });
+
+    ipcMain.handle('set-settings', (event, settings) => {
+      return this.prisma.settings.upsert({
+        where: { id: 1 }, // only one row in the settings table
+        update: settings,
+        create: settings,
       });
     });
 
@@ -119,6 +165,22 @@ class Clappy {
           // On macOS it's common to re-create a window in the app when the
           // dock icon is clicked and there are no other windows open.
           if (this.mainWindow === null) this.createWindow();
+        });
+
+        // Initialize the intervention handlers after the main window is created
+        INTERVENTION_HANDLERS.forEach((HandlerType) => {
+          const handler = createInterventionHandler(
+            HandlerType,
+            () => {
+              return this.getMainWindow();
+            },
+            this.openai,
+          );
+          handler.supportedInterventions.forEach((intervention) => {
+            if (ENABLED_INTERVENTIONS.includes(intervention)) {
+              this.interventionHandlers[intervention] = handler;
+            }
+          });
         });
       })
       .catch(console.log);
@@ -166,8 +228,10 @@ class Clappy {
     // testSpeechAndTranscription();
 
     // Take screenshots of the screen every 10 seconds and check if the user is productive
-    if (!IS_DEVELOPMENT) {
-      setInterval(this.manageProductivity, 10000);
+    if (!IS_DEVELOPMENT || DEVELOPMENT_INTERVENTION_ENABLED) {
+      setInterval(() => {
+        this.manageProductivity();
+      }, 10000);
     }
 
     mainWindow.on('ready-to-show', () => {
@@ -184,6 +248,10 @@ class Clappy {
     });
 
     this.mainWindow = mainWindow;
+  }
+
+  getMainWindow() {
+    return this.mainWindow;
   }
 
   getClappyTempPath(): string {
@@ -289,7 +357,7 @@ class Clappy {
     const responseText = response?.choices[0].message.content;
     if (!responseText) {
       return {
-        productive: true,
+        productive: false,
         confidence: 0.0,
         justification: 'Failed to analyze screen contents',
       };
@@ -304,29 +372,7 @@ class Clappy {
     return outputJson;
   }
 
-  /* === Intervention Options === */
-  async popupClappyIntervention(expression: ClappyExpression, popupText: string | null, closePopupIn5Seconds: boolean) {
-    if (this.mainWindow) {
-      this.mainWindow.webContents.send('open-popup', expression, popupText);
-
-      if (closePopupIn5Seconds) {
-        setTimeout(() => {
-          this.mainWindow?.webContents.send('close-popup');
-        }, 5000);
-      }
-    }
-  }
-
-  async minimizeWindowIntervention() {
-    // TODO: Implement this
-  }
-
-  async selectIntervention(userTask: string, productive: boolean) {
-    if (productive) {
-      console.log('User is currently productive, skipping intervention');
-      return;
-    }
-
+  async selectIntervention(userTask: string): Promise<Interventions | null> {
     // select an intervention using LLM prompting
     // first, query the database for the last 5 productivity records
     const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
@@ -364,6 +410,14 @@ class Clappy {
       ? `The last intervention taken was ${DateTime.fromJSDate(lastIntervention.date).toRelative()} with action ${lastIntervention.intervention}.`
       : 'No interventions were taken in the last 10 minutes.';
 
+    const interventionOptions = Object.keys(InterventionDescriptions)
+      .map((intervention) => {
+        return `${intervention}: ${InterventionDescriptions[intervention as keyof typeof InterventionDescriptions]}`;
+      })
+      .join('\n');
+
+    const llmChoices = Object.values(Interventions).join('/');
+
     const prompt = `You are a helpful productivity assistant that is observing the user's computer screen. You are given that the user is currently trying to accomplish: <${userTask}>.
       Do not ask questions about this objective, simply consider it in light of the productivity records and justification.
       You are asked to select an intervention to help the user become more productive. You are given the last 5 productivity records, which are as follows:
@@ -372,13 +426,12 @@ class Clappy {
       Your goal is to select an intervention that will help the user become more productive. Choose the most fitting intervention based on the productivity history and previous interventions taken.
 
       Your options, ordered from most gentle to most extreme are:
-      NOTIFY - Display a notification to the user to remind them to stay on task
-      MINIMIZE - Minimize the current window to reduce distractions
+      ${interventionOptions}
 
       ${lastInterventionString}
 
-      Enclosed in <OUTPUT> </OUTPUT> tags, you will output a JSON response that conforms the following schema:
-      { intervention: "<NOTIFY/MINIMIZE>" }
+      Only select one intervention. Enclosed in <OUTPUT> </OUTPUT> tags, you will output a JSON response that conforms the following schema:
+      { intervention: "<${llmChoices}>" }
     `;
 
     const response = await this.openai?.chat.completions.create({
@@ -396,7 +449,7 @@ class Clappy {
     const responseText = response?.choices[0].message.content;
     if (!responseText) {
       console.log('Failed to select an intervention');
-      return;
+      return null;
     }
 
     const outputStart = responseText.indexOf('<OUTPUT>') + '<OUTPUT>'.length;
@@ -406,26 +459,52 @@ class Clappy {
 
     const outputJson = JSON.parse(output);
     const { intervention } = outputJson;
-    console.log('Selected intervention: ', intervention);
+    console.log('LLM selected intervention: ', intervention);
 
-    if (intervention === 'NOTIFY' || intervention === 'MINIMIZE') {
-      this.prisma.interventionRecord.create({
-        data: {
-          date: new Date(),
-          intervention,
-        },
-      });
+    // if interventions isn't in the Interventions enums, return null
+    // TODO: figure out if we want to re-try picking
+    if (!Object.values(Interventions).includes(intervention)) {
+      return null;
     }
 
-    switch (intervention) {
-      case 'NOTIFY':
-        this.popupClappyIntervention(ClappyExpression.Enraged, 'GET BACK TO WORK', true);
-        break;
-      case 'MINIMIZE':
-        this.minimizeWindowIntervention();
-        break;
-      default:
-        console.log(`Invalid/unknown intervention selected: "${intervention}"`);
+    return intervention;
+  }
+
+  async applyIntervention(userTask: string, productive: boolean) {
+    if (productive) {
+      return;
+    }
+
+    const selectedIntervention = await (async () => {
+      // if LLM is enabled, first attempt to select an intervention using LLM
+      if (this.openai) {
+        const llmIntervention = await this.selectIntervention(userTask);
+        if (llmIntervention) {
+          return llmIntervention;
+        }
+      }
+
+      // if LLM is disabled or an invalid intervention was selected, select a random intervention
+      const randomIntervention = ENABLED_INTERVENTIONS[Math.floor(Math.random() * ENABLED_INTERVENTIONS.length)];
+      console.log('Random intervention selected:', randomIntervention);
+
+      return randomIntervention;
+    })();
+
+    // save the chosen intervention to the database
+    this.prisma.interventionRecord.create({
+      data: {
+        date: new Date(),
+        intervention: selectedIntervention,
+      },
+    });
+
+    // apply the intervention
+    const handler = this.interventionHandlers[selectedIntervention];
+    if (handler) {
+      await handler.handleIntervention(selectedIntervention);
+    } else {
+      console.error('No handler found for intervention:', selectedIntervention);
     }
   }
 
@@ -449,7 +528,7 @@ class Clappy {
         },
       });
 
-      await this.selectIntervention(hardcodedTask, productivity.productive);
+      await this.applyIntervention(hardcodedTask, productivity.productive);
     } else {
       console.log('No screenshot path recevied');
     }

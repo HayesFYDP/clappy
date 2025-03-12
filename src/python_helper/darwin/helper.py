@@ -1,11 +1,7 @@
 import sys, json
-from dragonfly import Window
-from dragonfly.windows.darwin_window import DarwinWindow
-from dragonfly.windows.win32_window import Win32Window
 from pydantic.dataclasses import dataclass
 from enum import Enum
 from logging import getLogger, DEBUG, FileHandler
-from sys import stdout
 from window_controller import focus_windows, list_windows, minimize_window, shake_window
 
 class IPCType(str, Enum):
@@ -38,15 +34,15 @@ for line in sys.stdin:
             print(json.dumps(dict(windows=json_windows)))
 
         case IPCType.MINIMIZE_WINDOW:
-            success = minimize_window(ipc_req.payload.get("handle", None))
+            success = minimize_window(ipc_req.payload.get("id", None))
             print(json.dumps(dict(success=success)))
 
         case IPCType.SHAKE_WINDOW:
-            success = shake_window(ipc_req.payload.get("handle", None))
+            success = shake_window(ipc_req.payload.get("id", None))
             print(json.dumps(dict(success=success)))
 
         case IPCType.FOCUS_WINDOW:
-            success = focus_windows(ipc_req.payload["handle"])
+            success = focus_windows(ipc_req.payload["id"])
             print(json.dumps(dict(success=success)))
 
         case _:

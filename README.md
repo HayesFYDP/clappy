@@ -26,5 +26,6 @@ npm run build
 ```
 npm run start
 ```
+Make sure to give VS Code accessibility access.
 
 To toggle the Clappy popup, use the keyboard shortcut `F8`.

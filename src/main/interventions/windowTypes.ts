@@ -8,7 +8,7 @@ type WindowInfo = {
   executablePath: string;
 
   isFocused: boolean; // whether the window is currently focused
-  handle: number; // used to refer to the window for future window operations
+  id: number; // used to refer to the window for future window operations
 };
 
 /* Types for IPC communication between the main process and the Python helper */
@@ -31,7 +31,7 @@ type ListWindowsResponse = {
 
 type FocusWindowRequest = {
   type: WindowIPCType.FOCUS_WINDOW;
-  payload: { handle: number };
+  payload: { id: number };
 };
 
 type FocusWindowResponse = {
@@ -40,7 +40,7 @@ type FocusWindowResponse = {
 
 type MinimizeWindowRequest = {
   type: WindowIPCType.MINIMIZE_WINDOW;
-  payload: { handle?: number }; // if handle is not provided, minimize the active window
+  payload: { id?: number }; // if window id is not provided, minimize the active window
 };
 
 type MinimizeWindowResponse = {
@@ -49,7 +49,7 @@ type MinimizeWindowResponse = {
 
 type ShakeWindowRequest = {
   type: WindowIPCType.SHAKE_WINDOW;
-  payload: { handle?: number };
+  payload: { id?: number };
 };
 
 type ShakeWindowResponse = {
