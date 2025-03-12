@@ -6,6 +6,7 @@ import { ClappyExpression } from '../main/types';
 import AnalyticsWindow from './AnalyticsWindow';
 import './App.css';
 import SettingsWindow from './SettingsWindow';
+import { ClappyAnalytics } from './analyticsHistory';
 
 function Hello() {
   const openSettings = () => {
@@ -78,13 +79,78 @@ function Hello() {
   );
 }
 
+const dummyAnalytics: ClappyAnalytics = {
+  sessions: [
+    {
+      date: new Date('2025-03-16'),
+      productivity: [
+        {
+          startTime: new Date('2025-03-10T08:00:00'),
+          endTime: new Date('2025-03-10T09:00:00'),
+          status: 'very-productive',
+        },
+        {
+          startTime: new Date('2025-03-10T09:30:00'),
+          endTime: new Date('2025-03-10T10:30:00'),
+          status: 'productive',
+        },
+        {
+          startTime: new Date('2025-03-10T11:00:00'),
+          endTime: new Date('2025-03-10T12:00:00'),
+          status: 'somewhat-productive',
+        },
+        {
+          startTime: new Date('2025-03-10T14:00:00'),
+          endTime: new Date('2025-03-10T14:30:00'),
+          status: 'uncertain',
+        },
+        {
+          startTime: new Date('2025-03-10T15:00:00'),
+          endTime: new Date('2025-03-10T16:00:00'),
+          status: 'not-productive',
+        },
+      ],
+      interventions: [
+        { time: new Date('2025-03-10T09:45:00'), action: 'notify' },
+        { time: new Date('2025-03-10T15:10:00'), action: 'minimize-window' },
+      ],
+    },
+    {
+      date: new Date('2025-03-09'),
+      productivity: [
+        {
+          startTime: new Date('2025-03-09T07:30:00'),
+          endTime: new Date('2025-03-09T08:30:00'),
+          status: 'productive',
+        },
+        {
+          startTime: new Date('2025-03-09T09:00:00'),
+          endTime: new Date('2025-03-09T10:00:00'),
+          status: 'somewhat-productive',
+        },
+        {
+          startTime: new Date('2025-03-09T11:30:00'),
+          endTime: new Date('2025-03-09T12:00:00'),
+          status: 'very-productive',
+        },
+        {
+          startTime: new Date('2025-03-09T13:00:00'),
+          endTime: new Date('2025-03-09T14:30:00'),
+          status: 'not-productive',
+        },
+      ],
+      interventions: [{ time: new Date('2025-03-09T09:30:00'), action: 'notify' }],
+    },
+  ],
+};
+
 export default function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<Hello />} />
         <Route path="/settings" element={<SettingsWindow />} />
-        <Route path="/analytics" element={<AnalyticsWindow />} />
+        <Route path="/analytics" element={<AnalyticsWindow analytics={dummyAnalytics} />} />
       </Routes>
     </Router>
   );

@@ -17,10 +17,10 @@ import { DateTime } from 'luxon';
 import OpenAI from 'openai';
 import os from 'os';
 import path from 'path';
+import INTERVENTION_HANDLERS from './interventions/interventionHandlers';
+import { createInterventionHandler, InterventionDescriptions, InterventionHandler, Interventions } from './interventions/types';
 import { ProductivityAnalysis } from './types';
 import { resolveHtmlPath } from './util';
-import { Interventions, InterventionHandler, createInterventionHandler, InterventionDescriptions } from './interventions/types';
-import INTERVENTION_HANDLERS from './interventions/interventionHandlers';
 
 // TODO: move this to env
 const WHISPER_PATH = '/Users/yashmulki/school/se490/clappy/whisper.cpp';
@@ -33,7 +33,7 @@ const ENABLED_INTERVENTIONS = [
   // Interventions.MINIMIZE_WINDOW,
   // Interventions.SHAKE_WINDOW,
   // Interventions.FOCUS_WINDOW,
-]
+];
 
 class Clappy {
   prisma: PrismaClient;
@@ -99,7 +99,7 @@ class Clappy {
         width: 800,
         height: 600,
         title: 'Clappy Analytics',
-        resizable: true,
+        resizable: false,
         frame: true,
         roundedCorners: true,
         autoHideMenuBar: true,
@@ -127,7 +127,7 @@ class Clappy {
 
     ipcMain.handle('get-settings', () => {
       return this.prisma.settings.findFirst();
-    })
+    });
 
     ipcMain.handle('set-settings', (event, settings) => {
       return this.prisma.settings.upsert({
@@ -135,7 +135,7 @@ class Clappy {
         update: settings,
         create: settings,
       });
-    })
+    });
 
     app.on('will-quit', () => {
       // Unregister all shortcuts.
@@ -169,14 +169,19 @@ class Clappy {
 
         // Initialize the intervention handlers after the main window is created
         INTERVENTION_HANDLERS.forEach((HandlerType) => {
-          const handler = createInterventionHandler(HandlerType, () => {return this.getMainWindow()}, this.openai);
+          const handler = createInterventionHandler(
+            HandlerType,
+            () => {
+              return this.getMainWindow();
+            },
+            this.openai,
+          );
           handler.supportedInterventions.forEach((intervention) => {
             if (ENABLED_INTERVENTIONS.includes(intervention)) {
               this.interventionHandlers[intervention] = handler;
             }
           });
         });
-
       })
       .catch(console.log);
   }
@@ -224,7 +229,9 @@ class Clappy {
 
     // Take screenshots of the screen every 10 seconds and check if the user is productive
     if (!IS_DEVELOPMENT || DEVELOPMENT_INTERVENTION_ENABLED) {
-      setInterval(() => { this.manageProductivity() }, 10000);
+      setInterval(() => {
+        this.manageProductivity();
+      }, 10000);
     }
 
     mainWindow.on('ready-to-show', () => {
@@ -403,9 +410,11 @@ class Clappy {
       ? `The last intervention taken was ${DateTime.fromJSDate(lastIntervention.date).toRelative()} with action ${lastIntervention.intervention}.`
       : 'No interventions were taken in the last 10 minutes.';
 
-    const interventionOptions = Object.keys(InterventionDescriptions).map((intervention) => {
-      return `${intervention}: ${InterventionDescriptions[intervention as keyof typeof InterventionDescriptions]}`;
-    }).join('\n');
+    const interventionOptions = Object.keys(InterventionDescriptions)
+      .map((intervention) => {
+        return `${intervention}: ${InterventionDescriptions[intervention as keyof typeof InterventionDescriptions]}`;
+      })
+      .join('\n');
 
     const llmChoices = Object.values(Interventions).join('/');
 
@@ -480,7 +489,7 @@ class Clappy {
       console.log('Random intervention selected:', randomIntervention);
 
       return randomIntervention;
-    })()
+    })();
 
     // save the chosen intervention to the database
     this.prisma.interventionRecord.create({
