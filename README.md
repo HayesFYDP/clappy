@@ -29,3 +29,13 @@ npm run start
 Make sure to give VS Code accessibility access.
 
 To toggle the Clappy popup, use the keyboard shortcut `F8`.
+
+---
+
+### Troubleshooting
+
+* If you get an error about some property not existing on type PrismaClient, you should run migrations and regenerate the prisma client:
+
+  > npx prisma migrate deploy && npx prisma generate
+
+* For window interventions to work on macOS, accessibility permission need to be enabled. See `src/python_helper/README.md` for more info.

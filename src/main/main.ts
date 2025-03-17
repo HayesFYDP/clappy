@@ -25,7 +25,8 @@ import { resolveHtmlPath } from './util';
 // TODO: move this to env
 const WHISPER_PATH = '/Users/yashmulki/school/se490/clappy/whisper.cpp';
 const IS_DEVELOPMENT = true; // TODO: Set this to false when deploying or take as an arg
-const DEVELOPMENT_INTERVENTION_ENABLED = false; // if set to true, will randomly select interventions; otherwise, no interventions will be taken
+// if set to true, will randomly select interventions when IS_DEVELOPMENT is true; otherwise, no interventions will be taken
+const DEVELOPMENT_INTERVENTION_ENABLED = false;
 dotenv.config();
 
 const ENABLED_INTERVENTIONS = [
@@ -227,11 +228,15 @@ class Clappy {
 
     // testSpeechAndTranscription();
 
-    // Take screenshots of the screen every 10 seconds and check if the user is productive
+    // Take screenshots of the screen every 30 seconds and check if the user is productive
     if (!IS_DEVELOPMENT || DEVELOPMENT_INTERVENTION_ENABLED) {
-      setInterval(() => {
+      setTimeout(() => {
         this.manageProductivity();
-      }, 10000);
+
+        setInterval(() => {
+          this.manageProductivity();
+        }, 30000);
+      }, 5000)
     }
 
     mainWindow.on('ready-to-show', () => {
@@ -416,7 +421,8 @@ class Clappy {
       })
       .join('\n');
 
-    const llmChoices = Object.values(Interventions).join('/');
+    const llmChoices = ENABLED_INTERVENTIONS.join('/');
+    console.log('LLM choices:', llmChoices);
 
     const prompt = `You are a helpful productivity assistant that is observing the user's computer screen. You are given that the user is currently trying to accomplish: <${userTask}>.
       Do not ask questions about this objective, simply consider it in light of the productivity records and justification.
@@ -480,6 +486,7 @@ class Clappy {
       if (this.openai) {
         const llmIntervention = await this.selectIntervention(userTask);
         if (llmIntervention) {
+          console.log('LLM intervention selected:', llmIntervention);
           return llmIntervention;
         }
       }
@@ -502,9 +509,9 @@ class Clappy {
     // apply the intervention
     const handler = this.interventionHandlers[selectedIntervention];
     if (handler) {
-      await handler.handleIntervention(selectedIntervention);
+      await handler.handleIntervention(selectedIntervention, { userTask });
     } else {
-      console.error('No handler found for intervention:', selectedIntervention);
+      console.error('No handler found for intervention (did you forget to enable it in ENABLED_INTERVENTIONS?):', selectedIntervention);
     }
   }
 
@@ -514,7 +521,7 @@ class Clappy {
     if (screenshotPath) {
       console.log('About to call isproductive');
       // TODO: Replace hardcoded task with actual task
-      const hardcodedTask = 'Working on FYDP presentation (a very cool bicycle)';
+      const hardcodedTask = 'Working on a school programming assignment.';
       const productivity = await this.isProductive(screenshotPath, hardcodedTask);
       console.log('Productivity:', productivity);
 
