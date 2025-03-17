@@ -23,19 +23,23 @@ export const InterventionDescriptions: Record<Interventions, string> = {
   [Interventions.FOCUS_WINDOW]: 'Put another (more productive) window into focus.',
 };
 
-export type MinimizeWindowPayload = {
+type GenericInterventionPayload = {
+  userTask?: string; // the task that the user is currently working on, used for LLM reasoning
+}
+
+export type MinimizeWindowPayload = GenericInterventionPayload & {
   windowHandle?: number; // if provided, the specific window to minimize; otherwise, minimize the active window
 };
 
-export type ShakeWindowPayload = {
+export type ShakeWindowPayload = GenericInterventionPayload &{
   windowHandle?: number; // if provided, the specific window to shake; otherwise, shake the active window
 };
 
-export type FocusWindowPayload = {
-  windowHandle: number; // if provided, the specific window to shake; otherwise, ask an LLM to determine the window to focus
+export type FocusWindowPayload = GenericInterventionPayload & {
+  windowHandle?: number; // if provided, the specific window to shake; otherwise, ask an LLM to determine the window to focus
 };
 
-export type PopupClappyPayload = {
+export type PopupClappyPayload = GenericInterventionPayload & {
   message?: string;
   expression?: ClappyExpression;
   timeoutMs?: number;
