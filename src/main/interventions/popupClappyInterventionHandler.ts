@@ -2,6 +2,12 @@ import { ClappyExpression } from '../types';
 import { InterventionHandler, InterventionPayloadMap, Interventions, PopupClappyPayload } from './types';
 import type Clappy from '../clappy';
 
+const llmExpressionChoices = [
+  ClappyExpression.Enraged,
+  ClappyExpression.Disappointed,
+  ClappyExpression.Crying,
+]
+
 export default class PopupClappyInterventionHandler implements InterventionHandler {
   supportedInterventions = [Interventions.POPUP_CLAPPY] as const;
 
@@ -27,9 +33,10 @@ export default class PopupClappyInterventionHandler implements InterventionHandl
   async popupClappy(payload?: PopupClappyPayload) {
     const timeoutMs = payload?.timeoutMs ?? 10000;
 
-    if (payload?.expression && payload?.message) {
+    // if the user provided an expression, use it; message is optional because it will just hide the speech option
+    if (payload?.expression) {
       const { expression, message } = payload;
-      return this.popupClappySpecified(expression, message, timeoutMs);
+      return this.popupClappySpecified(expression, message ?? '', timeoutMs);
     }
 
     const { expression, message } = await this.determineClappyMessage(payload);
@@ -68,20 +75,21 @@ export default class PopupClappyInterventionHandler implements InterventionHandl
         ? 'This is the first message that you are sending to the user.'
         : `The past few expressions and accompanying messages that you have displayed are:\n${this.messageHistory.map((entry) => `${entry.expression}: ${entry.message}`).join('\n')}`;
 
-    // TODO: feed in why the user is unproductive reasoning
+    const unproductiveReasoning = payload?.justification ? `The user is currently unproductive with the following reasoning: ${payload.justification}` : 'The user has been determined to be currently unproductive';
+
     const prompt = `You are a helpful productivity assistant that is observing the user's computer screen. ${userTask}.
       Do not ask questions about this objective, simply consider it in light of the productivity records and justification.
 
-      The user has been determined to be currently unproductive. You are asked to display a character expression and a message to the user to encourage them to be more productive.
+      ${unproductiveReasoning} You are asked to display a character expression and a message to the user to encourage them to be more productive.
 
       ${historyString}
 
-      Your expression options are: ${Object.values(ClappyExpression).join(', ')}.
+      Your expression options are: ${llmExpressionChoices.join(', ')}.
 
       Only select one expression, and write a short one sentence message to the user. Use all-caps if the tone fits. Try to avoid repeating exactly what you have said in the past and make use of the different expression options.
 
       Enclosed in <OUTPUT> </OUTPUT> tags, you will output a JSON response that conforms the following schema:
-      { expression: "<${Object.values(ClappyExpression).join('/')}>, message: <some helpful message>" }
+      { expression: "<${llmExpressionChoices}.join('/')}>, message: <some helpful message>" }
     `;
 
     const response = await this.clappy.openai?.chat.completions.create({

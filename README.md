@@ -62,6 +62,8 @@ brew install sox
 choco install sox.portable
 ```
 
+Note that `sox` is configured to use your default audio input, so ensure that it is set to the microphone you'd like to use.
+
 ### Miscellaneous
 
 Make sure to give VS Code accessibility access for window intervention to work (see `src/python_helper/README.md`)
@@ -77,3 +79,6 @@ To toggle the Clappy popup, use the keyboard shortcut `F8`.
   > npx prisma migrate deploy && npx prisma generate
 
 * For window interventions to work on macOS, accessibility permission need to be enabled. See `src/python_helper/README.md` for more info.
+
+* If you get some error from prisma about not being able to write into dev.db-journal, this is probably due to hot reloading. You should just restart the app.
+

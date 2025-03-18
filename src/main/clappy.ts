@@ -15,11 +15,10 @@ import { DateTime } from 'luxon';
 import OpenAI from 'openai';
 import os from 'os';
 import path from 'path';
-import INTERVENTION_HANDLERS from './interventions/interventionHandlers';
-import { createInterventionHandler, InterventionDescriptions, InterventionHandler, Interventions } from './interventions/types';
+import { InterventionHandlerMap, INTERVENTION_HANDLERS } from './interventions/interventionHandlers';
+import { createInterventionHandler, InterventionDescriptions, Interventions } from './interventions/types';
 import { ProductivityAnalysis } from './types';
 import { resolveHtmlPath } from './util';
-
 
 class Clappy {
   prisma: PrismaClient;
@@ -31,9 +30,8 @@ class Clappy {
   settingsWindow: BrowserWindow | null = null;
   analyticsWindow: BrowserWindow | null = null;
 
-
   enabledInterventions: Interventions[];
-  interventionHandlers: { [key in Interventions]?: InterventionHandler } = {};
+  interventionHandlers: Partial<InterventionHandlerMap> = {};
 
   constructor(enabledInterventions: Interventions[], isDevelopment: boolean, developmentInterventionEnabled: boolean) {
     this.isDevelopment = isDevelopment;
@@ -165,14 +163,10 @@ class Clappy {
 
         // Initialize the intervention handlers after the main window is created
         INTERVENTION_HANDLERS.forEach((HandlerType) => {
-          const handler = createInterventionHandler(
-            HandlerType,
-            this
-          );
+          const handler = createInterventionHandler(HandlerType, this);
           handler.supportedInterventions.forEach((intervention) => {
-            if (this.enabledInterventions.includes(intervention)) {
-              this.interventionHandlers[intervention] = handler;
-            }
+            // use a type assertion here because the rest of the code ensures that the handler is valid
+            this.assignHandler(intervention, handler as InterventionHandlerMap[typeof intervention]);
           });
         });
       })
@@ -216,7 +210,7 @@ class Clappy {
         setInterval(() => {
           this.manageProductivity();
         }, 30000);
-      }, 5000)
+      }, 5000);
     }
 
     mainWindow.on('ready-to-show', () => {
@@ -353,7 +347,7 @@ class Clappy {
       ? `The last intervention taken was ${DateTime.fromJSDate(lastIntervention.date).toRelative()} with action ${lastIntervention.intervention}.`
       : 'No interventions were taken in the last 10 minutes.';
 
-    const interventionOptions = Object.keys(InterventionDescriptions)
+    const interventionOptions = this.enabledInterventions
       .map((intervention) => {
         return `${intervention}: ${InterventionDescriptions[intervention as keyof typeof InterventionDescriptions]}`;
       })
@@ -403,7 +397,6 @@ class Clappy {
 
     const outputJson = JSON.parse(output);
     const { intervention } = outputJson;
-    console.log('LLM selected intervention: ', intervention);
 
     // if interventions isn't in the Interventions enums, return null
     // TODO: figure out if we want to re-try picking
@@ -411,7 +404,7 @@ class Clappy {
       return null;
     }
 
-    return intervention;
+    return intervention.trim();
   }
 
   async applyIntervention(userTask: string, productive: boolean, justification: string) {
@@ -450,7 +443,10 @@ class Clappy {
     if (handler) {
       await handler.handleIntervention(selectedIntervention, { userTask, justification });
     } else {
-      console.error('No handler found for intervention (did you forget to enable it in ENABLED_INTERVENTIONS?):', selectedIntervention);
+      console.error(
+        'No handler found for intervention (did you forget to add the handler to interventionHandlers.ts?):',
+        selectedIntervention,
+      );
     }
   }
 
@@ -478,6 +474,11 @@ class Clappy {
     } else {
       console.log('No screenshot path recevied');
     }
+  }
+
+  // function to assign a handler, mostly here to satisfy typescript typing
+  assignHandler<K extends keyof InterventionHandlerMap>(intervention: K, handler: InterventionHandlerMap[K]) {
+    this.interventionHandlers[intervention] = handler;
   }
 }
 
