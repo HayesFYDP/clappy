@@ -75,11 +75,12 @@ export default class PopupClappyInterventionHandler implements InterventionHandl
         ? 'This is the first message that you are sending to the user.'
         : `The past few expressions and accompanying messages that you have displayed are:\n${this.messageHistory.map((entry) => `${entry.expression}: ${entry.message}`).join('\n')}`;
 
-    // TODO: feed in why the user is unproductive reasoning
+    const unproductiveReasoning = payload?.justification ? `The user is currently unproductive with the following reasoning: ${payload.justification}` : 'The user has been determined to be currently unproductive';
+
     const prompt = `You are a helpful productivity assistant that is observing the user's computer screen. ${userTask}.
       Do not ask questions about this objective, simply consider it in light of the productivity records and justification.
 
-      The user has been determined to be currently unproductive. You are asked to display a character expression and a message to the user to encourage them to be more productive.
+      ${unproductiveReasoning} You are asked to display a character expression and a message to the user to encourage them to be more productive.
 
       ${historyString}
 
