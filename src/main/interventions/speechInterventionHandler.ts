@@ -26,7 +26,7 @@ export default class SpeechInterventionHandler implements InterventionHandler {
   }
 
   async speakClappy(payload?: InterventionPayloadMap[Interventions.SPEAK_CLAPPY]) {
-    const message = payload?.message ?? 'its biglet time its biglet time its biglet time its biglet time its biglet time';
+    const message = payload?.message ?? 'Get back to work!';
     const estSpeechDuration = message.split(' ').length * 500 + 2000; // assume 0.5 seconds per word, plus 2 second buffer
 
     await this.clappy.interventionHandlers[Interventions.POPUP_CLAPPY]?.handleIntervention(Interventions.POPUP_CLAPPY, {
@@ -41,7 +41,7 @@ export default class SpeechInterventionHandler implements InterventionHandler {
   // if autoDetect is false, then the recording begins immediately and lasts for maxDurationSeconds
   // if autoDetect is true, then the recording begins when speech is detected and ends when speech stops with a max duration of maxDurationSeconds
   // returns the file path of the recorded audio
-  async recordAudio(maxDurationSeconds: number, autoDetect = true): Promise<string> {
+  async recordAudio(maxDurationSeconds: number = 10, autoDetect = true): Promise<string> {
     return new Promise((resolve) => {
       const timestamp = new Date().toISOString().replace(/:/g, '-');
       const outputPath = path.join(this.clappy.getClappyTempPath(), `recording-${timestamp}.wav`);
@@ -82,6 +82,7 @@ export default class SpeechInterventionHandler implements InterventionHandler {
         '3%',
       ];
 
+      console.log('[SPEECH] starting audio recording');
       const recordProcess = spawn('sox', autoDetect ? argsAuto : argsManual);
 
       const timeoutId = setTimeout(() => {
@@ -98,15 +99,18 @@ export default class SpeechInterventionHandler implements InterventionHandler {
 
   async transcribeAudio(audioPath: string): Promise<string> {
     return new Promise((resolve, reject) => {
+      const currentPath = process.cwd();
+      process.chdir('./whisper.cpp');
+
       try {
         const whisperArgs = ['-f', audioPath, '-otxt'];
         const whisperProcess = (() => {
           // if you get errors here, make sure whisper.cpp has been built (see README)
           if (process.platform === 'win32') {
-            return spawn('./whisper.cpp/build/bin/Release/whisper-cli.exe', whisperArgs);
+            return spawn('.\\build\\bin\\Release\\whisper-cli.exe', whisperArgs);
           }
           if (process.platform === 'darwin') {
-            return spawn('./whisper.cpp/build/bin/whisper-cli', whisperArgs);
+            return spawn('./build/bin/whisper-cli', whisperArgs);
           }
 
           throw new Error('Unsupported platform for whisper');
@@ -118,16 +122,22 @@ export default class SpeechInterventionHandler implements InterventionHandler {
           // Read the generated .txt file
           const txtPath = `${audioPath}.txt`;
           const transcript = await fs.promises.readFile(txtPath, 'utf8');
-          console.log('Transcription text:', transcript);
+          console.log('[SPEECH] Transcription text:', transcript);
 
           // Clean up files
           fs.unlinkSync(txtPath);
+          resolve(transcript.trim());
+        });
 
-          resolve(transcript);
+        whisperProcess.on('error', (err) => {
+          console.error('[SPEECH] Error running whisper:', err);
+          reject(err);
         });
       } catch (err) {
         console.error('[SPEECH] Error transcribing audio:', err);
         reject(err);
+      } finally {
+        process.chdir(currentPath);
       }
     });
   }
