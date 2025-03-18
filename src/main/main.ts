@@ -15,10 +15,11 @@ const IS_DEVELOPMENT = true; // TODO: Set this to false when deploying or take a
 const DEVELOPMENT_INTERVENTION_ENABLED = true;
 
 const ENABLED_INTERVENTIONS = [
-  Interventions.POPUP_CLAPPY,
+  // Interventions.POPUP_CLAPPY,
   // Interventions.MINIMIZE_WINDOW,
   // Interventions.SHAKE_WINDOW,
   // Interventions.FOCUS_WINDOW,
+  Interventions.SPEAK_CLAPPY,
 ];
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

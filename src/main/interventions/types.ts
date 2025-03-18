@@ -4,7 +4,7 @@ import type Clappy from '../clappy';
 // to create and enable a new intervention, you must add it to the ENABLED_INTERVENTIONS array in main.ts
 // you also need to register your intervention handler in the INTERVENTION_HANDLERS array in interventionHandlers.ts
 export enum Interventions {
-  // make clappy appear on the right side of the user's screen, using an LLM to determine the expression
+  // make clappy appear on the right side of the user's screen, using an LLM to determine the expression and message
   POPUP_CLAPPY = 'POPUP_CLAPPY',
   // "shake" the user's current active window
   SHAKE_WINDOW = 'SHAKE_WINDOW',
@@ -12,6 +12,8 @@ export enum Interventions {
   MINIMIZE_WINDOW = 'MINIMIZE_WINDOW',
   // put another window into focus, with the window being decided by an LLM
   FOCUS_WINDOW = 'FOCUS_WINDOW',
+  // make clappy appear on the right side of the screen and speak a message out loud
+  SPEAK_CLAPPY = 'SPEAK_CLAPPY',
 }
 
 // descriptions of each intervention used for LLM reasoning, ordered from least to most intense
@@ -20,6 +22,7 @@ export const InterventionDescriptions: Record<Interventions, string> = {
   [Interventions.SHAKE_WINDOW]: "Shake the user's current active window.",
   [Interventions.MINIMIZE_WINDOW]: "Minimize the user's current active window.",
   [Interventions.FOCUS_WINDOW]: 'Put another (more productive) window into focus.',
+  [Interventions.SPEAK_CLAPPY]: 'Have a character speak a message out loud.',
 };
 
 type GenericInterventionPayload = {
@@ -40,9 +43,13 @@ export type FocusWindowPayload = GenericInterventionPayload & {
 };
 
 export type PopupClappyPayload = GenericInterventionPayload & {
-  message?: string;
-  expression?: ClappyExpression;
+  message?: string; // the message that Clappy will speak out loud if provided, otherwise use an LLM
+  expression?: ClappyExpression; // the expression that Clappy will display if provided, otherwise use an LLM
   timeoutMs?: number;
+};
+
+export type SpeakClappyPayload = GenericInterventionPayload & {
+  message?: string; // the message that Clappy will speak out loud if provided, otherwise use an LLM
 };
 
 // Map intervention types to their payload types
@@ -51,6 +58,7 @@ export type InterventionPayloadMap = {
   [Interventions.SHAKE_WINDOW]: ShakeWindowPayload;
   [Interventions.FOCUS_WINDOW]: FocusWindowPayload;
   [Interventions.POPUP_CLAPPY]: PopupClappyPayload;
+  [Interventions.SPEAK_CLAPPY]: SpeakClappyPayload;
 };
 
 export interface InterventionHandler {

@@ -450,7 +450,7 @@ class Clappy {
     if (handler) {
       await handler.handleIntervention(selectedIntervention, { userTask, justification });
     } else {
-      console.error('No handler found for intervention (did you forget to enable it in ENABLED_INTERVENTIONS?):', selectedIntervention);
+      console.error('No handler found for intervention (did you forget to add the handler to interventionHandlers.ts?):', selectedIntervention);
     }
   }
 

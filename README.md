@@ -62,6 +62,8 @@ brew install sox
 choco install sox.portable
 ```
 
+Note that `sox` is configured to use your default audio input, so ensure that it is set to the microphone you'd like to use.
+
 ### Miscellaneous
 
 Make sure to give VS Code accessibility access for window intervention to work (see `src/python_helper/README.md`)
