@@ -26,7 +26,36 @@ npm run build
 ```
 npm run start
 ```
-Make sure to give VS Code accessibility access.
+
+### Whisper Setup
+
+You'll need to separately setup Whisper for transcription to work.
+
+```
+# first, clone the whisper.cpp repo into the empty whisper.cpp folder
+git clone https://github.com/ggerganov/whisper.cpp.git
+cd whisper.cpp
+
+# download the model (for macOS)
+sh ./models/download-ggml-model.sh base.en
+# download the model (for Windows)
+.\models\download-ggml-model.cmd base.en
+
+# build the project (install cmake if you don't have it already)
+cmake -B build
+cmake --build build --config Release
+
+# test transcribing an audio file (for macOS, not 100% sure if this is the right command)
+./build/bin/whisper-cli -f samples/jfk.wav
+
+# test transcribing an audio file (for Windows)
+.\build\bin\Release\whisper-cli.exe -f samples/jfk.wav
+
+```
+
+### Miscellaneous
+
+Make sure to give VS Code accessibility access for window intervention to work (see `src/python_helper/README.md`)
 
 To toggle the Clappy popup, use the keyboard shortcut `F8`.
 
