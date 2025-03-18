@@ -23,7 +23,7 @@ export default class PopupClappyInterventionHandler implements InterventionHandl
 
   // make Clappy appear on the right side of a user's screen, using an LLM to determine Clappy's expression
   async popupClappy(payload?: PopupClappyPayload) {
-    const timeoutMs = payload?.timeoutMs ?? 5000;
+    const timeoutMs = payload?.timeoutMs ?? 10000;
 
     if (payload?.expression && payload?.message) {
       const { expression, message } = payload;
@@ -34,18 +34,18 @@ export default class PopupClappyInterventionHandler implements InterventionHandl
     return this.popupClappySpecified(ClappyExpression.Enraged, 'GET BACK TO WORK', timeoutMs);
   }
 
-  // make Clappy appear on the right side of a user's screen with a specific expression and text
-  async popupClappySpecified(expression: ClappyExpression, text: string, timeoutMs = 5000) {
+  // make Clappy appear on the right side of a user's screen with a specifclose-popupic expression and text
+  async popupClappySpecified(expression: ClappyExpression, text: string, timeoutMs = 10000) {
     const mainWindow = this.getMainWindow();
     if (mainWindow === null) {
       console.error('Main window is not available, cannot popup clappy');
       return;
     }
 
-    mainWindow.webContents.send('open-popup', expression, text);
+    mainWindow.webContents.send('open-popup-intervention', expression, text);
 
     setTimeout(() => {
-      mainWindow.webContents.send('close-popup');
+      mainWindow.webContents.send('close-popup-intervention');
     }, timeoutMs);
   }
 }

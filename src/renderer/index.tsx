@@ -11,6 +11,10 @@ const container = document.getElementById('root') as HTMLElement;
 const root = createRoot(container);
 root.render(<App />);
 
+let isMouseOver = false;
+let openSource: 'hotkey' | 'intervention' | null = null;
+let activeTimeout: ReturnType<typeof setTimeout> | null = null;
+
 export default function openPopup(expression: ClappyExpression, text: string | null): void {
   const speechBubble = document.getElementById('speech-bubble') as HTMLElement;
   if (text !== null && text !== undefined && text !== '') {
@@ -60,13 +64,40 @@ function closePopup(): void {
   }, 500); // Wait for the transition before hiding
 }
 
+// function to close the popup only if the user is not hovering over it
+// this is meant to prevent the popup from closing while the user is interacting with it if it was opened by an intervention
+function closeIfUserNotHovering(remainingChecks: number, checkCooldown = 200): void {
+  if (activeTimeout !== null) {
+    // if there is already a timeout active, don't start another one
+    return;
+  }
+
+  if (remainingChecks <= 0 && !isMouseOver) {
+    closePopup();
+    openSource = null;
+  } else if (isMouseOver) {
+    // reset the countdown if the user is hovering
+    activeTimeout = setTimeout(() => {
+      activeTimeout = null;
+      closeIfUserNotHovering(10, checkCooldown);
+    }, checkCooldown);
+  } else {
+    activeTimeout = setTimeout(() => {
+      activeTimeout = null;
+      closeIfUserNotHovering(remainingChecks - 1, checkCooldown);
+    }, checkCooldown);
+  }
+}
+
 window.electron.ipcRenderer.on('add-mouse-event-listeners', () => {
   const popup = document.getElementById('popup');
   popup?.addEventListener('mouseenter', (): void => {
+    isMouseOver = true;
     window.electron.ipcRenderer.sendMessage('set-ignore-mouse-events', false);
   });
 
   popup?.addEventListener('mouseleave', (): void => {
+    isMouseOver = false;
     window.electron.ipcRenderer.sendMessage('set-ignore-mouse-events', true, { forward: true });
   });
 
@@ -77,19 +108,29 @@ window.electron.ipcRenderer.on('add-mouse-event-listeners', () => {
 });
 
 // Listen for the open-popup message from the main process
-window.electron.ipcRenderer.on('open-popup', (expression, text) => {
+window.electron.ipcRenderer.on('open-popup-intervention', (expression, text) => {
+  console.log('Received open-popup-intervention message');
+
+  if (openSource === null) {
+    openSource = 'intervention'; // track how the popup was opened to better determine when it should be closed
+  }
   openPopup(expression as ClappyExpression, text as string | null);
 });
 
-window.electron.ipcRenderer.on('close-popup', () => {
-  closePopup();
+window.electron.ipcRenderer.on('close-popup-intervention', () => {
+  // only attempt to close the popup if it was opened by an intervention
+  if (openSource === 'intervention') {
+    closeIfUserNotHovering(10, 200);
+  }
 });
 
 window.electron.ipcRenderer.on('toggle-popup', () => {
   const popup = document.getElementById('popup') as HTMLElement;
   if (popup.classList.contains('visible')) {
     closePopup();
+    openSource = null;
   } else {
+    openSource = 'hotkey';
     openPopup(ClappyExpression.Hello, 'GET BACK TO WORK');
   }
 });

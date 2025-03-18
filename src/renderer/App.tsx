@@ -84,7 +84,7 @@ function Hello() {
             </div>
           )}
         </div>
-        <img src={bufoHelloIcon} alt="Character" id="main-character-image" />
+        <img src={bufoHelloIcon} alt="Character" id="main-character-image" width="100" />
       </div>
     </div>
   );
