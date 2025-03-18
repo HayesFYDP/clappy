@@ -170,9 +170,7 @@ class Clappy {
             this
           );
           handler.supportedInterventions.forEach((intervention) => {
-            if (this.enabledInterventions.includes(intervention)) {
-              this.interventionHandlers[intervention] = handler;
-            }
+            this.interventionHandlers[intervention] = handler;
           });
         });
       })

@@ -2,6 +2,12 @@ import { ClappyExpression } from '../types';
 import { InterventionHandler, InterventionPayloadMap, Interventions, PopupClappyPayload } from './types';
 import type Clappy from '../clappy';
 
+const llmExpressionChoices = [
+  ClappyExpression.Enraged,
+  ClappyExpression.Disappointed,
+  ClappyExpression.Crying,
+]
+
 export default class PopupClappyInterventionHandler implements InterventionHandler {
   supportedInterventions = [Interventions.POPUP_CLAPPY] as const;
 
@@ -27,9 +33,10 @@ export default class PopupClappyInterventionHandler implements InterventionHandl
   async popupClappy(payload?: PopupClappyPayload) {
     const timeoutMs = payload?.timeoutMs ?? 10000;
 
-    if (payload?.expression && payload?.message) {
+    // if the user provided an expression, use it; message is optional because it will just hide the speech option
+    if (payload?.expression) {
       const { expression, message } = payload;
-      return this.popupClappySpecified(expression, message, timeoutMs);
+      return this.popupClappySpecified(expression, message ?? '', timeoutMs);
     }
 
     const { expression, message } = await this.determineClappyMessage(payload);
@@ -76,12 +83,12 @@ export default class PopupClappyInterventionHandler implements InterventionHandl
 
       ${historyString}
 
-      Your expression options are: ${Object.values(ClappyExpression).join(', ')}.
+      Your expression options are: ${llmExpressionChoices.join(', ')}.
 
       Only select one expression, and write a short one sentence message to the user. Use all-caps if the tone fits. Try to avoid repeating exactly what you have said in the past and make use of the different expression options.
 
       Enclosed in <OUTPUT> </OUTPUT> tags, you will output a JSON response that conforms the following schema:
-      { expression: "<${Object.values(ClappyExpression).join('/')}>, message: <some helpful message>" }
+      { expression: "<${llmExpressionChoices}.join('/')}>, message: <some helpful message>" }
     `;
 
     const response = await this.clappy.openai?.chat.completions.create({

@@ -4,6 +4,7 @@ import bufoDisappointedIcon from '../../assets/bufo-disappointed.png';
 import bufoEnragedIcon from '../../assets/bufo-enraged.png';
 import bufoHappyIcon from '../../assets/bufo-happy.png';
 import bufoHelloIcon from '../../assets/bufo-hello.gif';
+import bufoChompIcon from '../../assets/bufo-chomp.gif'; // use as speaking
 import { ClappyExpression } from '../main/types';
 import App from './App';
 
@@ -41,6 +42,9 @@ export default function openPopup(expression: ClappyExpression, text: string | n
       break;
     case ClappyExpression.Hello:
       clappyIcon.src = bufoHelloIcon;
+      break;
+    case ClappyExpression.Chomp:
+      clappyIcon.src = bufoChompIcon;
       break;
     default:
       clappyIcon.src = bufoHelloIcon;
