@@ -25,6 +25,7 @@ export const InterventionDescriptions: Record<Interventions, string> = {
 
 type GenericInterventionPayload = {
   userTask?: string; // the task that the user is currently working on, used for LLM reasoning
+  justification?: string; // justification for the intervention, used for LLM reasoning
 }
 
 export type MinimizeWindowPayload = GenericInterventionPayload & {

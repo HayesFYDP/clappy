@@ -476,11 +476,12 @@ class Clappy {
     return intervention;
   }
 
-  async applyIntervention(userTask: string, productive: boolean) {
+  async applyIntervention(userTask: string, productive: boolean, justification: string) {
     if (productive) {
       return;
     }
 
+    // use an IIFE to select an intervention based on whether LLM is enabled
     const selectedIntervention = await (async () => {
       // if LLM is enabled, first attempt to select an intervention using LLM
       if (this.openai) {
@@ -509,7 +510,7 @@ class Clappy {
     // apply the intervention
     const handler = this.interventionHandlers[selectedIntervention];
     if (handler) {
-      await handler.handleIntervention(selectedIntervention, { userTask });
+      await handler.handleIntervention(selectedIntervention, { userTask, justification });
     } else {
       console.error('No handler found for intervention (did you forget to enable it in ENABLED_INTERVENTIONS?):', selectedIntervention);
     }
@@ -535,7 +536,7 @@ class Clappy {
         },
       });
 
-      await this.applyIntervention(hardcodedTask, productivity.productive);
+      await this.applyIntervention(hardcodedTask, productivity.productive, productivity.justification);
     } else {
       console.log('No screenshot path recevied');
     }
