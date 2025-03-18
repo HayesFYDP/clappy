@@ -5,11 +5,11 @@ type ProductivityAnalysis = {
 };
 
 enum ClappyExpression {
-  Happy = 'happy',
-  Crying = 'crying',
-  Disappointed = 'disappointed',
-  Enraged = 'enraged',
-  Hello = 'hello',
+  Happy = 'HAPPY',
+  Crying = 'CRYING',
+  Disappointed = 'DISAPPOINTED',
+  Enraged = 'ENRAGED',
+  Hello = 'HELLO',
 }
 
 // eslint-disable-next-line import/prefer-default-export
