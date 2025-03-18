@@ -71,6 +71,7 @@ export default class PopupClappyInterventionHandler implements InterventionHandl
         ? 'This is the first message that you are sending to the user.'
         : `The past few expressions and accompanying messages that you have displayed are:\n${this.messageHistory.map((entry) => `${entry.expression}: ${entry.message}`).join('\n')}`;
 
+    // TODO: feed in why the user is unproductive reasoning
     const prompt = `You are a helpful productivity assistant that is observing the user's computer screen. ${userTask}.
       Do not ask questions about this objective, simply consider it in light of the productivity records and justification.
 
@@ -80,7 +81,7 @@ export default class PopupClappyInterventionHandler implements InterventionHandl
 
       Your expression options are: ${Object.values(ClappyExpression).join(', ')}.
 
-      Only select one expression, and write a short one sentence message to the user. Use all-caps if the tone fits. Try to avoid repeating exactly what you have said in the past.
+      Only select one expression, and write a short one sentence message to the user. Use all-caps if the tone fits. Try to avoid repeating exactly what you have said in the past and make use of the different expression options.
 
       Enclosed in <OUTPUT> </OUTPUT> tags, you will output a JSON response that conforms the following schema:
       { expression: "<${Object.values(ClappyExpression).join('/')}>, message: <some helpful message>" }
