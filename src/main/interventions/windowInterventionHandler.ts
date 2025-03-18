@@ -1,5 +1,3 @@
-import { BrowserWindow } from 'electron';
-import OpenAI from 'openai';
 import {
   InterventionHandler,
   Interventions,
@@ -9,18 +7,17 @@ import {
   FocusWindowPayload,
 } from './types';
 import WindowManager from './windowManager';
+import type Clappy from '../clappy';
 
 export default class WindowInterventionHandler implements InterventionHandler {
   supportedInterventions = [Interventions.MINIMIZE_WINDOW, Interventions.SHAKE_WINDOW, Interventions.FOCUS_WINDOW] as const;
 
-  getMainWindow: () => BrowserWindow | null;
-  openai: OpenAI | null;
+  clappy: Clappy;
   windowManager: WindowManager;
 
-  constructor(getMainWindow: () => BrowserWindow | null, openai: OpenAI | null) {
+  constructor(clappy: Clappy) {
     this.windowManager = new WindowManager();
-    this.getMainWindow = getMainWindow;
-    this.openai = openai;
+    this.clappy = clappy;
   }
 
   async handleIntervention<T extends Interventions>(intervention: T, payload?: InterventionPayloadMap[T]): Promise<void> {
@@ -66,7 +63,7 @@ export default class WindowInterventionHandler implements InterventionHandler {
     const userWindows = await this.windowManager.listWindows();
     const windowDescriptions = userWindows.windows.map((window, index) => `${index + 1}. ${window.executablePath}: ${window.title}`);
 
-    if (!this.openai) {
+    if (!this.clappy.openai) {
       console.log('[FOCUS_WINDOW] OpenAI API not initialized, cannot use LLM to determine window to focus');
       return null;
     }
@@ -90,7 +87,7 @@ export default class WindowInterventionHandler implements InterventionHandler {
       { window: "<number between 1 and ${windowDescriptions.length}}>" }
     `;
 
-    const response = await this.openai?.chat.completions.create({
+    const response = await this.clappy.openai?.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         {

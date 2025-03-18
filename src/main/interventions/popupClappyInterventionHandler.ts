@@ -1,18 +1,15 @@
-import { BrowserWindow } from 'electron';
-import OpenAI from 'openai';
 import { ClappyExpression } from '../types';
 import { InterventionHandler, InterventionPayloadMap, Interventions, PopupClappyPayload } from './types';
+import type Clappy from '../clappy';
 
 export default class PopupClappyInterventionHandler implements InterventionHandler {
   supportedInterventions = [Interventions.POPUP_CLAPPY] as const;
 
-  getMainWindow: () => BrowserWindow | null;
-  openai: OpenAI | null;
   messageHistory: { expression: ClappyExpression; message: string }[]; // store message history in memory because there's no benefit to persist it
+  clappy: Clappy;
 
-  constructor(getMainWindow: () => BrowserWindow | null, openai: OpenAI | null) {
-    this.getMainWindow = getMainWindow;
-    this.openai = openai;
+  constructor(clappy: Clappy) {
+    this.clappy = clappy;
     this.messageHistory = [];
   }
 
@@ -41,7 +38,7 @@ export default class PopupClappyInterventionHandler implements InterventionHandl
 
   // make Clappy appear on the right side of a user's screen with a specifclose-popupic expression and text
   async popupClappySpecified(expression: ClappyExpression, text: string, timeoutMs = 10000) {
-    const mainWindow = this.getMainWindow();
+    const mainWindow = this.clappy.getMainWindow();
     if (mainWindow === null) {
       console.error('Main window is not available, cannot popup clappy');
       return;
@@ -57,7 +54,7 @@ export default class PopupClappyInterventionHandler implements InterventionHandl
   async determineClappyMessage(payload?: PopupClappyPayload): Promise<{ expression: ClappyExpression; message: string }> {
     const defaultResponse = { expression: ClappyExpression.Enraged, message: 'GET BACK TO WORK' };
 
-    if (!this.openai) {
+    if (!this.clappy.openai) {
       return defaultResponse;
     }
 
@@ -87,7 +84,7 @@ export default class PopupClappyInterventionHandler implements InterventionHandl
       { expression: "<${Object.values(ClappyExpression).join('/')}>, message: <some helpful message>" }
     `;
 
-    const response = await this.openai?.chat.completions.create({
+    const response = await this.clappy.openai?.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         {

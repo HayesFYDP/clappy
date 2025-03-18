@@ -1,6 +1,5 @@
-import { BrowserWindow } from 'electron';
-import OpenAI from 'openai';
 import { ClappyExpression } from '../types';
+import type Clappy from '../clappy';
 
 // to create and enable a new intervention, you must add it to the ENABLED_INTERVENTIONS array in main.ts
 // you also need to register your intervention handler in the INTERVENTION_HANDLERS array in interventionHandlers.ts
@@ -60,12 +59,11 @@ export interface InterventionHandler {
   handleIntervention<T extends Interventions>(intervention: T, payload?: InterventionPayloadMap[T]): Promise<void>;
 }
 
-export type InterventionHandlerConstructor = new (getMainWindow: () => BrowserWindow | null, openai: OpenAI | null) => InterventionHandler;
+export type InterventionHandlerConstructor = new (clappy: Clappy) => InterventionHandler;
 
 export function createInterventionHandler(
   HandlerType: InterventionHandlerConstructor,
-  getMainWindow: () => BrowserWindow | null,
-  openai: OpenAI | null,
+  clappy: Clappy,
 ): InterventionHandler {
-  return new HandlerType(getMainWindow, openai);
+  return new HandlerType(clappy);
 }

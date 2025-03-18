@@ -27,7 +27,7 @@ npm run build
 npm run start
 ```
 
-### Whisper Setup
+### Speech to Text/Text to Speech
 
 You'll need to separately setup Whisper for transcription to work.
 
@@ -50,7 +50,16 @@ cmake --build build --config Release
 
 # test transcribing an audio file (for Windows)
 .\build\bin\Release\whisper-cli.exe -f samples/jfk.wav
+```
 
+You'll also need to install `sox` for audio recording to work.
+
+```
+# for macOS
+brew install sox
+
+# for Windows (requires Chocolatey)
+choco install sox.portable
 ```
 
 ### Miscellaneous
