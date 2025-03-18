@@ -15,8 +15,8 @@ import { DateTime } from 'luxon';
 import OpenAI from 'openai';
 import os from 'os';
 import path from 'path';
-import INTERVENTION_HANDLERS from './interventions/interventionHandlers';
-import { createInterventionHandler, InterventionDescriptions, InterventionHandler, Interventions } from './interventions/types';
+import { InterventionHandlerMap, INTERVENTION_HANDLERS} from './interventions/interventionHandlers';
+import { createInterventionHandler, InterventionDescriptions, Interventions } from './interventions/types';
 import { ProductivityAnalysis } from './types';
 import { resolveHtmlPath } from './util';
 
@@ -33,7 +33,7 @@ class Clappy {
 
 
   enabledInterventions: Interventions[];
-  interventionHandlers: { [key in Interventions]?: InterventionHandler } = {};
+  interventionHandlers: Partial<InterventionHandlerMap> = {};
 
   constructor(enabledInterventions: Interventions[], isDevelopment: boolean, developmentInterventionEnabled: boolean) {
     this.isDevelopment = isDevelopment;
@@ -170,7 +170,8 @@ class Clappy {
             this
           );
           handler.supportedInterventions.forEach((intervention) => {
-            this.interventionHandlers[intervention] = handler;
+            // use a type assertion here because the rest of the code ensures that the handler is valid
+            this.assignHandler(intervention, handler as InterventionHandlerMap[typeof intervention]);
           });
         });
       })
@@ -476,6 +477,14 @@ class Clappy {
     } else {
       console.log('No screenshot path recevied');
     }
+  }
+
+  // function to assign a handler, mostly here to satisfy typescript typing
+  assignHandler<K extends keyof InterventionHandlerMap>(
+    intervention: K,
+    handler: InterventionHandlerMap[K]
+  ) {
+    this.interventionHandlers[intervention] = handler;
   }
 }
 

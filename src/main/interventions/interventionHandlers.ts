@@ -1,12 +1,18 @@
 import WindowInterventionHandler from "./windowInterventionHandler";
 import PopupClappyInterventionHandler from "./popupClappyInterventionHandler";
 import SpeechInterventionHandler from "./speechInterventionHandler";
-import { InterventionHandlerConstructor } from "./types";
+import { InterventionHandlerConstructor, Interventions } from "./types";
 
-const INTERVENTION_HANDLERS: InterventionHandlerConstructor[] = [
+export const INTERVENTION_HANDLERS: InterventionHandlerConstructor[] = [
   WindowInterventionHandler,
   PopupClappyInterventionHandler,
   SpeechInterventionHandler
 ] as const;
 
-export default INTERVENTION_HANDLERS;
+export type InterventionHandlerMap = {
+  [Interventions.MINIMIZE_WINDOW]: WindowInterventionHandler;
+  [Interventions.SHAKE_WINDOW]: WindowInterventionHandler;
+  [Interventions.FOCUS_WINDOW]: WindowInterventionHandler;
+  [Interventions.POPUP_CLAPPY]: PopupClappyInterventionHandler;
+  [Interventions.SPEAK_CLAPPY]: SpeechInterventionHandler;
+}

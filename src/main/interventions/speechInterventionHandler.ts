@@ -27,13 +27,13 @@ export default class SpeechInterventionHandler implements InterventionHandler {
 
   async speakClappy(payload?: InterventionPayloadMap[Interventions.SPEAK_CLAPPY]) {
     const message = payload?.message ?? 'Get back to work!';
-    const estSpeechDuration = message.split(' ').length * 500 + 2000; // assume 0.5 seconds per word, plus 2 second buffer
+    const estimatedSpeechDuration = message.split(' ').length * 500 + 2000; // assume 0.5 seconds per word, plus 2 second buffer
 
-    await this.clappy.interventionHandlers[Interventions.POPUP_CLAPPY]?.handleIntervention(Interventions.POPUP_CLAPPY, {
-      message: '',
-      expression: ClappyExpression.Chomp,
-      timeoutMs: estSpeechDuration,
-    });
+    await this.clappy.interventionHandlers[Interventions.POPUP_CLAPPY]?.popupClappySpecified(
+      ClappyExpression.Chomp,
+      message,
+      estimatedSpeechDuration,
+    );
     await this.speak(message);
   }
 
