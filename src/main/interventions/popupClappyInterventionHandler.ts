@@ -42,10 +42,10 @@ export default class PopupClappyInterventionHandler implements InterventionHandl
       return;
     }
 
-    mainWindow.webContents.send('open-popup', expression, text);
+    mainWindow.webContents.send('open-popup-intervention', expression, text);
 
     setTimeout(() => {
-      mainWindow.webContents.send('close-popup');
+      mainWindow.webContents.send('close-popup-intervention');
     }, timeoutMs);
   }
 }

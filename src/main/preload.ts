@@ -3,8 +3,8 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
 export type Channels =
-  | 'open-popup'
-  | 'close-popup'
+  | 'open-popup-intervention'
+  | 'close-popup-intervention'
   | 'toggle-popup'
   | 'set-ignore-mouse-events'
   | 'add-mouse-event-listeners'
