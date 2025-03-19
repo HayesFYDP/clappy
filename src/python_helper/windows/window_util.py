@@ -18,6 +18,10 @@ def is_window_important(window: Win32Window) -> bool:
     if window.executable.startswith("C:\\Windows\\"):
         return False
 
+    # ignore ourself
+    if window.executable.endswith("electron.exe") and "clappy" in window.title:
+        return False
+
     return True
 
 def get_all_important_windows() -> list[Win32Window]:

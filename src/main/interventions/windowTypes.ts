@@ -85,4 +85,4 @@ type IPCResponseType<T extends WindowIPCRequests> = T extends { type: infer R }
     : never
   : never;
 
-export { WindowIPCRequests, IPCResponseType };
+export { WindowIPCRequests, IPCResponseType, WindowInfo };

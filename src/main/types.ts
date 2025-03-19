@@ -11,6 +11,7 @@ enum ClappyExpression {
   Enraged = 'ENRAGED',
   Hello = 'HELLO',
   Chomp = 'CHOMP',
+  Thwack = 'THWACK',
 }
 
 // eslint-disable-next-line import/prefer-default-export

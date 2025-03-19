@@ -37,6 +37,7 @@ class Clappy {
     this.isDevelopment = isDevelopment;
     this.developmentInterventionEnabled = developmentInterventionEnabled;
     this.enabledInterventions = enabledInterventions;
+    console.log('Enabled interventions: ', enabledInterventions);
 
     // Initialize Prisma client for database access
     this.prisma = new PrismaClient();
