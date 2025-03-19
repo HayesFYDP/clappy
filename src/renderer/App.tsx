@@ -35,49 +35,65 @@ function Hello() {
 
   const hoverClass = !isTextInputOpen ? 'hover-row' : 'hover-row-no-display';
 
+  function autoGrow(e) {
+    const { target } = e;
+
+    // First, lock it to your single-line min, e.g. 24px
+    const singleLineHeight = 24;
+    target.style.height = `${singleLineHeight}px`;
+
+    // Now measure the scrollHeight
+    const needed = target.scrollHeight;
+
+    // Only grow if it exceeds single-line height
+    if (needed > singleLineHeight) {
+      target.style.height = `${needed}px`;
+    }
+  }
+
   return (
     <div>
       <div id="popup">
         <div id="speech-bubble" />
         <div id="hover-rows">
           <div id="settings" className={hoverClass}>
-            <span onClick={openSettings}>View settings</span>
             <button type="button" id="settings-button" onClick={openSettings}>
               <div className="button-icon">
                 <IoMdSettings />
               </div>
+              <div>View settings</div>
             </button>
           </div>
           <div id="history" className={hoverClass}>
-            <span>View history</span>
             <button type="button" id="history-button" onClick={openAnalytics}>
               <div className="button-icon">
                 <FaClock />
               </div>
+              <div>View history</div>
             </button>
           </div>
           {!isTextInputOpen ? (
             <div id="talk-to" className={hoverClass}>
-              <span>Talk to Clappy</span>
               <button type="button" id="talk-to-button" onClick={onOpenTextInput}>
                 <div className="button-icon">
                   <IoChatbubbleEllipses />
                 </div>
+                <div>Talk to Clappy</div>
               </button>
             </div>
           ) : (
             <div id="talk-to" className={hoverClass}>
-              <span>to Clappy</span>
               <button type="button" id="talk-to-button" onClick={onOpenTextInput}>
                 <span className="button-icon">
                   <IoChatbubbleEllipses />
                 </span>
+                <div>Type to Clappy</div>
               </button>
             </div>
           )}
           {isTextInputOpen && (
-            <div id="text-input-container">
-              <input type="text" id="text-input-field" placeholder="Type a reply to Clappy..." />
+            <div id="text-input-wrapper">
+              <textarea id="bubble-textarea" placeholder="Type a reply to Clappy..." onInput={autoGrow} />
               <button type="button" id="text-input-button" onClick={onSendTextInput}>
                 Send
               </button>

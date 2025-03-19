@@ -2,6 +2,11 @@
  * @NOTE: Prepend a `~` to css file paths that are in your node_modules
  *        See https://github.com/webpack-contrib/sass-loader#imports
  */
+div {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: bold;
+}
+
 #popup {
   width: 100px;
   height: 500px;
@@ -70,42 +75,53 @@ button {
   display: none;
 }
 
-.hover-row > span { 
-  margin: 0 10px;
-  cursor: pointer;
-  background-color: #D7E999;
-  text-align: center;
-  font-weight: bold;
-  padding: 2px 10px;
-  min-width: 120px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 6px;
-  border-right: 5px solid #536C3F; /* Bubble border */
-  border-bottom: 5px solid #536C3F; /* Bubble border */
-  border-top: 2px solid #536C3F; /* Bubble border */
-  border-left: 2px solid #536C3F; /* Bubble border */
-}
-
 .hover-row > button {
-  width: 20px;
+  margin: 0 10px;
+  min-width: 176px;
   height: 20px;
   padding: 15px;
   font-size: 15px;
   border-radius: 7px;
   display: flex;
-  justify-content: center;
+  text-align: left;
   align-items: center;
   background-color: #D7E999;
+  color: #536C3F;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   border-right: 5px solid #536C3F; /* Bubble border */
   border-bottom: 5px solid #536C3F; /* Bubble border */
   border-top: 2px solid #536C3F; /* Bubble border */
   border-left: 2px solid #536C3F; /* Bubble border */
 }
 
+.hover-row > button:active {
+  background-color: #c2d86f;
+  transform: translate(2px, 2px);
+  border-right: 5px solid #536C3F;
+  border-bottom: 5px solid #536C3F;
+  border-top: 2px solid #536C3F;
+  border-left: 2px solid #536C3F;
+}
+
+
+.hover-row > button div:first-child {
+  width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hover-row > button div:nth-child(2) {
+  width: 120px;
+  margin-left: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: left;
+}
+
 .hover-row >button:hover {
   cursor: pointer;
+  background-color: #cce677;
 }
 
 #speech-bubble {
@@ -132,20 +148,18 @@ button {
   box-sizing: border-box;
 }
 
-/* Outer border for the speech bubble triangle */
 #speech-bubble::before {
   content: '';
   position: absolute;
-  top: 20px; /* Centering */
-  right: -8px; /* Adjust for border width */
+  top: 20px;
+  right: -8px;
   transform: translateY(-50%) rotate(45deg);
   width: 20px;
   height: 20px;
-  background-color: #536C3F; /* Dark green border */
+  background-color: #536C3F;
   z-index: -1
 }
 
-/* Inner triangle */
 #speech-bubble::after {
   content: '';
   position: absolute;
@@ -154,7 +168,7 @@ button {
   transform: translateY(-50%) rotate(45deg);
   width: 10px;
   height: 10px;
-  background-color: #D7E999; /* Speech bubble color */
+  background-color: #D7E999;
 }
 
 #main-character-image {
@@ -162,41 +176,95 @@ button {
   top: 146px;
 }
 
-#text-input-container {
-  position:absolute;
-  top: 220px;
-  right: 110px;
-  width: 300px;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-}
-
-#text-input-container > input {
-  width: 220px;
-  height: 30px;
-  border: 2px solid #D7E999;
+#text-input-wrapper {
+  position: absolute;
+  top: 240px;
+  min-width: 260px;
+  left: -300px;
+  min-height: 40px;
+  
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  
+  padding: 10px 8px 8px;
   border-radius: 10px;
-  padding: 3px 10px;
+  
+  border-right: 2px solid #536C3F;
+  border-bottom: 5px solid #536C3F;
+  border-top: 2px solid #536C3F;
+  border-left: 5px solid #536C3F;
+  background-color: #D7E999;
+  color: #536C3F;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  
+  position: relative;
+}
+
+#text-input-wrapper::before {
+  content: '';
+  position: absolute;
+  
+  top: 50%;
+  left: -10px;
+  
+  transform: translateY(-50%) rotate(135deg);
+  width: 15px;
+  height: 15px;
+  
   background-color: #536C3F;
-  color: #D7E999;
+  z-index: -1; 
 }
 
-#text-input-container > input:focus {
+#text-input-wrapper::after {
+  content: '';
+  position: absolute;
+  
+  top: 50%;
+  left: -6px;
+  
+  transform: translateY(-50%) rotate(135deg);
+  width: 10px;
+  height: 10px;
+  
+  background-color: #D7E999;
+}
+
+#bubble-textarea {
+  min-width: 260px;
+  min-height: 30px;
+  
+  border: none;
   outline: none;
+  background-color: transparent;
+  color: #536C3F;
+  resize: none;
+  
+  font-family: inherit;
+  font-size: 14px;
 }
 
-#text-input-container > input::placeholder {
+#bubble-textarea::placeholder {
   color: #536C3F;
 }
 
-#text-input-container > button {
-  font-weight:bold;
+#text-input-button {
+  cursor: pointer;
+  font-weight: bold;
+  
   border: 2px solid #D7E999;
-  border-radius: 10px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  border-radius: 15px;
+  
   background-color: #536C3F;
   color: #D7E999;
+  
+  padding: 5px 10px;
+  font-family: inherit;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+}
+
+#text-input-button:hover {
+  background-color: #394a2c;
 }
