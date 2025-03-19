@@ -197,9 +197,10 @@ button {
   border-left: 5px solid #536C3F;
   background-color: #D7E999;
   color: #536C3F;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   
   position: relative;
+  font-family: 'Courier New', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: bold;
 }
 
 #text-input-wrapper::before {
@@ -241,12 +242,14 @@ button {
   color: #536C3F;
   resize: none;
   
-  font-family: inherit;
   font-size: 14px;
+
+  font-family: 'Courier New', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: bold;
 }
 
 #bubble-textarea::placeholder {
-  color: #536C3F;
+  color: #91ad7b;
 }
 
 #text-input-button {
