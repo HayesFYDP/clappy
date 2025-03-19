@@ -12,14 +12,14 @@ if (process.env.NODE_ENV === 'production') {
 
 const IS_DEVELOPMENT = true; // TODO: Set this to false when deploying or take as an arg
 // if set to true, will randomly select interventions when IS_DEVELOPMENT is true; otherwise, no interventions will be taken
-const DEVELOPMENT_INTERVENTION_ENABLED = true;
+const DEVELOPMENT_INTERVENTION_ENABLED = false;
 
-const ENABLED_INTERVENTIONS = [
-  // Interventions.POPUP_CLAPPY,
+const ENABLED_INTERVENTIONS: Interventions[] = [
+  Interventions.POPUP_CLAPPY,
   // Interventions.MINIMIZE_WINDOW,
   // Interventions.SHAKE_WINDOW,
   // Interventions.FOCUS_WINDOW,
-  Interventions.SPEAK_CLAPPY,
+  // Interventions.SPEAK_CLAPPY,
 ];
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

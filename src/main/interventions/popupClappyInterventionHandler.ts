@@ -43,7 +43,7 @@ export default class PopupClappyInterventionHandler implements InterventionHandl
     return this.popupClappySpecified(expression, message, timeoutMs);
   }
 
-  // make Clappy appear on the right side of a user's screen with a specifclose-popupic expression and text
+  // make Clappy appear on the right side of a user's screen with a specific expression and text
   async popupClappySpecified(expression: ClappyExpression, text: string, timeoutMs = 10000) {
     const mainWindow = this.clappy.getMainWindow();
     if (mainWindow === null) {
@@ -51,6 +51,7 @@ export default class PopupClappyInterventionHandler implements InterventionHandl
       return;
     }
 
+    console.log(`[POPUP_CLAPPY] Displaying ${expression} Clappy popup: ${text}`);
     mainWindow.webContents.send('open-popup-intervention', expression, text);
 
     setTimeout(() => {

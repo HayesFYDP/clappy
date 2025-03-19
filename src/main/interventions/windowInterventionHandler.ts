@@ -8,6 +8,8 @@ import {
 } from './types';
 import WindowManager from './windowManager';
 import type Clappy from '../clappy';
+import { ClappyExpression } from '../types';
+import { WindowInfo } from './windowTypes';
 
 export default class WindowInterventionHandler implements InterventionHandler {
   supportedInterventions = [Interventions.MINIMIZE_WINDOW, Interventions.SHAKE_WINDOW, Interventions.FOCUS_WINDOW] as const;
@@ -39,11 +41,23 @@ export default class WindowInterventionHandler implements InterventionHandler {
   async minimizeActiveWindow(payload?: MinimizeWindowPayload) {
     const handle = payload?.windowHandle;
 
+    await this.clappy.interventionHandlers[Interventions.POPUP_CLAPPY]?.popupClappySpecified(
+      ClappyExpression.Enraged,
+      'I minimized that window for you. Get back to work!',
+      6000
+    );
+
     return this.windowManager.minimizeWindow(handle);
   }
 
   async shakeActiveWindow(payload?: ShakeWindowPayload) {
     const handle = payload?.windowHandle;
+
+    await this.clappy.interventionHandlers[Interventions.POPUP_CLAPPY]?.popupClappySpecified(
+      ClappyExpression.Thwack,
+      'Stop being unproductive.',
+      6000
+    );
 
     return this.windowManager.shakeWindow(handle);
   }
@@ -55,21 +69,41 @@ export default class WindowInterventionHandler implements InterventionHandler {
       return this.windowManager.focusWindow(handle);
     }
 
+    const userWindows = await this.windowManager.listWindows();
+    const selectedWindow = await this.selectWindowToFocus(userWindows.windows);
+
+    if (!selectedWindow) {
+      console.log('[FOCUS_WINDOW] No window selected to focus on, skipping intervention');
+      return null;
+    }
+
+    await this.clappy.interventionHandlers[Interventions.POPUP_CLAPPY]?.popupClappySpecified(
+      ClappyExpression.Happy,
+      'The window I just focused seems more applicable for completing your task.',
+      6000
+    );
+    return this.windowManager.focusWindow(selectedWindow.id);
+  }
+
+  async selectWindowToFocus(windows: WindowInfo[], payload?: MinimizeWindowPayload): Promise<WindowInfo | null> {
     const userTask =
       payload?.userTask !== undefined
         ? `You are given that the user is currently trying to accomplish: ${payload.userTask}`
         : 'The user did not provide a specific goal that they are working on, but would like to generally do productive work.';
 
-    const userWindows = await this.windowManager.listWindows();
-    const windowDescriptions = userWindows.windows.map((window, index) => `${index + 1}. ${window.executablePath}: ${window.title}`);
+
+    const eligibleWindows = windows.filter(window => !window.isFocused); // only consider windows that are not currently focused
+    const windowDescriptions = eligibleWindows.map((window, index) => `${index + 1}. ${window.executablePath}: ${window.title}`);
+    // console.log(windowDescriptions);
 
     if (!this.clappy.openai) {
-      console.log('[FOCUS_WINDOW] OpenAI API not initialized, cannot use LLM to determine window to focus');
-      return null;
+      const randomWindow = eligibleWindows[Math.floor(Math.random() * eligibleWindows.length)];
+
+      console.log(`[FOCUS_WINDOW] OpenAI API not initialized, selecting random window (${randomWindow.title}) to focus on`);
+      return randomWindow;
     }
 
-    if (userWindows.windows.length === 0) {
-      console.log('[FOCUS_WINDOW] No windows to focus on');
+    if (windows.length === 0) {
       return null;
     }
 
@@ -110,14 +144,14 @@ export default class WindowInterventionHandler implements InterventionHandler {
     const outputJson = JSON.parse(output);
     const windowIndex = Number(outputJson.window) - 1;
 
-    if (Number.isNaN(windowIndex) || windowIndex < 0 || windowIndex >= userWindows.windows.length) {
+    if (Number.isNaN(windowIndex) || windowIndex < 0 || windowIndex >= windows.length) {
       console.log('[FOCUS_WINDOW] Invalid window index selected by LLM:', windowIndex);
       return null;
     }
 
-    const windowToFocus = userWindows.windows[windowIndex];
+    const windowToFocus = windows[windowIndex];
     console.log(`[FOCUS_WINDOW] LLM selected to focus on window: ${windowToFocus.executablePath}: ${windowToFocus.title}`);
 
-    return this.windowManager.focusWindow(windowToFocus.id);
+    return windowToFocus;
   }
 }

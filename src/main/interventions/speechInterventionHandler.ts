@@ -29,7 +29,7 @@ export default class SpeechInterventionHandler implements InterventionHandler {
 
   async speakClappy(payload?: SpeakClappyPayload) {
     const message = await this.determineClappySpeech(payload);
-    const estimatedSpeechDuration = message.split(' ').length * 500 + 2000; // assume 0.5 seconds per word, plus 2 second buffer
+    const estimatedSpeechDuration = message.split(' ').length * 450 + 2000; // assume 0.45 seconds per word, plus 2 second buffer
 
     await this.clappy.interventionHandlers[Interventions.POPUP_CLAPPY]?.popupClappySpecified(
       ClappyExpression.Chomp,

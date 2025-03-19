@@ -5,6 +5,7 @@ def is_window_important(window: DarwinWindow) -> bool:
     if not window.title or not window.executable:
         return False
 
+    # TODO: ignore ourself (its probably has a title of clappy and Eletron as executable? need to confirm)
     return True
 
 def get_all_important_windows() -> list[DarwinWindow]:
