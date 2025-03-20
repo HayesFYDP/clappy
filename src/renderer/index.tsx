@@ -4,8 +4,12 @@ import bufoDisappointedIcon from '../../assets/bufo-disappointed.png';
 import bufoEnragedIcon from '../../assets/bufo-enraged.png';
 import bufoHappyIcon from '../../assets/bufo-happy.png';
 import bufoHelloIcon from '../../assets/bufo-hello.gif';
+import bufoDespairIcon from '../../assets/bufo-despair.png';
+import bufoSuspiciousIcon from '../../assets/bufo-suspicious.png';
+import bufoOffersMicrophoneIcon from '../../assets/bufo-offers-mic.png';
 import bufoChompIcon from '../../assets/bufo-chomp.gif'; // use as speaking
 import bufoThwackIcon from '../../assets/bufo-thwack.gif'; // use as shaking
+
 import { ClappyExpression } from '../main/types';
 import App from './App';
 
@@ -49,6 +53,15 @@ export default function openPopup(expression: ClappyExpression, text: string | n
       break;
     case ClappyExpression.Thwack:
       clappyIcon.src = bufoThwackIcon
+      break;
+    case ClappyExpression.OffersMicrophone:
+      clappyIcon.src = bufoOffersMicrophoneIcon;
+      break;
+    case ClappyExpression.Despair:
+      clappyIcon.src = bufoDespairIcon;
+      break;
+    case ClappyExpression.Suspicious:
+      clappyIcon.src = bufoSuspiciousIcon;
       break;
     default:
       clappyIcon.src = bufoHelloIcon;
@@ -139,6 +152,6 @@ window.electron.ipcRenderer.on('toggle-popup', () => {
     openSource = null;
   } else {
     openSource = 'hotkey';
-    openPopup(ClappyExpression.Hello, 'GET BACK TO WORK');
+    openPopup(ClappyExpression.Hello, '');
   }
 });

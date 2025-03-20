@@ -78,7 +78,7 @@ export default class WindowInterventionHandler implements InterventionHandler {
     }
 
     await this.clappy.interventionHandlers[Interventions.POPUP_CLAPPY]?.popupClappySpecified(
-      ClappyExpression.Happy,
+      ClappyExpression.Suspicious,
       'The window I just focused seems more applicable for completing your task.',
       6000
     );
