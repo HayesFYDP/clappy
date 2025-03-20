@@ -1,7 +1,14 @@
+:root {
+  --clappy-dark-green: #536C3F;
+  --clappy-light-green: #D7E999;
+  --clappy-less-light-green: #cce677;
+  --clappy-darker-green: #394a2c;
+  --clappy-light-grey: #91ad7b;
+  --clappy-dark-grey: #7b8a6e;
+}
+
 .container {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  padding: 10px;
-  max-width: 700px;
   margin: 0 auto;
   color: #536C3F;
 }
@@ -10,27 +17,48 @@
   margin-bottom: 10px;
 }
 
+.navLinks-wrapper {
+  background-color: var(--clappy-light-green);
+  border-bottom: 1px solid var(--clappy-dark-green);
+}
+
 .navLinks {
-  margin-bottom: 20px;
-  width: 50%;
+  width: 68%;
   display: flex;
   justify-content: space-between;
+  padding: 10px 20px;
 }
 
 .navLink {
-  padding: 0px 15px;
+  height: 20px;
+  width: 129px;
+  text-align: center;
+  padding: 10px 16px;
+  font-size: 15px;
+  border-right: 5px solid var(--clappy-dark-green);
+  border-bottom: 5px solid var(--clappy-dark-green);
+  border-top: 2px solid var(--clappy-dark-green);
+  border-left: 2px solid var(--clappy-dark-green);
+  font-weight: 500;
+
+  border-radius: 7px;
   cursor: pointer;
+
+  background-color: var(--clappy-light-green);
+
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
-.navLink:hover, .navLink-active {
-  text-decoration: underline;
+.navLink:hover {
+  background-color: var(--clappy-less-light-green);
 }
 
-.navLink:first-child {
-  padding-left: 0px;
+.navLink-active {
+  background-color: var(--clappy-less-light-green);
+  font-weight: bold;
 }
-
-.navLink:not(:last-child) { border-right: 1px solid green; }
 
 .link {
   color: #536C3F;
@@ -43,10 +71,8 @@
   flex-wrap: wrap;
   align-items: center;
   margin-bottom: 20px;
-  padding: 10px;
-  border-radius: 10px;
+  padding: 14px 20px;
   background-color: #D7E999;
-  border: 1px solid #536C3F;
 }
 
 .label {
@@ -98,10 +124,10 @@
   display: flex;
   align-items: center;
   justify-content: space-evenly;
-  padding: 8px;
+  padding: 0px 8px 20px;
+  margin-bottom: 20px;
   font-size: 14px;
   width: 100%;
-  margin-bottom: 20px;
 }
 
 .legend-item {
@@ -163,4 +189,103 @@ label {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 20px;
+}
+
+select {
+  width: 140px;
+  padding: 3px 6px;
+  border-radius: 6px;
+  text-align: left;
+  background: var(--clappy-light-green);
+  font-size: 15px;
+  color: var(--clappy-dark-green);
+
+  border-right: 2.5px solid var(--clappy-dark-green);
+  border-bottom: 2.5px solid var(--clappy-dark-green);
+  border-top: 1px solid var(--clappy-dark-green);
+  border-left: 1px solid var(--clappy-dark-green);
+
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="%23536C3F"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>')
+    no-repeat right 10px center;
+  background-size: 14px;
+  cursor: pointer;
+}
+
+.select:focus {
+  outline: none;
+}
+
+.select:hover {
+  background-color: var(--clappy-less-light-green);
+}
+
+.graph-container, .table-container, .timeline-container {
+  padding: 20px;
+}
+
+tr > td {
+  padding: 10px 0px;
+  border-bottom: 1px solid var(--clappy-light-green);
+}
+
+tbody {
+  font-weight: normal;
+}
+
+.productivitySegments {
+  width: 100%;
+  text-align: right;
+}
+
+.productivitySegments > * {
+  font-weight: normal;
+}
+
+.filters {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-left: 20px;
+}
+
+.statCheckbox {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.statCheckbox + label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.statCheckbox + label::before {
+  content: "";
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 2px solid var(--clappy-dark-green);
+  background: var(--clappy-light-green);
+  display: inline-block;
+  margin-right: 10px;
+  position: relative;
+}
+
+.statCheckbox:hover + label::before {
+  background: var(--clappy-less-light-green);
+}
+
+/* Adding the checkmark */
+.statCheckbox:checked + label::before {
+  content: "✓";
+  text-align: center;
+  color: var(--clappy-light-green);
+  background: var(--clappy-dark-green);
+  border-color: var(--clappy-dark-green);
 }

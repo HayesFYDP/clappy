@@ -1,6 +1,10 @@
+/* eslint-disable jsx-a11y/label-has-associated-control */
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import React from 'react';
+import { FaTableList } from 'react-icons/fa6';
+import { IoTime } from 'react-icons/io5';
+import { TbGraphFilled } from 'react-icons/tb';
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { ClappyAnalytics, ProductivityHistoryRecord, SessionAnalytics } from './analyticsHistory';
 import './AnalyticsWindow.css';
@@ -25,6 +29,13 @@ function formatDate(date: string) {
 
   return dateFormatted;
 }
+const statuses: ProductivityHistoryRecord['status'][] = [
+  'very-productive',
+  'productive',
+  'somewhat-productive',
+  'not-productive',
+  'uncertain',
+];
 
 const productivityScore: Record<ProductivityHistoryRecord['status'], number> = {
   'very-productive': 5,
@@ -68,23 +79,25 @@ function calculateProductivityStats(sessions: SessionAnalytics[]) {
 }
 
 function calculateProductivityStatsLineGraph(sessions: SessionAnalytics[]) {
-  return sessions.map((session) => {
-    const totalDuration = session.productivity.reduce((sum, record) => {
-      return sum + (new Date(record.endTime).getTime() - new Date(record.startTime).getTime());
-    }, 0);
+  return sessions
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) // Sort by date in ascending order
+    .map((session) => {
+      const totalDuration = session.productivity.reduce((sum, record) => {
+        return sum + (new Date(record.endTime).getTime() - new Date(record.startTime).getTime());
+      }, 0);
 
-    const weightedSum = session.productivity.reduce((sum, record) => {
-      const duration = new Date(record.endTime).getTime() - new Date(record.startTime).getTime();
-      return sum + productivityScore[record.status] * duration;
-    }, 0);
+      const weightedSum = session.productivity.reduce((sum, record) => {
+        const duration = new Date(record.endTime).getTime() - new Date(record.startTime).getTime();
+        return sum + productivityScore[record.status] * duration;
+      }, 0);
 
-    const avgScore = Math.round((totalDuration > 0 ? weightedSum / totalDuration : 0) * 100) / 100;
+      const avgScore = Math.round((totalDuration > 0 ? weightedSum / totalDuration : 0) * 100) / 100;
 
-    return {
-      date: formatDate(session.date.toDateString()),
-      avgProductivityScore: avgScore,
-    };
-  });
+      return {
+        date: formatDate(session.date.toDateString()),
+        avgProductivityScore: avgScore,
+      };
+    });
 }
 
 type AnalyticsWindowProps = {
@@ -95,17 +108,21 @@ function GraphView({ analytics }: { analytics: ClappyAnalytics }) {
   const statsData = calculateProductivityStatsLineGraph(analytics.sessions);
 
   return (
-    <div className="container">
-      <div className="graph-container">
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={statsData} margin={{ bottom: 30 }}>
-            <XAxis dataKey="date" padding={{ left: 50, right: 50 }} />
-            <YAxis domain={[0, 5]} tickCount={6} allowDataOverflow ticks={[0, 1, 2, 3, 4, 5]} />
-            <Tooltip />
-            <Line type="monotone" dataKey="avgProductivityScore" stroke="#4CAF50" strokeWidth={2} />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+    <div className="graph-container">
+      <ResponsiveContainer width="100%" height={400}>
+        <LineChart data={statsData} margin={{ bottom: 30 }}>
+          <XAxis
+            dataKey="date"
+            padding={{ left: 50, right: 50 }}
+            label={{ value: 'Date', position: 'insideBottom', offset: -10, fill: '#7b8a6e' }}
+            stroke="#536C3F"
+            tick={{ fill: '#536C3F' }}
+          />
+          <YAxis domain={[0, 5]} tickCount={6} allowDataOverflow ticks={[0, 1, 2, 3, 4, 5]} stroke="#536C3F" tick={{ fill: '#536C3F' }} />
+          <Tooltip formatter={(value, _) => [value, 'Average Productivity Score']} contentStyle={{ color: '#536C3F' }} />
+          <Line type="monotone" dataKey="avgProductivityScore" stroke="#536C3F" strokeWidth={2} />
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   );
 }
@@ -113,11 +130,11 @@ function GraphView({ analytics }: { analytics: ClappyAnalytics }) {
 function TimelineView({ analytics }: { analytics: ClappyAnalytics }) {
   const statsData = calculateProductivityStats(analytics.sessions);
   return (
-    <>
+    <div className="timeline-container">
       <div className="legend-container">
-        {Object.keys(getColorForStatus).map((status) => (
+        {statuses.map((status) => (
           <div className="legend-item" key={status}>
-            <span className="color-box" style={{ backgroundColor: getColorForStatus(status as ProductivityHistoryRecord['status']) }} />
+            <span className="color-box" style={{ backgroundColor: getColorForStatus(status) }} />
             <span className="legend-text">{status.replace('-', ' ')}</span>
           </div>
         ))}
@@ -140,43 +157,56 @@ function TimelineView({ analytics }: { analytics: ClappyAnalytics }) {
           </div>
         </div>
       ))}
-    </>
+    </div>
   );
 }
 
 function TableView({ analytics }: { analytics: ClappyAnalytics }) {
   const statsData = calculateProductivityStats(analytics.sessions);
   return (
-    <table className="analytics-table">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Estimated Productivity</th>
-          <th>Productivity Breakdown</th>
-        </tr>
-      </thead>
-      <tbody>
-        {statsData.map((data) => (
-          <tr key={data.date}>
-            <td>{formatDate(data.date)}</td>
-            <td>{data.estimatedProductivity}</td>
-            <td>
-              <div className="productivitySegments">
-                {data.segments.map((segment) => (
-                  <div
-                    key={segment.label}
-                    className="productivitySegment"
-                    style={{ backgroundColor: segment.color, width: `${segment.widthPercent}%` }}
-                  >
-                    {segment.widthPercent > 10 && <span className="segmentLabel">{segment.label}</span>}
-                  </div>
-                ))}
-              </div>
-            </td>
-          </tr>
+    <div className="table-container">
+      <div className="legend-container">
+        {statuses.map((status) => (
+          <div className="legend-item" key={status}>
+            <span className="color-box" style={{ backgroundColor: getColorForStatus(status) }} />
+            <span className="legend-text">{status.replace('-', ' ')}</span>
+          </div>
         ))}
-      </tbody>
-    </table>
+      </div>
+
+      <table className="analytics-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Estimated Productivity</th>
+            <th>Productivity Breakdown</th>
+          </tr>
+        </thead>
+        <tbody>
+          {statsData.map((data) => (
+            <tr key={data.date}>
+              <td>{formatDate(data.date)}</td>
+              <td>{data.estimatedProductivity}</td>
+              <td>
+                <div className="productivitySegments">
+                  {data.segments.map((segment) => (
+                    <div
+                      key={segment.label}
+                      style={{
+                        width: '100%',
+                        background: `linear-gradient(to right, ${segment.color} ${segment.widthPercent}%, transparent ${segment.widthPercent}%)`,
+                      }}
+                    >
+                      {`${segment.widthPercent.toPrecision(3)}% ${segment.label}`}
+                    </div>
+                  ))}
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -188,16 +218,21 @@ function AnalyticsWindow({ analytics }: AnalyticsWindowProps) {
 
   return (
     <div className="container">
-      <div className="navLinks">
-        <span className={`navLink ${currentView === 'graph' ? 'navLink-active' : ''}`} onClick={() => setCurrentView('graph')}>
-          Graph View
-        </span>
-        <span className={`navLink ${currentView === 'timeline' ? 'navLink-active' : ''}`} onClick={() => setCurrentView('timeline')}>
-          Timeline View
-        </span>
-        <span className={`navLink ${currentView === 'table' ? 'navLink-active' : ''}`} onClick={() => setCurrentView('table')}>
-          Table View
-        </span>
+      <div className="navLinks-wrapper">
+        <div className="navLinks">
+          <div className={`navLink ${currentView === 'graph' ? 'navLink-active' : ''}`} onClick={() => setCurrentView('graph')}>
+            <TbGraphFilled />
+            Graph View
+          </div>
+          <div className={`navLink ${currentView === 'timeline' ? 'navLink-active' : ''}`} onClick={() => setCurrentView('timeline')}>
+            <IoTime />
+            Timeline View
+          </div>
+          <div className={`navLink ${currentView === 'table' ? 'navLink-active' : ''}`} onClick={() => setCurrentView('table')}>
+            <FaTableList />
+            Table View
+          </div>
+        </div>
       </div>
       <div className="controls">
         <label className="label" htmlFor="timeRange">
@@ -210,14 +245,15 @@ function AnalyticsWindow({ analytics }: AnalyticsWindowProps) {
         </label>
         <div className="filters">
           <span>Filters: </span>
-          <label htmlFor="productive-filter">
-            <input type="checkbox" id="productive" name="productive-filter" className="statCheckbox" />
-            Only Productive Time
-          </label>
-          <label htmlFor="sortByTask">
+          <div style={{ marginRight: 10 }}>
+            <input type="checkbox" id="productiveCheckbox" className="statCheckbox" />
+            <label htmlFor="productiveCheckbox">Only Productive Time</label>
+          </div>
+
+          <div>
             <input type="checkbox" id="sortByTask" className="statCheckbox" />
-            Sort by Task
-          </label>
+            <label htmlFor="sortByTask">Sort by Task</label>
+          </div>
         </div>
       </div>
       {currentView === 'graph' && <GraphView analytics={analytics} />}
