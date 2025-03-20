@@ -15,7 +15,7 @@ import { DateTime } from 'luxon';
 import OpenAI from 'openai';
 import os from 'os';
 import path from 'path';
-import { InterventionHandlerMap, INTERVENTION_HANDLERS } from './interventions/interventionHandlers';
+import { INTERVENTION_HANDLERS, InterventionHandlerMap } from './interventions/interventionHandlers';
 import { createInterventionHandler, InterventionDescriptions, Interventions } from './interventions/types';
 import { ProductivityAnalysis } from './types';
 import { resolveHtmlPath } from './util';
@@ -54,13 +54,12 @@ class Clappy {
         return;
       }
       const settingsWindow = new BrowserWindow({
-        width: 650,
+        width: 800,
         height: 600,
         title: 'Clappy Settings',
         resizable: false,
         frame: true,
         movable: true,
-        titleBarStyle: 'hidden',
         roundedCorners: true,
         autoHideMenuBar: true,
         webPreferences: {
