@@ -5,6 +5,7 @@ interface DropdownSetting {
   type: 'dropdown';
   options: string[];
   value: string;
+  descriptions: string[];
 }
 
 interface ListSetting {
@@ -14,6 +15,7 @@ interface ListSetting {
     Programs: string[];
     Sites: string[];
   };
+  descriptions: string[];
 }
 
 interface CheckboxSetting {
@@ -21,17 +23,21 @@ interface CheckboxSetting {
   type: 'checkbox';
   options: string[];
   values: string[];
+  descriptions: string[];
 }
 
 export type SettingType = DropdownSetting | ListSetting | CheckboxSetting;
 
 const DefaultSettings: SettingType[] = [
+  /*
   {
     category: 'Communication',
     type: 'dropdown',
     options: ['continuous input', 'push to talk'],
     value: 'continuous input',
+    descriptions: [],
   },
+  */
   {
     category: 'Blacklist',
     type: 'list',
@@ -39,12 +45,17 @@ const DefaultSettings: SettingType[] = [
       Programs: ['League of Legends'],
       Sites: ['twitter.com'],
     },
+    descriptions: ['Programs you would like Clappy to help block', 'Websites you would like Clappy to stop you from visiting'],
   },
   {
     category: 'Permissions',
     type: 'checkbox',
     options: ['Take screenshots', 'Listen to user microphone'],
     values: ['Take screenshots', 'Listen to user microphone'],
+    descriptions: [
+      'Clappy needs to take screenshots to see what is on your screen',
+      'User microphone is required to verbally talk with Clappy',
+    ],
   },
 ];
 

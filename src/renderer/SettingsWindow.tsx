@@ -24,12 +24,14 @@ interface DropdownSetting {
   type: 'dropdown';
   options: string[];
   value: string;
+  descriptions: string[];
 }
 
 interface ListSetting {
   category: CategoryType;
   type: 'list';
   items: Record<string, string[]>;
+  descriptions: string[];
 }
 
 interface CheckboxSetting {
@@ -37,6 +39,7 @@ interface CheckboxSetting {
   type: 'checkbox';
   options: string[];
   values: string[];
+  descriptions: string[];
 }
 
 /** Union type to cover all setting variants in the UI */
@@ -46,14 +49,15 @@ type ClappySetting = DropdownSetting | ListSetting | CheckboxSetting;
 const getStoredSettings = async (): Promise<ClappySetting[]> => {
   const stored: StoredSettings | null = await window.electron.ipcRenderer.invoke('get-settings');
   if (!stored) return DefaultSettings;
-
   return [
+    /*
     {
       category: 'Communication',
       type: 'dropdown',
       options: ['continuous input', 'push to talk'],
       value: stored.communicationIsContinuousInput ? 'continuous input' : 'push to talk',
     },
+    */
     {
       category: 'Blacklist',
       type: 'list',
@@ -61,6 +65,7 @@ const getStoredSettings = async (): Promise<ClappySetting[]> => {
         Programs: dbStringToList(stored.blacklistPrograms),
         Sites: dbStringToList(stored.blacklistSites),
       },
+      descriptions: ['Programs you would like Clappy to help block', 'Websites you would like Clappy to stop you from visiting'],
     },
     {
       category: 'Permissions',
@@ -70,6 +75,10 @@ const getStoredSettings = async (): Promise<ClappySetting[]> => {
         stored.permissionScreenshot ? 'Take screenshots' : '',
         stored.permissionMicrophone ? 'Listen to user microphone' : '',
       ].filter(Boolean),
+      descriptions: [
+        'Clappy needs to take screenshots to see what is on your screen',
+        'User microphone is required to verbally talk with Clappy',
+      ],
     },
   ];
 };
