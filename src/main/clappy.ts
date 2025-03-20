@@ -60,6 +60,7 @@ class Clappy {
         resizable: false,
         frame: true,
         movable: true,
+        icon: path.join(__dirname, '../../assets/app-icon.png'),
         roundedCorners: true,
         autoHideMenuBar: true,
         webPreferences: {
@@ -95,6 +96,7 @@ class Clappy {
         title: 'Clappy Analytics',
         resizable: false,
         frame: true,
+        icon: path.join(__dirname, '../../assets/app-icon.png'),
         roundedCorners: true,
         autoHideMenuBar: true,
         webPreferences: {
@@ -179,6 +181,7 @@ class Clappy {
     const mainWindow = new BrowserWindow({
       width: screenSize.width,
       height: screenSize.height,
+      icon: path.join(__dirname, '../../assets/app-icon.png'),
       fullscreen: !isRunningMacos, // Make the window full-screen
       transparent: true, // Transparent background
       frame: false, // Remove window borders and title bar

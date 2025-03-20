@@ -126,11 +126,13 @@
     "files": [
       "dist",
       "node_modules",
-      "package.json"
+      "package.json",
+      "assets"
     ],
     "mac": {
       "sign": ".erb/scripts/notarize.js",
       "notarize": false,
+      "icon": "assets/appIconMac.icns",
       "target": {
         "target": "default",
         "arch": [
@@ -159,6 +161,7 @@
       ]
     },
     "win": {
+      "icon": "assets/appIconWindows.ico",
       "target": [
         "nsis"
       ]
@@ -177,10 +180,6 @@
     "extraResources": [
       "./assets/**"
     ]
-  },
-  "devEngines": {
-    "node": ">=14.x",
-    "npm": ">=7.x"
   },
   "electronmon": {
     "patterns": [
