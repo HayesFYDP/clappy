@@ -158,7 +158,7 @@ export default function ClappySettingsWindow(): JSX.Element {
     });
 
     window.electron.ipcRenderer.invoke('set-settings', newSettings);
-  }, [settings, tempSettings]);
+  }, [settings]);
 
   /** Detect which categories and items have changed compared to originalTempSettings */
   useEffect(() => {
