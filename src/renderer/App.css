@@ -100,7 +100,7 @@ button {
   border: 2px solid var(--clappy-dark-green);  
   border-right-width: 5px;  
   border-bottom-width: 5px;
-  }
+}
 
 .hover-row > button:active {
   background-color: #c2d86f;
