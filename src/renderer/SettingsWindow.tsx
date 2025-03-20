@@ -248,7 +248,7 @@ export default function ClappySettingsWindow(): JSX.Element {
               ...setting,
               items: {
                 ...setting.items,
-                [subCategory]: [...setting.items[subCategory], newValue.trim()],
+                [subCategory]: [...setting.items[subCategory], newValue.trim()].filter((item) => item.trim() !== ''),
               },
             }
           : setting,
@@ -391,8 +391,6 @@ export default function ClappySettingsWindow(): JSX.Element {
                           >
                             <div className="clappy-setting-label">{subCategory}</div>
                             <div className="clappy-list-container">
-                              {/* TODO(@alex): sometimes items is just a list of empty items - that's why we need the 
-                              items.some check. but this feels wrong */}
                               {items.some(Boolean) && items.length > 0 ? (
                                 items.map((item, index) => (
                                   <div key={item} className="clappy-list-item">
