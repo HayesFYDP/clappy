@@ -188,7 +188,6 @@ function AnalyticsWindow({ analytics }: AnalyticsWindowProps) {
 
   return (
     <div className="container">
-      <h1 className="title">Clappy Stats</h1>
       <div className="navLinks">
         <span className={`navLink ${currentView === 'graph' ? 'navLink-active' : ''}`} onClick={() => setCurrentView('graph')}>
           Graph View

@@ -1,4 +1,31 @@
-const DefaultSettings = [
+export type CategoryType = 'Communication' | 'Blacklist' | 'Permissions';
+
+interface DropdownSetting {
+  category: 'Communication';
+  type: 'dropdown';
+  options: string[];
+  value: string;
+}
+
+interface ListSetting {
+  category: 'Blacklist';
+  type: 'list';
+  items: {
+    Programs: string[];
+    Sites: string[];
+  };
+}
+
+interface CheckboxSetting {
+  category: 'Permissions';
+  type: 'checkbox';
+  options: string[];
+  values: string[];
+}
+
+export type SettingType = DropdownSetting | ListSetting | CheckboxSetting;
+
+const DefaultSettings: SettingType[] = [
   {
     category: 'Communication',
     type: 'dropdown',
@@ -8,13 +35,16 @@ const DefaultSettings = [
   {
     category: 'Blacklist',
     type: 'list',
-    items: { Programs: ['League of Legends'], Sites: ['twitter.com'] },
+    items: {
+      Programs: ['League of Legends'],
+      Sites: ['twitter.com'],
+    },
   },
   {
     category: 'Permissions',
     type: 'checkbox',
-    options: ['Take Screenshots', 'Listen to user microphone'],
-    values: ['Take Screenshots', 'Listen to user microphone'],
+    options: ['Take screenshots', 'Listen to user microphone'],
+    values: ['Take screenshots', 'Listen to user microphone'],
   },
 ];
 

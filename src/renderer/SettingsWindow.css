@@ -1,38 +1,58 @@
-.clappy-settings * {
-  font-family: sans-serif;
-  box-sizing: border-box;
+:root {
+  --clappy-dark-green: #536C3F;
+  --clappy-light-green: #D7E999;
+  --clappy-less-light-green: #cce677;
+  --clappy-darker-green: #394a2c;
+  --clappy-light-grey: #91ad7b;
+  --clappy-dark-grey: #7b8a6e;
 }
+
+.clappy-settings * {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--clappy-dark-green);
+  /* box-sizing: border-box; */
+}
+
+.clappy-settings {
+  background-color: var(--clappy-light-green);
+}
+
+.clappy-settings-title {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 0;
+  padding: 20px 20px 16px 20px;
+  border-bottom: 1px solid var(--clappy-dark-green);
+  /* background-color: var(--clappy-light-green); */
+}
+
 .clappy-settings-window {
   display: flex;
   flex-direction: column;
   height: 100vh;
   width: 100%;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
-  background-color: #f5f9ed;
 }
 .clappy-header-container {
-  -webkit-app-region: drag;
   user-select: none;
   display: flex;
   justify-content: space-between;
   align-items: center;
   width: 100%;
   padding: 20px 20px 16px 20px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  background: #e8f0d6;
+  border-bottom: 5px solid var(--clappy-dark-green);
+  background-color: var(--clappy-light-green);
   z-index: 10;
 }
 .clappy-settings-header {
   font-size: 32px;
   font-weight: 600;
-  color: #2c3e2e;
+  padding: 20px 20px 16px 20px;
 }
 .clappy-close-button {
   background: transparent;
   border: none;
   cursor: pointer;
   font-size: 18px;
-  color: #2c3e2e;
   width: 32px;
   height: 32px;
   display: flex;
@@ -50,34 +70,47 @@
 }
 .clappy-settings-navigation {
   user-select: none;
-  width: 200px;
-  background: #f5f9ed;
+  width: 240px;
+  background: var(--clappy-light-green);
   display: flex;
+  align-items: center;
   flex-direction: column;
   height: 100%;
 }
 .clappy-nav-items {
   padding: 12px 0;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  width: 95%;
   flex: 1;
 }
 .clappy-nav-item {
   margin: 4px 8px;
   padding: 10px 16px;
-  font-size: 16px;
-  color: #3a523e;
+  font-size: 15px;
   cursor: pointer;
   border-radius: 8px;
   display: flex;
   align-items: center;
   gap: 10px;
+  background-color: var(--clappy-light-green);
+  border: 2px solid var(--clappy-dark-green);  
+  border-right-width: 5px;  
+  border-bottom-width: 5px;
+  font-weight:500;
 }
 .clappy-nav-item:hover {
-  background-color: rgba(44, 62, 46, 0.08);
+  background-color: var(--clappy-less-light-green);
 }
 .clappy-nav-item.clappy-active {
-  background-color: #e8f0d6;
-  font-weight: 500;
+  transform: translate(2px, 2px);
+  border-right: 5px solid var(--clappy-dark-green);
+  border-bottom: 5px solid var(--clappy-dark-green);
+  border-top: 2px solid var(--clappy-dark-green);
+  border-left: 2px solid var(--clappy-dark-green);
+  font-weight: 900;
+  background-color: var(--clappy-less-light-green);
 }
 .clappy-changed-nav {
   position: relative;
@@ -90,7 +123,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background-color: #7a9c69;
+  background-color: var(--clappy-dark-green);
   transform: translateY(-50%);
 }
 .clappy-changed-item {
@@ -104,49 +137,51 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background-color: #7a9c69;
+  background-color: var(--clappy-dark-green);
   transform: translateY(-50%);
 }
 .clappy-save-container {
   padding: 16px;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
-  background: #e8f0d6;
+  width: 80%;
+  border-radius: 10px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 .clappy-save-count {
   font-size: 12px;
-  color: #3a523e;
+  color: var(--clappy-dark-green);
   text-align: center;
 }
 .clappy-save-indicator {
   font-size: 12px;
-  color: #4b7a3c;
+  color: var(--clappy-dark-green);
   text-align: center;
-  font-weight: 500;
+  font-weight: bold;
 }
 .clappy-save-button {
-  background: #7a9c69;
+  background-color: var(--clappy-dark-green);
   border: none;
   border-radius: 4px;
   padding: 8px 16px;
   cursor: pointer;
-  font-size: 16px;
-  font-weight: 500;
-  color: white;
+  font-weight: bold;
+  letter-spacing: 0.2px;
+  font-size: 15px;
+  color: var(--clappy-light-green);
   width: 100%;
 }
 .clappy-save-button:hover {
-  background: #617b53;
+  background: var(--clappy-darker-green);;
 }
 .clappy-settings-container {
-  background: #f5f9ed;
-  color: #3a523e;
+  color:var(--clappy-dark-green);
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  padding-top: 20px;
+  background-color: white;
 }
 .clappy-settings-content {
   flex-grow: 1;
@@ -161,15 +196,17 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-left: 16px;
-  border-bottom: 1px solid rgba(44, 62, 46, 0.1) !important;
+  padding: 4px 16px;
+  border-bottom: 1px solid var(--clappy-light-green);
+}
+.clappy-setting-control:last-child {
+  border-bottom: none;
 }
 .clappy-setting-label {
-  font-size: 16px;
-  font-weight: 700;
+  font-size: 15px;
   margin-top: 16px;
   margin-bottom: 16px;
-  color: #3a523e;
+  color: var(--clappy-dark-green);;
 }
 .clappy-setting-dropdown {
   width: 160px;
@@ -177,9 +214,9 @@
   border-radius: 6px;
   text-align: left;
   border: none;
-  background: #f5f9ed;
-  font-size: 16px;
-  color: #3a523e;
+  background: var(--clappy-light-green);
+  font-size: 15px;
+  color: var(--clappy-dark-green);;
 }
 .clappy-setting-dropdown:focus {
   outline: none;
@@ -191,12 +228,11 @@
   margin-bottom: 20px;
   position: relative;
   padding-left: 16px;
-  border-bottom: 1px solid rgba(44, 62, 46, 0.1) !important;
+  border-bottom: 1px solid var(--clappy-light-green);
   padding-bottom: 16px;
 }
 .clappy-list-container {
-  background: #f5f9ed;
-  border: 1px solid #b8cc95;
+  background: var(--clappy-light-green);
   border-radius: 6px;
   padding: 8px;
   display: flex;
@@ -206,30 +242,30 @@
 .clappy-list-item {
   display: flex;
   align-items: center;
-  font-size: 16px;
+  font-size: 15px;
   gap: 8px;
   padding: 10px;
-  border-bottom: 1px solid rgba(44, 62, 46, 0.07);
+  border-bottom: 1px solid var(--clappy-light-green);
 }
 .clappy-list-item:last-child {
   border-bottom: none;
 }
 .clappy-delete-button {
-  background: #e8f0d6;
+  background: var(--clappy-light-green);
   border: none;
   border-radius: 4px;
   height: 24px;
   width: 24px;
-  font-size: 16px;
-  color: #3a523e;
+  font-size: 15px;
+  color: var(--clappy-dark-green);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .clappy-delete-button:hover {
-  background: #e8f0d6;
-  color: #2c3e2e;
+  background: var(--clappy-less-light-green);
+  color: var(--clappy-darker-green);;
 }
 .clappy-list-add {
   display: flex;
@@ -243,26 +279,32 @@
   padding: 10px 12px;
   border: 1px solid #b8cc95;
   border-radius: 6px;
-  font-size: 16px;
-  background: #f5f9ed;
+  font-size: 15px;
+  background: var(--clappy-light-green);
+  color: var(--clappy-dark-green);
+  border: none;
+  outline: none;
+}
+.clappy-list-input::placeholder {
+  color: var(--clappy-light-grey);
 }
 .clappy-list-input:focus {
+  border: none;
   outline: none;
-  border-color: #7a9c69;
+  border-color: var(--clappy-dark-green);;
   box-shadow: 0 0 0 2px rgba(122, 156, 105, 0.2);
 }
 .clappy-add-button {
   cursor: pointer;
-  background: #7a9c69;
+  background: var(--clappy-dark-green);;
   border: none;
   border-radius: 6px;
   padding: 10px 14px;
-  font-size: 16px;
-  font-weight: 500;
-  color: white;
+  font-weight: bold;
+  color: var(--clappy-light-green);;
 }
 .clappy-add-button:hover {
-  background: #617b53;
+  background: var(--clappy-darker-green);;
 }
 .clappy-toggle {
   position: relative;
@@ -282,10 +324,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #b8cc95;
+  background-color: var(--clappy-light-green);
   transition: 0.2s;
   border-radius: 34px;
-  opacity: 0.5;
 }
 .clappy-toggle-slider:before {
   position: absolute;
@@ -300,7 +341,7 @@
 }
 input:checked + .clappy-toggle-slider {
   opacity: 1;
-  background-color: #7a9c69;
+  background-color: var(--clappy-dark-green);
 }
 input:checked + .clappy-toggle-slider:before {
   transform: translateX(24px);
@@ -311,7 +352,7 @@ input:checked + .clappy-toggle-slider:before {
   border-radius: 6px;
   padding: 6px 12px;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 15px;
   color: #3a523e;
 }
 .clappy-manage-button:hover {
@@ -323,8 +364,7 @@ input:checked + .clappy-toggle-slider:before {
   border-radius: 6px;
   padding: 6px 12px;
   cursor: pointer;
-  font-size: 16px;
-  color: white;
+  font-size: 15px;
 }
 .clappy-danger-button:hover {
   background: #c23434;
@@ -336,7 +376,8 @@ input:checked + .clappy-toggle-slider:before {
 }
 .clappy-list-empty {
   font-style: italic;
-  color: #7c8d7e;
+  font-weight: normal;
+  color: var(--clappy-dark-grey);
   padding: 12px;
   text-align: center;
 }
@@ -344,15 +385,15 @@ input:checked + .clappy-toggle-slider:before {
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(44, 62, 46, 0.05);
+  background: var(--clappy-light-green);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(44, 62, 46, 0.15);
+  background: var(--clappy-dark-green);
   border-radius: 6px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(44, 62, 46, 0.25);
+  background: var(--clappy-darker-green);
 }
 html,
 body {
