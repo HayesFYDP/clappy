@@ -5,6 +5,7 @@
   --clappy-darker-green: #394a2c;
   --clappy-light-grey: #91ad7b;
   --clappy-dark-grey: #7b8a6e;
+  --clappy-uncertain-grey: #E0E0E0;
 }
 
 .container {
@@ -105,16 +106,6 @@
   color: var(--clappy-dark-green);
   margin-left: 10px;
 }
-
-.timelineBar {
-  position: relative;  /* Ensure interventions are positioned correctly */
-  display: flex;
-  height: 30px;
-  border-radius: 4px;
-  overflow: hidden;
-  box-shadow: inset 0 0 1px rgba(0,0,0,0.3);
-}
-
 
 .segment {
   height: 100%;
@@ -313,6 +304,7 @@ tr > td > * {
   display: flex;
   height: 30px;
   border-radius: 4px;
+  background-color: var(--clappy-uncertain-grey);
 }
 
 .timeline-labels {

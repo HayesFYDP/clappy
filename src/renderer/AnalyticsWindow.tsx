@@ -235,11 +235,12 @@ function TimelineView({ analytics, timeFilter }: { analytics: ClappyAnalytics; t
         const sessionDuration = sessionEnd - sessionStart || 1; // Avoid division by zero
 
         // Generate time markers
-        const timeMarkers: { time: any; position: any }[] = [];
+        const timeMarkers: { label: any; offset: any; position: any }[] = [];
 
         // Start Time Marker
         timeMarkers.push({
-          time: new Date(sessionStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          offset: 0,
+          label: new Date(sessionStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           position: 0,
         });
 
@@ -248,17 +249,30 @@ function TimelineView({ analytics, timeFilter }: { analytics: ClappyAnalytics; t
           const startTime = new Date(record.startTime).getTime();
           const elapsedTime = startTime - sessionStart;
           const positionPercent = (elapsedTime / sessionDuration) * 100;
-          const formattedTime = new Date(record.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-          // Add marker only if it's not a duplicate of the previous one
-          if (index === 0 || arr[index - 1].status !== record.status || !timeMarkers.some((marker) => marker.time === formattedTime)) {
-            timeMarkers.push({ time: formattedTime, position: positionPercent });
+          const formattedTime = new Date(record.startTime).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          });
+
+          // Check if it's a different status, or if the last marker is different, etc.
+          if (index === 0 || arr[index - 1].status !== record.status || !timeMarkers.some((m) => m.label === formattedTime)) {
+            timeMarkers.push({
+              offset: elapsedTime, // <--- numeric offset
+              label: formattedTime, // <--- user-friendly label
+              position: positionPercent,
+            });
           }
         });
 
         // End Time Marker
+        // Add end time marker only if it's at least 5 minutes after the last one
         timeMarkers.push({
-          time: new Date(sessionEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          offset: sessionEnd - sessionStart,
+          label: new Date(sessionEnd).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
           position: 100,
         });
 
@@ -268,17 +282,31 @@ function TimelineView({ analytics, timeFilter }: { analytics: ClappyAnalytics; t
               <strong>{dayData.date}</strong>
               <span className="estimation">Estimated Productivity Time: {dayData.estimatedProductivity}</span>
             </div>
-
             {/* Timeline Bar (relative for interventions) */}
             <div className="timelineBar">
-              {dayData.segments.map((segment) => (
-                <div
-                  key={segment.label}
-                  className="segment"
-                  style={{ backgroundColor: segment.color, width: `${segment.widthPercent}%` }}
-                  title={segment.label}
-                />
-              ))}
+              {daySession.productivity.map((record) => {
+                const startTime = new Date(record.startTime).getTime();
+                const endTime = new Date(record.endTime).getTime();
+                const elapsedStart = startTime - sessionStart;
+                const elapsedEnd = endTime - sessionStart;
+                const startPercent = (elapsedStart / sessionDuration) * 100;
+                const endPercent = (elapsedEnd / sessionDuration) * 100;
+                const widthPercent = endPercent - startPercent;
+
+                return (
+                  <div
+                    key={record.startTime.toISOString()}
+                    className="segment"
+                    style={{
+                      backgroundColor: getColorForStatus(record.status),
+                      width: `${widthPercent}%`,
+                      left: `${startPercent}%`, // Position it at the exact start time
+                      position: 'absolute', // Ensure it is positioned correctly
+                    }}
+                    title={record.status}
+                  />
+                );
+              })}
 
               {/* Interventions - Marked on the Timeline */}
               {daySession.interventions.map((intervention) => {
@@ -304,13 +332,26 @@ function TimelineView({ analytics, timeFilter }: { analytics: ClappyAnalytics; t
               })}
             </div>
 
-            {/* Time Labels (Start, Productivity Changes, End) */}
             <div className="timeline-labels">
-              {timeMarkers.map(({ time, position }) => (
-                <div key={time} className="time-label" style={{ left: `${position}%` }}>
-                  {time}
-                </div>
-              ))}
+              {(() => {
+                const minSpacingMs = 30 * 60 * 1000;
+                let lastShownOffset = -Infinity;
+
+                return timeMarkers
+                  .sort((a, b) => a.offset - b.offset)
+                  .filter(({ offset }) => {
+                    if (offset - lastShownOffset >= minSpacingMs) {
+                      lastShownOffset = offset;
+                      return true;
+                    }
+                    return false;
+                  })
+                  .map(({ label, position, offset }) => (
+                    <div key={offset} className="time-label" style={{ left: `${position}%` }}>
+                      {label}
+                    </div>
+                  ));
+              })()}
             </div>
           </div>
         );
