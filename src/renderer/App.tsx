@@ -33,13 +33,18 @@ function Hello() {
     setIsTextInputOpen(false);
   };
 
+  const onCancelTextInput = () => {
+    openPopup(ClappyExpression.Happy, "Alright, I'll be here if you need me!"); // TODO: idk feed the response here or something
+    setIsTextInputOpen(false);
+  };
+
   const hoverClass = !isTextInputOpen ? 'hover-row' : 'hover-row-no-display';
 
-  function autoGrow(e) {
+  function autoGrow(e: { target: any }) {
     const { target } = e;
 
     // First, lock it to your single-line min, e.g. 24px
-    const singleLineHeight = 24;
+    const singleLineHeight = 20;
     target.style.height = `${singleLineHeight}px`;
 
     // Now measure the scrollHeight
@@ -94,9 +99,14 @@ function Hello() {
           {isTextInputOpen && (
             <div id="text-input-wrapper">
               <textarea id="bubble-textarea" placeholder="Type a reply to Clappy..." onInput={autoGrow} />
-              <button type="button" id="text-input-button" onClick={onSendTextInput}>
-                Send
-              </button>
+              <div className="flex-row-div">
+                <button type="button" className="text-input-button" onClick={onSendTextInput}>
+                  Send
+                </button>
+                <button type="button" id="cancel-button" className="text-input-button" onClick={onCancelTextInput}>
+                  Cancel
+                </button>
+              </div>
             </div>
           )}
         </div>
