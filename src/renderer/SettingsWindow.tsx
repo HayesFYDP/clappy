@@ -24,12 +24,14 @@ interface DropdownSetting {
   type: 'dropdown';
   options: string[];
   value: string;
+  descriptions: string[];
 }
 
 interface ListSetting {
   category: CategoryType;
   type: 'list';
   items: Record<string, string[]>;
+  descriptions: string[];
 }
 
 interface CheckboxSetting {
@@ -37,6 +39,7 @@ interface CheckboxSetting {
   type: 'checkbox';
   options: string[];
   values: string[];
+  descriptions: string[];
 }
 
 /** Union type to cover all setting variants in the UI */
@@ -46,14 +49,15 @@ type ClappySetting = DropdownSetting | ListSetting | CheckboxSetting;
 const getStoredSettings = async (): Promise<ClappySetting[]> => {
   const stored: StoredSettings | null = await window.electron.ipcRenderer.invoke('get-settings');
   if (!stored) return DefaultSettings;
-
   return [
+    /*
     {
       category: 'Communication',
       type: 'dropdown',
       options: ['continuous input', 'push to talk'],
       value: stored.communicationIsContinuousInput ? 'continuous input' : 'push to talk',
     },
+    */
     {
       category: 'Blacklist',
       type: 'list',
@@ -61,6 +65,7 @@ const getStoredSettings = async (): Promise<ClappySetting[]> => {
         Programs: dbStringToList(stored.blacklistPrograms),
         Sites: dbStringToList(stored.blacklistSites),
       },
+      descriptions: ['Programs you would like Clappy to help block', 'Websites you would like Clappy to stop you from visiting'],
     },
     {
       category: 'Permissions',
@@ -70,6 +75,10 @@ const getStoredSettings = async (): Promise<ClappySetting[]> => {
         stored.permissionScreenshot ? 'Take screenshots' : '',
         stored.permissionMicrophone ? 'Listen to user microphone' : '',
       ].filter(Boolean),
+      descriptions: [
+        'Clappy needs to take screenshots to see what is on your screen',
+        'User microphone is required to verbally talk with Clappy',
+      ],
     },
   ];
 };
@@ -374,6 +383,8 @@ export default function ClappySettingsWindow(): JSX.Element {
                               </option>
                             ))}
                           </select>
+                          {/* Display the description for the selected option */}
+                          <div className="clappy-setting-description">{setting.descriptions[setting.options.indexOf(setting.value)]}</div>
                         </div>
                       </div>
                     );
@@ -382,7 +393,7 @@ export default function ClappySettingsWindow(): JSX.Element {
                   if (setting.type === 'list') {
                     return (
                       <div key={setting.category} className="clappy-setting-group">
-                        {Object.entries(setting.items).map(([subCategory, items]) => (
+                        {Object.entries(setting.items).map(([subCategory, items], index) => (
                           <div
                             key={subCategory}
                             className={`clappy-list-wrapper ${
@@ -390,14 +401,15 @@ export default function ClappySettingsWindow(): JSX.Element {
                             }`}
                           >
                             <div className="clappy-setting-label">{subCategory}</div>
+
                             <div className="clappy-list-container">
                               {items.some(Boolean) && items.length > 0 ? (
-                                items.map((item, index) => (
+                                items.map((item, itemIndex) => (
                                   <div key={item} className="clappy-list-item">
                                     {item}
                                     <button
                                       className="clappy-delete-button"
-                                      onClick={() => removeListItem(setting.category, subCategory, index)}
+                                      onClick={() => removeListItem(setting.category, subCategory, itemIndex)}
                                       type="button"
                                     >
                                       ×
@@ -434,6 +446,8 @@ export default function ClappySettingsWindow(): JSX.Element {
                                 Add
                               </button>
                             </div>
+                            {/* Display the description for this subcategory */}
+                            <div className="clappy-setting-description">{setting.descriptions[index]}</div>
                           </div>
                         ))}
                       </div>
@@ -443,25 +457,29 @@ export default function ClappySettingsWindow(): JSX.Element {
                   if (setting.type === 'checkbox') {
                     return (
                       <div key={setting.category} className="clappy-setting-group">
-                        {setting.options.map((option) => (
-                          <div
-                            key={option}
-                            className={`clappy-setting-control ${
-                              changedItems.has(`${setting.category}-${option}`) ? 'clappy-changed-item' : ''
-                            }`}
-                          >
-                            <label className="clappy-setting-label" htmlFor={`${setting.category}-${option}`}>
-                              {option}
-                            </label>
-                            <label className="clappy-toggle" htmlFor={`${setting.category}-${option}`} aria-label={option}>
-                              <input
-                                id={`${setting.category}-${option}`}
-                                type="checkbox"
-                                checked={setting.values.includes(option)}
-                                onChange={() => toggleOption(setting.category, option)}
-                              />
-                              <span className="clappy-toggle-slider" />
-                            </label>
+                        {setting.options.map((option, index) => (
+                          <div className={`clappy-setting-outer-container`}>
+                            <div
+                              key={option}
+                              className={`clappy-setting-control ${
+                                changedItems.has(`${setting.category}-${option}`) ? 'clappy-changed-item' : ''
+                              }`}
+                            >
+                              <label className="clappy-setting-label" htmlFor={`${setting.category}-${option}`}>
+                                {option}
+                              </label>
+                              <label className="clappy-toggle" htmlFor={`${setting.category}-${option}`} aria-label={option}>
+                                <input
+                                  id={`${setting.category}-${option}`}
+                                  type="checkbox"
+                                  checked={setting.values.includes(option)}
+                                  onChange={() => toggleOption(setting.category, option)}
+                                />
+                                <span className="clappy-toggle-slider" />
+                              </label>
+                            </div>
+                            {/* Display the description for this option */}
+                            <div className="clappy-setting-description">{setting.descriptions[index]}</div>
                           </div>
                         ))}
                       </div>
