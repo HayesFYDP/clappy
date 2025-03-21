@@ -135,15 +135,12 @@ button {
 #speech-bubble {
   position: absolute;
   top: 180px;
-  right: 110px;
+  right: 100px;
   background-color: var(--clappy-light-green);
   border-right: 5px solid var(--clappy-dark-green); /* Bubble border */
   border-bottom: 5px solid var(--clappy-dark-green); /* Bubble border */
   border-top: 2px solid var(--clappy-dark-green); /* Bubble border */
   border-left: 2px solid var(--clappy-dark-green); /* Bubble border */
-  border: 2px solid var(--clappy-dark-green);
-  border-right-width: 5px;
-  border-bottom-width: 5px;
   color: var(--clappy-dark-green);
   font-weight: bold;
   border-radius: 10px;
@@ -303,12 +300,6 @@ button {
 }
 
 .flex-row-div {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-}
-v {
   display: flex;
   flex-direction: row;
   justify-content: center;
