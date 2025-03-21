@@ -97,8 +97,8 @@ button {
   background-color: var(--clappy-light-green);
   color: var(--clappy-dark-green);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  border: 2px solid var(--clappy-dark-green);  
-  border-right-width: 5px;  
+  border: 2px solid var(--clappy-dark-green);
+  border-right-width: 5px;
   border-bottom-width: 5px;
 }
 
@@ -190,22 +190,22 @@ button {
   min-width: 260px;
   left: -300px;
   min-height: 40px;
-  
+
   display: inline-flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 6px;
-  
+
   padding: 10px 8px 8px;
   border-radius: 10px;
-  
+
   border-right: 2px solid var(--clappy-dark-green);
   border-bottom: 5px solid var(--clappy-dark-green);
   border-top: 2px solid var(--clappy-dark-green);
   border-left: 5px solid var(--clappy-dark-green);
   background-color: var(--clappy-light-green);
   color: var(--clappy-dark-green);
-  
+
   position: relative;
   font-family: 'Courier New', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   font-weight: bold;
@@ -214,42 +214,42 @@ button {
 #text-input-wrapper::before {
   content: '';
   position: absolute;
-  
+
   top: 50%;
   left: -10px;
-  
+
   transform: translateY(-50%) rotate(135deg);
   width: 15px;
   height: 15px;
-  
+
   background-color: var(--clappy-dark-green);
-  z-index: -1; 
+  z-index: -1;
 }
 
 #text-input-wrapper::after {
   content: '';
   position: absolute;
-  
+
   top: 50%;
   left: -6px;
-  
+
   transform: translateY(-50%) rotate(135deg);
   width: 10px;
   height: 10px;
-  
+
   background-color: var(--clappy-light-green);
 }
 
 #bubble-textarea {
   min-width: 260px;
   height: 24px;
-  
+
   border: none;
   outline: none;
   background-color: transparent;
   color: var(--clappy-dark-green);
   resize: none;
-  
+
   font-size: 14px;
 
   font-family: 'Courier New', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -263,13 +263,13 @@ button {
 .text-input-button {
   cursor: pointer;
   font-weight: bold;
-  
+
   border: 2px solid var(--clappy-light-green);
   border-radius: 15px;
-  
+
   background-color: var(--clappy-dark-green);
   color: var(--clappy-light-green);
-  
+
   padding: 5px 10px;
   font-family: inherit;
   font-size: 14px;
@@ -280,15 +280,15 @@ button {
   background-color: var(--clappy-darker-green);
 }
 
-#cancel-button { 
+#cancel-button {
   cursor: pointer;
   font-weight: bold;
-  
+
   border: 2px solid var(--clappy-light-green);
   background-color: var(--clappy-light-green);
   border-radius: 15px;
   color: var(--clappy-dark-green);
-    
+
   padding: 5px 10px;
   font-family: inherit;
   font-size: 14px;
@@ -299,7 +299,7 @@ button {
   color: var(--clappy-dark-grey);
 }
 
-.flex-row-div { 
+.flex-row-div {
   display: flex;
   flex-direction: row;
   justify-content: center;

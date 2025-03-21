@@ -12,6 +12,10 @@ enum ClappyExpression {
   Hello = 'HELLO',
   Chomp = 'CHOMP',
   Thwack = 'THWACK',
+  OffersMicrophone = 'OFFERS_MICROPHONE',
+  Despair = 'DESPAIR',
+  Suspicious = 'SUSPICIOUS',
+  ThumbsUp = 'THUMBS_UP',
 }
 
 // eslint-disable-next-line import/prefer-default-export
