@@ -323,7 +323,7 @@ class Clappy {
     const outputJson = JSON.parse(output);
 
     if (outputJson.memory) {
-      this.memory.updateMemory(outputJson.memory);
+      this.memory.replaceMemory(outputJson.memory);
     }
 
     return outputJson;
@@ -425,7 +425,7 @@ class Clappy {
 
     // Update memory if provided
     if (outputJson.memory) {
-      this.memory.updateMemory(outputJson.memory);
+      this.memory.replaceMemory(outputJson.memory);
     }
 
     // if interventions isn't in the Interventions enums, return null

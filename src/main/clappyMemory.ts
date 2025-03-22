@@ -9,7 +9,7 @@ export default class ClappyMemory {
 
   constructor(clappy: Clappy, isEnabled: boolean) {
     this.clappy = clappy;
-    this.memory = ''; // TODO: figure out if we want default memory
+    this.memory = null;
     this._isEnabled = isEnabled;
   }
 
@@ -18,22 +18,24 @@ export default class ClappyMemory {
     return this._isEnabled;
   }
 
-  updateMemory(memory: string) {
+  replaceMemory(memory: string) {
     this.memory = memory;
   }
 
   // returns info about the current memory if enabled, otherwise nothing
-  getMemoryInfoString() {
+  getMemoryInfoString(): string {
+    const memoryInfo = this.memory ? `Here is the current memory: <${this.memory}>` : 'There is currently nothing stored in memory.';
+
     if (this.isEnabled()) {
       return `You have access to a memory field that persists between calls. This allows you to remember important information or patterns from previous observations.
-            Here is the current memory: <${this.memory}>.
+            Here is the current memory: <${memoryInfo}>.
             You can update this memory with important insights or patterns you observe.`
     }
 
     return '';
   }
 
-  getMemoryResponseString() {
+  getMemoryResponseString(): string {
     if (this.isEnabled()) {
       return `, memory: <concise string containing all of the information you want to remember for future calls>`
     }
