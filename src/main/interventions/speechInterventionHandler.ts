@@ -28,12 +28,12 @@ export default class SpeechInterventionHandler implements InterventionHandler {
   }
 
   async speakClappy(payload?: SpeakClappyPayload) {
-    const message = await this.determineClappySpeech(payload);
+    const message = payload?.message ?? (await this.determineClappySpeech(payload));
     const estimatedSpeechDuration = message.split(' ').length * 450 + 2000; // assume 0.45 seconds per word, plus 2 second buffer
 
     await this.clappy.interventionHandlers[Interventions.POPUP_CLAPPY]?.popupClappySpecified(
       ClappyExpression.Chomp,
-      '',
+      message,
       estimatedSpeechDuration,
     );
     await this.speak(message);
@@ -150,7 +150,7 @@ export default class SpeechInterventionHandler implements InterventionHandler {
   }
 
   async determineClappySpeech(payload?: SpeakClappyPayload): Promise<string> {
-    const defaultSpeech = "Get back to work!";
+    const defaultSpeech = 'Get back to work!';
 
     if (!this.clappy.openai) {
       return defaultSpeech;
@@ -166,7 +166,9 @@ export default class SpeechInterventionHandler implements InterventionHandler {
         ? 'This is the first message that you are sending to the user.'
         : `The past few messages that you have spoken are:\n${this.messageHistory.join('\n')}`;
 
-    const unproductiveReasoning = payload?.justification ? `The user is currently unproductive with the following reasoning: ${payload.justification}` : 'The user has been determined to be currently unproductive';
+    const unproductiveReasoning = payload?.justification
+      ? `The user is currently unproductive with the following reasoning: ${payload.justification}`
+      : 'The user has been determined to be currently unproductive';
 
     const prompt = `You are a helpful productivity assistant that is observing the user's computer screen. ${userTask}.
       Do not ask questions about this objective, simply consider it in light of the productivity records and justification.

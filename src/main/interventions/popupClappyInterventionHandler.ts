@@ -6,6 +6,8 @@ const llmExpressionChoices = [
   ClappyExpression.Enraged,
   ClappyExpression.Disappointed,
   ClappyExpression.Crying,
+  ClappyExpression.Suspicious,
+  ClappyExpression.Despair,
 ]
 
 export default class PopupClappyInterventionHandler implements InterventionHandler {

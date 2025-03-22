@@ -214,7 +214,7 @@ class Clappy {
         setInterval(() => {
           this.manageProductivity();
         }, 30000);
-      }, 5000);
+      }, 10000);
     }
 
     mainWindow.on('ready-to-show', () => {

@@ -4,8 +4,13 @@ import bufoDisappointedIcon from '../../assets/bufo-disappointed.png';
 import bufoEnragedIcon from '../../assets/bufo-enraged.png';
 import bufoHappyIcon from '../../assets/bufo-happy.png';
 import bufoHelloIcon from '../../assets/bufo-hello.gif';
+import bufoDespairIcon from '../../assets/bufo-despair.png';
+import bufoSuspiciousIcon from '../../assets/bufo-suspicious.png';
+import bufoOffersMicrophoneIcon from '../../assets/bufo-offers-mic.png';
+import bufoThumbsUpIcon from '../../assets/bufo-thumbsup.png';
 import bufoChompIcon from '../../assets/bufo-chomp.gif'; // use as speaking
 import bufoThwackIcon from '../../assets/bufo-thwack.gif'; // use as shaking
+
 import { ClappyExpression } from '../main/types';
 import App from './App';
 
@@ -16,8 +21,13 @@ root.render(<App />);
 let isMouseOver = false;
 let openSource: 'hotkey' | 'intervention' | null = null;
 let activeTimeout: ReturnType<typeof setTimeout> | null = null;
+let activePopupTimeout: ReturnType<typeof setTimeout> | null = null;
 
-export default function openPopup(expression: ClappyExpression, text: string | null): void {
+export default function openPopup(expression: ClappyExpression, text: string | null, removeTextTimeoutMs: number | null = null): void {
+  if (activePopupTimeout) {
+    clearTimeout(activePopupTimeout);
+  }
+
   const speechBubble = document.getElementById('speech-bubble') as HTMLElement;
   if (text !== null && text !== undefined && text !== '') {
     speechBubble.style.display = 'block';
@@ -50,6 +60,18 @@ export default function openPopup(expression: ClappyExpression, text: string | n
     case ClappyExpression.Thwack:
       clappyIcon.src = bufoThwackIcon
       break;
+    case ClappyExpression.OffersMicrophone:
+      clappyIcon.src = bufoOffersMicrophoneIcon;
+      break;
+    case ClappyExpression.Despair:
+      clappyIcon.src = bufoDespairIcon;
+      break;
+    case ClappyExpression.Suspicious:
+      clappyIcon.src = bufoSuspiciousIcon;
+      break;
+    case ClappyExpression.ThumbsUp:
+      clappyIcon.src = bufoThumbsUpIcon;
+      break;
     default:
       clappyIcon.src = bufoHelloIcon;
   }
@@ -57,6 +79,21 @@ export default function openPopup(expression: ClappyExpression, text: string | n
   const popup = document.getElementById('popup') as HTMLElement;
   popup.style.display = 'block';
   popup.classList.add('visible');
+
+  // optional timeout to remove the text from the speech bubble after a certain amount of time has passed
+  if (removeTextTimeoutMs !== null) {
+    activePopupTimeout = setTimeout(() => {
+      const speechBubbleNew = document.getElementById('speech-bubble') as HTMLElement;
+
+      // double check that the text is the same to prevent changes if the content has changed in the meantime
+      if (speechBubbleNew.textContent === text) {
+        speechBubbleNew.style.display = 'none';
+        speechBubbleNew.textContent = '';
+      }
+
+      activePopupTimeout = null;
+    }, removeTextTimeoutMs);
+  }
 }
 
 export function closeSpeechBubble(): void {
@@ -139,6 +176,6 @@ window.electron.ipcRenderer.on('toggle-popup', () => {
     openSource = null;
   } else {
     openSource = 'hotkey';
-    openPopup(ClappyExpression.Hello, 'GET BACK TO WORK');
+    openPopup(ClappyExpression.Hello, '');
   }
 });
