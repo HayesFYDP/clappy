@@ -16,6 +16,7 @@ enum ClappyExpression {
   Despair = 'DESPAIR',
   Suspicious = 'SUSPICIOUS',
   ThumbsUp = 'THUMBS_UP',
+  Loading = 'LOADING',
 }
 
 // eslint-disable-next-line import/prefer-default-export

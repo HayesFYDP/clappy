@@ -1,21 +1,31 @@
 /* eslint-disable no-underscore-dangle */
 import type Clappy from "./clappy";
 
-// class to store Clappy's "memory", including both LLM managed memory and other user data
+// class to interact with Clappy's "memory", including both LLM managed memory and other user data
 export default class ClappyMemory {
   clappy: Clappy;
+  userTask: string | null;
   memory: string | null;
   _isEnabled: boolean;
 
   constructor(clappy: Clappy, isEnabled: boolean) {
     this.clappy = clappy;
     this.memory = null;
+    this.userTask = null;
     this._isEnabled = isEnabled;
   }
 
   // whether or not Clappy LLM based memory features are enabled
   isEnabled() {
     return this._isEnabled;
+  }
+
+  getUserTask(): string {
+    if (this.userTask) {
+      return this.userTask;
+    }
+    return 'Working on a school programming assignment.';
+    // return 'The user did not provide a specific goal that they are working on, but would like to generally do productive work.';
   }
 
   replaceMemory(memory: string) {

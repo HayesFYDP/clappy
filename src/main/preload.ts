@@ -11,7 +11,8 @@ export type Channels =
   | 'open-settings-window'
   | 'open-analytics-window'
   | 'get-settings'
-  | 'set-settings';
+  | 'set-settings'
+  | 'send-text-interaction';
 
 const electronHandler = {
   ipcRenderer: {

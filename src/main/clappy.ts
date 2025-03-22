@@ -20,6 +20,7 @@ import { createInterventionHandler, InterventionDescriptions, Interventions } fr
 import { ProductivityAnalysis } from './types';
 import { resolveHtmlPath } from './util';
 import ClappyMemory from './clappyMemory';
+import ClappyInteractionManager from './clappyInteractionManager';
 
 class Clappy {
   prisma: PrismaClient;
@@ -27,6 +28,7 @@ class Clappy {
   isDevelopment: boolean; // when true, avoid interacting with the LLM
   developmentInterventionEnabled: boolean; // randomly select interventions in development mode
   memory: ClappyMemory; // Clappy's memory used to store more persistent information
+  interactionManager: ClappyInteractionManager; // used to handle interactions (text and voice) with Clappy
   // memory: string = 'empty memory, do not use this in reasoning'; // Persistent memory field for LLM
 
   mainWindow: BrowserWindow | null = null;
@@ -40,8 +42,10 @@ class Clappy {
     this.isDevelopment = isDevelopment;
     this.developmentInterventionEnabled = developmentInterventionEnabled;
     this.enabledInterventions = enabledInterventions;
-    console.log('Enabled interventions: ', enabledInterventions);
+    console.log(`Enabled interventions: ${enabledInterventions}`);
+    console.log(`Globally, intervetentions are ${(!this.isDevelopment || this.developmentInterventionEnabled) ? 'enabled' : 'disabled'}`);
 
+    this.interactionManager = new ClappyInteractionManager(this);
     this.memory = new ClappyMemory(this, memoryEnabled);
 
     // Initialize Prisma client for database access
@@ -136,6 +140,10 @@ class Clappy {
         update: settings,
         create: settings,
       });
+    });
+
+    ipcMain.on('send-text-interaction', async (event, text) => {
+      this.interactionManager.handleTextInteraction(text);
     });
 
     app.on('will-quit', () => {
@@ -485,9 +493,8 @@ class Clappy {
 
     if (screenshotPath) {
       console.log('About to call isproductive');
-      // TODO: Replace hardcoded task with actual task
-      const hardcodedTask = 'Working on a school programming assignment.';
-      const productivity = await this.isProductive(screenshotPath, hardcodedTask);
+      const userTask = this.memory.getUserTask();
+      const productivity = await this.isProductive(screenshotPath, userTask);
       console.log('Productivity:', productivity);
 
       // Save the productivity analysis to the database (excluding memory field)
@@ -500,7 +507,7 @@ class Clappy {
         },
       });
 
-      await this.applyIntervention(hardcodedTask, productivity.productive, productivity.confidence, productivity.justification);
+      await this.applyIntervention(userTask, productivity.productive, productivity.confidence, productivity.justification);
     } else {
       console.log('No screenshot path recevied');
     }

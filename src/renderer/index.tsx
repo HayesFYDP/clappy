@@ -9,7 +9,8 @@ import bufoSuspiciousIcon from '../../assets/bufo-suspicious.png';
 import bufoOffersMicrophoneIcon from '../../assets/bufo-offers-mic.png';
 import bufoThumbsUpIcon from '../../assets/bufo-thumbsup.png';
 import bufoChompIcon from '../../assets/bufo-chomp.gif'; // use as speaking
-import bufoThwackIcon from '../../assets/bufo-thwack.gif'; // use as shaking
+import bufoThwackIcon from '../../assets/bufo-thwack.gif';
+import bufoLoadingIcon from '../../assets/bufo-loading.gif';
 
 import { ClappyExpression } from '../main/types';
 import App from './App';
@@ -71,6 +72,9 @@ export default function openPopup(expression: ClappyExpression, text: string | n
       break;
     case ClappyExpression.ThumbsUp:
       clappyIcon.src = bufoThumbsUpIcon;
+      break;
+    case ClappyExpression.Loading:
+      clappyIcon.src = bufoLoadingIcon;
       break;
     default:
       clappyIcon.src = bufoHelloIcon;
