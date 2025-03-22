@@ -19,13 +19,15 @@ import { INTERVENTION_HANDLERS, InterventionHandlerMap } from './interventions/i
 import { createInterventionHandler, InterventionDescriptions, Interventions } from './interventions/types';
 import { ProductivityAnalysis } from './types';
 import { resolveHtmlPath } from './util';
+import ClappyMemory from './clappyMemory';
 
 class Clappy {
   prisma: PrismaClient;
   openai: OpenAI | null;
   isDevelopment: boolean; // when true, avoid interacting with the LLM
   developmentInterventionEnabled: boolean; // randomly select interventions in development mode
-  memory: string = 'empty memory, do not use this in reasoning'; // Persistent memory field for LLM
+  memory: ClappyMemory; // Clappy's memory used to store more persistent information
+  // memory: string = 'empty memory, do not use this in reasoning'; // Persistent memory field for LLM
 
   mainWindow: BrowserWindow | null = null;
   settingsWindow: BrowserWindow | null = null;
@@ -34,11 +36,13 @@ class Clappy {
   enabledInterventions: Interventions[];
   interventionHandlers: Partial<InterventionHandlerMap> = {};
 
-  constructor(enabledInterventions: Interventions[], isDevelopment: boolean, developmentInterventionEnabled: boolean) {
+  constructor(enabledInterventions: Interventions[], isDevelopment: boolean, developmentInterventionEnabled: boolean, memoryEnabled: boolean) {
     this.isDevelopment = isDevelopment;
     this.developmentInterventionEnabled = developmentInterventionEnabled;
     this.enabledInterventions = enabledInterventions;
     console.log('Enabled interventions: ', enabledInterventions);
+
+    this.memory = new ClappyMemory(this, memoryEnabled);
 
     // Initialize Prisma client for database access
     this.prisma = new PrismaClient();
@@ -268,7 +272,18 @@ class Clappy {
   }
 
   async isProductive(screenshotPath: string, userTask: string): Promise<ProductivityAnalysis> {
-    const prompt = `You are Clappy, a productivity AI assistant analyzing a user's screen to determine if they're being productive. You are given that the user is currently trying to accomplish: <${userTask}>. Do not ask questions about this objective, simply consider it in light of the screen contents. You have access to a memory field that persists between calls. This allows you to remember important information or patterns from previous observations. Here is the current memory: <${this.memory}>. You can update this memory with important ins/eights or patterns you observe. First, you will start by analyzing these contents and discussing with yourself if the contents of the screen match the user's intended tasks. Consider: 1) Is the current activity directly contributing to the user's goal? 2) Even if using typically distracting sites, is the content relevant to their task? 3) Are there patterns in the user's behavior you can identify from memory? Then, enclosed in <OUTPUT> </OUTPUT> tags, you will output a JSON response that conforms the following schema { productive: <TRUE/FALSE>, confidence: <float from 0.0->1.0>, justification: <concise string justification for decision>, memory: <string containing information you want to remember for future calls> }`;
+    const prompt = `You are Clappy, a productivity AI assistant analyzing a user's screen to determine if they're being productive.'
+                    You are given that the user is currently trying to accomplish: <${userTask}>. Do not ask questions about this objective, simply consider it in light of the screen contents.
+                    ${this.memory.getMemoryInfoString()}
+                    First, you will start by analyzing these contents and discussing with yourself if the contents of the screen match the user's intended tasks.
+
+                    Consider:
+                    1) Is the current activity directly contributing to the user's goal?
+                    2) Even if using typically distracting sites, is the content relevant to their task?
+                    3) Are there patterns in the user's behavior you can identify from memory?
+
+                    Then, enclosed in <OUTPUT> </OUTPUT> tags, you will output a JSON response that conforms the following schema:
+                    { productive: <TRUE/FALSE>, confidence: <float from 0.0->1.0>, justification: <concise string justification for decision>${this.memory.getMemoryResponseString()} }.`;
 
     // Read the screenshot file and convert to base64
     const imageBuffer = fs.readFileSync(screenshotPath);
@@ -308,7 +323,7 @@ class Clappy {
     const outputJson = JSON.parse(output);
 
     if (outputJson.memory) {
-      this.memory = outputJson.memory;
+      this.memory.updateMemory(outputJson.memory);
     }
 
     return outputJson;
@@ -361,7 +376,25 @@ class Clappy {
     const llmChoices = this.enabledInterventions.join('/');
     console.log('LLM choices:', llmChoices);
 
-    const prompt = `You are a helpful productivity assistant that is observing the user's computer screen. You are given that the user is currently trying to accomplish: <${userTask}>. Do not ask questions about this objective, simply consider it in light of the productivity records and justification. You are asked to select an intervention to help the user become more productive. You are given the last 5 productivity records, which are as follows: ${prevRecordsString} Your goal is to select an intervention that will help the user become more productive. Choose the most fitting intervention based on the productivity history and previous interventions taken. Your options, ordered from most gentle to most extreme are: ${interventionOptions} ${lastInterventionString} You have access to a memory field that persists between calls. This allows you to remember important information or patterns from previous observations. Here is the current memory: <${this.memory}>. Consider: 1) Is this a recurring pattern of distraction? 2) Did previous interventions work effectively? 3) Should you try a different approach based on the user's response? Only select one intervention. Enclosed in <OUTPUT> </OUTPUT> tags, you will output a JSON response that conforms the following schema: { intervention: "<${llmChoices}>", memory: <string containing information you want to remember for future calls> }
+    const prompt = `You are a helpful productivity assistant that is observing the user's computer screen.
+                    You are given that the user is currently trying to accomplish: <${userTask}>. Do not ask questions about this objective, simply consider it in light of the productivity records and justification.
+                    You are asked to select an intervention to help the user become more productive.
+                    You are given the last 5 productivity records, which are as follows:
+                    ${prevRecordsString}
+                    Your goal is to select an intervention that will help the user become more productive.
+                    Choose the most fitting intervention based on the productivity history and previous interventions taken.
+                    Your options, ordered from most gentle to most extreme are:
+                    ${interventionOptions}
+                    ${lastInterventionString}
+
+                    ${this.memory.getMemoryInfoString()}
+                    Consider:
+                    1) Is this a recurring pattern of distraction?
+                    2) Did previous interventions work effectively?
+                    3) Should you try a different approach based on the user's response?
+
+                    Only select one intervention. Enclosed in <OUTPUT> </OUTPUT> tags, you will output a JSON response that conforms the following schema:
+                    { intervention: "<${llmChoices}>"${this.memory.getMemoryResponseString()} }
     `;
 
     const response = await this.openai?.chat.completions.create({
@@ -392,7 +425,7 @@ class Clappy {
 
     // Update memory if provided
     if (outputJson.memory) {
-      this.memory = outputJson.memory;
+      this.memory.updateMemory(outputJson.memory);
     }
 
     // if interventions isn't in the Interventions enums, return null
