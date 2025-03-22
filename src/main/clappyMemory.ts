@@ -25,9 +25,9 @@ export default class ClappyMemory {
   // returns info about the current memory if enabled, otherwise nothing
   getMemoryInfoString() {
     if (this.isEnabled()) {
-      return `\nYou have access to a memory field that persists between calls. This allows you to remember important information or patterns from previous observations.
+      return `You have access to a memory field that persists between calls. This allows you to remember important information or patterns from previous observations.
             Here is the current memory: <${this.memory}>.
-            You can update this memory with important ins/eights or patterns you observe.\n`
+            You can update this memory with important insights or patterns you observe.`
     }
 
     return '';
@@ -35,7 +35,7 @@ export default class ClappyMemory {
 
   getMemoryResponseString() {
     if (this.isEnabled()) {
-      return `, memory: <string containing all of the information you want to remember for future calls>`
+      return `, memory: <concise string containing all of the information you want to remember for future calls>`
     }
 
     return '';
