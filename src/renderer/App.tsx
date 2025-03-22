@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaClock } from 'react-icons/fa6';
 import { IoMdSettings } from 'react-icons/io';
 import { IoChatbubbleEllipses } from 'react-icons/io5';
@@ -20,7 +20,7 @@ function Hello() {
     window.electron.ipcRenderer.sendMessage('open-analytics-window');
   };
 
-  const [isTextInputOpen, setIsTextInputOpen] = React.useState(false);
+  const [isTextInputOpen, setIsTextInputOpen] = useState(false);
 
   const onOpenTextInput = () => {
     closeSpeechBubble();
@@ -34,9 +34,24 @@ function Hello() {
   };
 
   const onCancelTextInput = () => {
-    openPopup(ClappyExpression.Happy, "Alright, I'll be here if you need me!"); // TODO: idk feed the response here or something
+    openPopup(ClappyExpression.Happy, "Alright, I'll be here if you need me!", 5000); // TODO: idk feed the response here or something
     setIsTextInputOpen(false);
   };
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isTextInputOpen) {
+        onCancelTextInput();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    // Clean up the event listener when component unmounts
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isTextInputOpen]); // Only re-attach when isTextInputOpen changes
 
   const hoverClass = !isTextInputOpen ? 'hover-row' : 'hover-row-no-display';
 

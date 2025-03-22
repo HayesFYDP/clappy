@@ -21,8 +21,13 @@ root.render(<App />);
 let isMouseOver = false;
 let openSource: 'hotkey' | 'intervention' | null = null;
 let activeTimeout: ReturnType<typeof setTimeout> | null = null;
+let activePopupTimeout: ReturnType<typeof setTimeout> | null = null;
 
-export default function openPopup(expression: ClappyExpression, text: string | null): void {
+export default function openPopup(expression: ClappyExpression, text: string | null, removeTextTimeoutMs: number | null = null): void {
+  if (activePopupTimeout) {
+    clearTimeout(activePopupTimeout);
+  }
+
   const speechBubble = document.getElementById('speech-bubble') as HTMLElement;
   if (text !== null && text !== undefined && text !== '') {
     speechBubble.style.display = 'block';
@@ -74,6 +79,21 @@ export default function openPopup(expression: ClappyExpression, text: string | n
   const popup = document.getElementById('popup') as HTMLElement;
   popup.style.display = 'block';
   popup.classList.add('visible');
+
+  // optional timeout to remove the text from the speech bubble after a certain amount of time has passed
+  if (removeTextTimeoutMs !== null) {
+    activePopupTimeout = setTimeout(() => {
+      const speechBubbleNew = document.getElementById('speech-bubble') as HTMLElement;
+
+      // double check that the text is the same to prevent changes if the content has changed in the meantime
+      if (speechBubbleNew.textContent === text) {
+        speechBubbleNew.style.display = 'none';
+        speechBubbleNew.textContent = '';
+      }
+
+      activePopupTimeout = null;
+    }, removeTextTimeoutMs);
+  }
 }
 
 export function closeSpeechBubble(): void {
