@@ -437,8 +437,8 @@ class Clappy {
     return intervention.trim();
   }
 
-  async applyIntervention(userTask: string, productive: boolean, justification: string) {
-    if (productive) {
+  async applyIntervention(userTask: string, productive: boolean, confidence: number, justification: string) {
+    if (productive || confidence <= 0.8) { // avoid being too aggressive if we are less confident about the user's productivity
       return;
     }
 
@@ -500,7 +500,7 @@ class Clappy {
         },
       });
 
-      await this.applyIntervention(hardcodedTask, productivity.productive, productivity.justification);
+      await this.applyIntervention(hardcodedTask, productivity.productive, productivity.confidence, productivity.justification);
     } else {
       console.log('No screenshot path recevied');
     }

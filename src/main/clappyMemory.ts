@@ -24,6 +24,8 @@ export default class ClappyMemory {
 
   // returns info about the current memory if enabled, otherwise nothing
   getMemoryInfoString(): string {
+    console.log('[getMemoryInfoString content]', this.memory);
+
     const memoryInfo = this.memory ? `Here is the current memory: <${this.memory}>` : 'There is currently nothing stored in memory.';
 
     if (this.isEnabled()) {
