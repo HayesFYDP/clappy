@@ -50,11 +50,12 @@ const DefaultSettings: SettingType[] = [
   {
     category: 'Permissions',
     type: 'checkbox',
-    options: ['Take screenshots', 'Listen to user microphone'],
-    values: ['Take screenshots', 'Listen to user microphone'],
+    options: ['Take screenshots', 'Listen to user microphone', 'Window control'],
+    values: ['Take screenshots', 'Listen to user microphone', 'Window control'],
     descriptions: [
       'Clappy needs to take screenshots to see what is on your screen',
       'User microphone is required to verbally talk with Clappy',
+      'Window control is required for interventions to interact with other windows'
     ],
   },
 ];
