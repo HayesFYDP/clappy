@@ -3,9 +3,11 @@ import time
 from dragonfly.windows.rectangle import Rectangle
 from dragonfly.windows.darwin_window import DarwinWindow
 from pydantic import BaseModel
+from logging import getLogger
 
 from window_util import get_all_important_windows
 
+logger = getLogger()
 
 class WindowInfo(BaseModel):
     title: str
@@ -45,9 +47,14 @@ def focus_windows(id: int) -> bool:
 def minimize_window(id: int | None) -> bool:
     if id is None:
         active_window = DarwinWindow.get_foreground()
+        # TODO: check if window is clappy
         if active_window is not None:
             active_window.minimize()
             return True
+        elif active_window is not None:
+            logger.debug("could not minimize active window with title: %s and executable: %s", active_window.title, active_window.executable)
+        else:
+            logger.debug("could not minimize active window because it is None")
     else:
         for window in get_all_important_windows():
             if window.id == id:
@@ -68,7 +75,10 @@ def shake_window(id: int | None) -> bool:
                 break
 
     if window is None:
+        logger.debug("could not shake window because it is None")
         return False
+
+    # TODO: check if window is clappy
 
     was_maximized = False
 

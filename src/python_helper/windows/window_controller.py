@@ -3,10 +3,11 @@ import time
 from dragonfly.windows.rectangle import Rectangle
 from dragonfly.windows.win32_window import Win32Window
 from pydantic import BaseModel
+from logging import getLogger
 
 from window_util import get_all_important_windows
 
-
+logger = getLogger()
 class WindowInfo(BaseModel):
     title: str
     executablePath: str
@@ -48,6 +49,10 @@ def minimize_window(id: int | None) -> bool:
         if active_window is not None and not (active_window.executable.endswith("electron.exe") and "clappy" in active_window.title):
             active_window.minimize()
             return True
+        elif active_window is not None:
+            logger.debug("could not minimize active window with title: %s and executable: %s", active_window.title, active_window.executable)
+        else:
+            logger.debug("could not minimize active window because it is None")
     else:
         for window in get_all_important_windows():
             if window.id == id:
@@ -67,7 +72,12 @@ def shake_window(id: int | None) -> bool:
                 window = w
                 break
 
-    if window is None or (window.executable.endswith("electron.exe") and "clappy" in window.title):
+    if window is None:
+        logger.debug("could not shake window because it is None")
+        return False
+
+    if (window.executable.endswith("electron.exe") and "clappy" in window.title):
+        logger.debug("could not shake window with title: %s and executable: %s", window.title, window.executable)
         return False
 
     was_maximized = False
