@@ -22,6 +22,12 @@ import { resolveHtmlPath } from './util';
 import ClappyMemory from './clappyMemory';
 import ClappyInteractionManager from './clappyInteractionManager';
 
+const WINDOW_CONTROL_REQUIRED_INTERVENTIONS = [
+  Interventions.SHAKE_WINDOW,
+  Interventions.MINIMIZE_WINDOW,
+  Interventions.FOCUS_WINDOW,
+];
+
 class Clappy {
   prisma: PrismaClient;
   openai: OpenAI | null;
@@ -345,7 +351,7 @@ class Clappy {
     return outputJson;
   }
 
-  async selectIntervention(userTask: string): Promise<Interventions | null> {
+  async selectIntervention(validInterventions: Interventions[], userTask: string): Promise<Interventions | null> {
     // select an intervention using LLM prompting
     // first, query the database for the last 5 productivity records
     const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
@@ -385,13 +391,13 @@ class Clappy {
          The last intervention was taken ${DateTime.fromJSDate(lastInterventions[0].date).toRelative()}.`
       : 'No interventions were taken in the last 10 minutes.';
 
-    const interventionOptions = this.enabledInterventions
+    const interventionOptions = validInterventions
       .map((intervention) => {
         return `${intervention}: ${InterventionDescriptions[intervention as keyof typeof InterventionDescriptions]}`;
       })
       .join('\n');
 
-    const llmChoices = this.enabledInterventions.join('/');
+    const llmChoices = validInterventions.join('/');
     console.log('LLM choices:', llmChoices);
 
     const prompt = `You are a helpful productivity assistant that is observing the user's computer screen.
@@ -469,23 +475,44 @@ class Clappy {
 
     }
 
+    const settings = await this.prisma.settings.findFirst();
+    const windowControlEnabled = settings?.permissionWindowControl ?? true;
+
+    const eligibleInterventions = this.enabledInterventions.filter((intervention) => {
+      // if the intervention is a window control intervention, check if the user has given permission
+      if (WINDOW_CONTROL_REQUIRED_INTERVENTIONS.includes(intervention) && !windowControlEnabled) {
+        return false;
+      }
+      return true;
+    });
+
+    if (eligibleInterventions.length === 0) {
+      console.log('No eligible interventions available');
+      return;
+    }
+
     // use an IIFE to select an intervention based on whether LLM is enabled
     const selectedIntervention = await (async () => {
       // if LLM is enabled, first attempt to select an intervention using LLM
       if (this.openai) {
-        const llmIntervention = await this.selectIntervention(userTask);
+        const llmIntervention = await this.selectIntervention(eligibleInterventions, userTask);
         if (llmIntervention) {
           console.log('LLM intervention selected:', llmIntervention);
           return llmIntervention;
         }
       }
 
-      // if LLM is disabled or an invalid intervention was selected, select a random intervention
-      const randomIntervention = this.enabledInterventions[Math.floor(Math.random() * this.enabledInterventions.length)];
+      // if LLM is disabled or an error occured, select a random intervention
+      const randomIntervention = eligibleInterventions[Math.floor(Math.random() * eligibleInterventions.length)];
       console.log('Random intervention selected:', randomIntervention);
 
       return randomIntervention;
     })();
+
+    if (!selectedIntervention) {
+      console.log('No intervention selected, skipping intervention');
+      return;
+    }
 
     // save the chosen intervention to the database
     await this.prisma.interventionRecord.create({
