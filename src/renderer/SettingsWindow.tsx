@@ -11,11 +11,11 @@ const dbStringToList = (dbString: string): string[] => dbString.split(',').map((
 /** Stored shape of data (from DB or Electron) */
 interface StoredSettings {
   id: number;
-  communicationIsContinuousInput: boolean;
   blacklistPrograms: string;
   blacklistSites: string;
   permissionScreenshot: boolean;
   permissionMicrophone: boolean;
+  permissionWindowControl: boolean;
 }
 
 /** The local shape of each Setting in the UI */
@@ -70,14 +70,16 @@ const getStoredSettings = async (): Promise<ClappySetting[]> => {
     {
       category: 'Permissions',
       type: 'checkbox',
-      options: ['Take screenshots', 'Listen to user microphone'],
+      options: ['Take screenshots', 'Listen to user microphone', 'Window control'],
       values: [
         stored.permissionScreenshot ? 'Take screenshots' : '',
         stored.permissionMicrophone ? 'Listen to user microphone' : '',
+        stored.permissionWindowControl ? 'Window control' : '',
       ].filter(Boolean),
       descriptions: [
         'Clappy needs to take screenshots to see what is on your screen',
         'User microphone is required to verbally talk with Clappy',
+        'Window control is required for interventions to interact with other windows'
       ],
     },
   ];
@@ -135,20 +137,20 @@ export default function ClappySettingsWindow(): JSX.Element {
   useEffect(() => {
     const newSettings: StoredSettings = {
       id: 1,
-      communicationIsContinuousInput: true,
       blacklistPrograms: '',
       blacklistSites: '',
       permissionScreenshot: true,
       permissionMicrophone: true,
+      permissionWindowControl: true,
     };
 
     tempSettings.forEach((setting) => {
       switch (setting.category) {
-        case 'Communication':
-          if (setting.type === 'dropdown') {
-            newSettings.communicationIsContinuousInput = setting.value === 'continuous input';
-          }
-          break;
+        // case 'Communication':
+        //   if (setting.type === 'dropdown') {
+        //     newSettings.communicationIsContinuousInput = setting.value === 'continuous input';
+        //   }
+        //   break;
         case 'Blacklist':
           if (setting.type === 'list') {
             newSettings.blacklistPrograms = dbListToString(setting.items.Programs);
@@ -157,8 +159,9 @@ export default function ClappySettingsWindow(): JSX.Element {
           break;
         case 'Permissions':
           if (setting.type === 'checkbox') {
-            newSettings.permissionScreenshot = setting.values.includes('Take Screenshots');
+            newSettings.permissionScreenshot = setting.values.includes('Take screenshots');
             newSettings.permissionMicrophone = setting.values.includes('Listen to user microphone');
+            newSettings.permissionWindowControl = setting.values.includes('Window control');
           }
           break;
         default:
