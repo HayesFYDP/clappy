@@ -6,12 +6,14 @@ export type Channels =
   | 'open-popup-intervention'
   | 'close-popup-intervention'
   | 'toggle-popup'
+  | 'open-popup-interact'
   | 'set-ignore-mouse-events'
   | 'add-mouse-event-listeners'
   | 'open-settings-window'
   | 'open-analytics-window'
   | 'get-settings'
-  | 'set-settings';
+  | 'set-settings'
+  | 'send-text-interaction';
 
 const electronHandler = {
   ipcRenderer: {

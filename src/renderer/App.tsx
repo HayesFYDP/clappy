@@ -24,12 +24,21 @@ function Hello() {
 
   const onOpenTextInput = () => {
     closeSpeechBubble();
-    openPopup(ClappyExpression.Happy, "I'm listening..."); // TODO: idk feed the response here or something
+    openPopup(ClappyExpression.Happy, "waiting for your message..."); // TODO: idk feed the response here or something
     setIsTextInputOpen(true);
   };
 
   const onSendTextInput = () => {
-    openPopup(ClappyExpression.Happy, "I see! I'll remember that!"); // TODO: idk feed the response here or something
+    const textArea = document.getElementById('bubble-textarea') as HTMLTextAreaElement;
+    const message = textArea.value;
+
+    if (message.trim() === '') {
+      openPopup(ClappyExpression.Happy, "Did you forget to type something?");
+      return;
+    }
+
+    window.electron.ipcRenderer.sendMessage('send-text-interaction', message);
+
     setIsTextInputOpen(false);
   };
 
@@ -39,17 +48,33 @@ function Hello() {
   };
 
   useEffect(() => {
+    // add event listener to close the text input when the user presses the escape key
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && isTextInputOpen) {
         onCancelTextInput();
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
 
-    // Clean up the event listener when component unmounts
+    // add event listener to the input textarea to submit when the user presses enter, unless shift is pressed
+    const textArea = document.getElementById('bubble-textarea');
+    const handleTextEnter = (event: KeyboardEvent) => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault(); // Prevent the default behavior of adding a new line
+        onSendTextInput();
+      }
+    };
+
+    if (textArea) {
+      textArea.addEventListener('keydown', handleTextEnter);
+    }
+
     return () => {
+      // Clean up the event listeners when component unmounts
       window.removeEventListener('keydown', handleKeyDown);
+      if (textArea) {
+        textArea.removeEventListener('keydown', handleTextEnter);
+      }
     };
   }, [isTextInputOpen]); // Only re-attach when isTextInputOpen changes
 
