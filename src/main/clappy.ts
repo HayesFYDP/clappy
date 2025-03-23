@@ -454,8 +454,14 @@ class Clappy {
   }
 
   async applyIntervention(userTask: string, productive: boolean, confidence: number, justification: string) {
-    if ((productive || confidence <= 0.65) && !this.developmentInterventionEnabled) { // avoid being too aggressive if we are less confident about the user's productivity
-      return;
+    // avoid being too aggressive if we are less confident about the user's productivity
+    if (productive || confidence <= 0.65) {
+      if (this.isDevelopment && this.developmentInterventionEnabled) {
+        // do nothing; don't early exit in development mode with interventions enabled
+      } else {
+        return;
+      }
+
     }
 
     // use an IIFE to select an intervention based on whether LLM is enabled
