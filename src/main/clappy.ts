@@ -368,7 +368,7 @@ class Clappy {
       })
       .join('\n');
 
-    const lastIntervention = await this.prisma.interventionRecord.findFirst({
+    const lastInterventions = await this.prisma.interventionRecord.findMany({
       orderBy: {
         date: 'desc',
       },
@@ -377,10 +377,12 @@ class Clappy {
           gte: tenMinutesAgo,
         },
       },
+      take: 10,
     });
 
-    const lastInterventionString = lastIntervention
-      ? `The last intervention taken was ${DateTime.fromJSDate(lastIntervention.date).toRelative()} with action ${lastIntervention.intervention}.`
+    const lastInterventionString = lastInterventions.length > 0
+      ? `In the past 10 minutes, the following interventions were taken (most recent first): ${lastInterventions.map(intervention => intervention.intervention).join(', ')}
+         The last intervention was taken ${DateTime.fromJSDate(lastInterventions[0].date).toRelative()}.`
       : 'No interventions were taken in the last 10 minutes.';
 
     const interventionOptions = this.enabledInterventions
@@ -395,12 +397,15 @@ class Clappy {
     const prompt = `You are a helpful productivity assistant that is observing the user's computer screen.
                     You are given that the user is currently trying to accomplish: <${userTask}>. Do not ask questions about this objective, simply consider it in light of the productivity records and justification.
                     You are asked to select an intervention to help the user become more productive.
+
                     You are given the last 5 productivity records, which are as follows:
                     ${prevRecordsString}
+
                     Your goal is to select an intervention that will help the user become more productive.
                     Choose the most fitting intervention based on the productivity history and previous interventions taken.
                     Your options, ordered from most gentle to most extreme are:
                     ${interventionOptions}
+
                     ${lastInterventionString}
 
                     ${this.memory.getMemoryInfoString()}
@@ -483,7 +488,7 @@ class Clappy {
     })();
 
     // save the chosen intervention to the database
-    this.prisma.interventionRecord.create({
+    await this.prisma.interventionRecord.create({
       data: {
         date: new Date(),
         intervention: selectedIntervention,
