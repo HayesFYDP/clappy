@@ -33,9 +33,38 @@ function closePopup(): void {
   }, 500); // Wait for the transition before hiding
 }
 
+// function to close the popup only if the user is not hovering over it
+// this is meant to prevent the popup from closing while the user is interacting with it if it was opened by an intervention
+function closeIfUserNotHovering(remainingChecks: number, checkCooldown = 200): void {
+  if (activeTimeout !== null) {
+    // if there is already a timeout active, don't start another one
+    return;
+  }
+
+  if (remainingChecks <= 0 && !isMouseOver) {
+    closePopup();
+    openSource = null;
+  } else if (isMouseOver) {
+    // reset the countdown if the user is hovering
+    activeTimeout = setTimeout(() => {
+      activeTimeout = null;
+      closeIfUserNotHovering(10, checkCooldown);
+    }, checkCooldown);
+  } else {
+    activeTimeout = setTimeout(() => {
+      activeTimeout = null;
+      closeIfUserNotHovering(remainingChecks - 1, checkCooldown);
+    }, checkCooldown);
+  }
+}
+
 export default function openPopup(expression: ClappyExpression, text: string | null, removeTextTimeoutMs: number | null = null): void {
   if (activePopupTimeout) {
     clearTimeout(activePopupTimeout);
+  }
+  if (activeTimeout) {
+    clearTimeout(activeTimeout);
+    activeTimeout = null;
   }
 
   const speechBubble = document.getElementById('speech-bubble') as HTMLElement;
@@ -105,7 +134,7 @@ export default function openPopup(expression: ClappyExpression, text: string | n
 
       // double check that the text is the same to prevent changes if the content has changed in the meantime
       if (speechBubbleNew.textContent === text) {
-        closePopup();
+        closeIfUserNotHovering(10, 200);
       }
 
       activePopupTimeout = null;
@@ -116,31 +145,6 @@ export default function openPopup(expression: ClappyExpression, text: string | n
 export function closeSpeechBubble(): void {
   const speechBubble = document.getElementById('speech-bubble') as HTMLElement;
   speechBubble.style.display = 'none';
-}
-
-// function to close the popup only if the user is not hovering over it
-// this is meant to prevent the popup from closing while the user is interacting with it if it was opened by an intervention
-function closeIfUserNotHovering(remainingChecks: number, checkCooldown = 200): void {
-  if (activeTimeout !== null) {
-    // if there is already a timeout active, don't start another one
-    return;
-  }
-
-  if (remainingChecks <= 0 && !isMouseOver) {
-    closePopup();
-    openSource = null;
-  } else if (isMouseOver) {
-    // reset the countdown if the user is hovering
-    activeTimeout = setTimeout(() => {
-      activeTimeout = null;
-      closeIfUserNotHovering(10, checkCooldown);
-    }, checkCooldown);
-  } else {
-    activeTimeout = setTimeout(() => {
-      activeTimeout = null;
-      closeIfUserNotHovering(remainingChecks - 1, checkCooldown);
-    }, checkCooldown);
-  }
 }
 
 window.electron.ipcRenderer.on('add-mouse-event-listeners', () => {
