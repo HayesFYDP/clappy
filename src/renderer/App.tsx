@@ -32,12 +32,12 @@ function Hello() {
     const textArea = document.getElementById('bubble-textarea') as HTMLTextAreaElement;
     const message = textArea.value;
 
-    window.electron.ipcRenderer.sendMessage('send-text-interaction', message);
-
     if (message.trim() === '') {
       openPopup(ClappyExpression.Happy, "Did you forget to type something?");
       return;
     }
+
+    window.electron.ipcRenderer.sendMessage('send-text-interaction', message);
 
     openPopup(ClappyExpression.Loading, "thinking of a reply...");
     setIsTextInputOpen(false);

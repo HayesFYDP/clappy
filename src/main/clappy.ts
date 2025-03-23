@@ -43,7 +43,7 @@ class Clappy {
     this.developmentInterventionEnabled = developmentInterventionEnabled;
     this.enabledInterventions = enabledInterventions;
     console.log(`Enabled interventions: ${enabledInterventions}`);
-    console.log(`Globally, intervetentions are ${(!this.isDevelopment || this.developmentInterventionEnabled) ? 'enabled' : 'disabled'}`);
+    console.log(`>> Globally, interventions are ${(!this.isDevelopment || this.developmentInterventionEnabled) ? 'ENABLED' : 'DISABLED'}`);
 
     this.interactionManager = new ClappyInteractionManager(this);
     this.memory = new ClappyMemory(this, memoryEnabled);
@@ -162,13 +162,22 @@ class Clappy {
     app
       .whenReady()
       .then(() => {
-        const shortcutSuccess = globalShortcut.register('F8', () => {
+        const shortcutSuccessTogglePopup = globalShortcut.register('F8', () => {
           console.log('F8 is pressed');
           this.mainWindow?.webContents.send('toggle-popup');
         });
-        if (!shortcutSuccess) {
-          console.error('Failed to register global shortcut');
+        if (!shortcutSuccessTogglePopup) {
+          console.error('Failed to register global shortcut for toggle popup');
         }
+
+        const shortcutSuccessSpeech = globalShortcut.register('F9', () => {
+          console.log('F9 is pressed');
+          this.interactionManager.startVoiceInteraction();
+        });
+        if (!shortcutSuccessSpeech) {
+          console.error('Failed to register global shortcut for speech interaction');
+        }
+
         this.createWindow();
         app.on('activate', () => {
           // On macOS it's common to re-create a window in the app when the
@@ -254,7 +263,6 @@ class Clappy {
     if (!fs.existsSync(tempDir)) {
       fs.mkdirSync(tempDir, { recursive: true });
     }
-    console.log(tempDir);
     return tempDir;
   }
 

@@ -6,6 +6,7 @@ export type Channels =
   | 'open-popup-intervention'
   | 'close-popup-intervention'
   | 'toggle-popup'
+  | 'toggle-popup-voice'
   | 'set-ignore-mouse-events'
   | 'add-mouse-event-listeners'
   | 'open-settings-window'

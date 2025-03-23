@@ -1,4 +1,5 @@
 import type Clappy from "./clappy";
+import { recordAudio, transcribeAudio } from "./speechUtil";
 
 // class to handle text and voice interactions with Clappy
 export default class ClappyInteractionManager {
@@ -14,5 +15,15 @@ export default class ClappyInteractionManager {
 
   async handleTextInteraction(text: string): Promise<void> {
     console.log('[TEXT] Received text message: ', text);
+  };
+
+  async startVoiceInteraction(): Promise<void> {
+    this.clappy.mainWindow?.webContents.send('toggle-popup-voice');
+
+    console.log('[VOICE] Starting voice interaction');
+    const audioPath = await recordAudio(this.clappy, 15, true);
+    console.log('[VOICE] Finished recording audio:', audioPath);
+    const transcription = await transcribeAudio(audioPath);
+    console.log('[VOICE] Transcription:', transcription);
   };
 }

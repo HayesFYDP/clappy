@@ -20,7 +20,7 @@ const root = createRoot(container);
 root.render(<App />);
 
 let isMouseOver = false;
-let openSource: 'hotkey' | 'intervention' | null = null;
+let openSource: 'hotkey' | 'intervention' | 'speech' | null = null;
 let activeTimeout: ReturnType<typeof setTimeout> | null = null;
 let activePopupTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -30,9 +30,11 @@ export default function openPopup(expression: ClappyExpression, text: string | n
   }
 
   const speechBubble = document.getElementById('speech-bubble') as HTMLElement;
-  if (text !== null && text !== undefined && text !== '') {
+  if (text && text.length > 0) {
     speechBubble.style.display = 'block';
     speechBubble.textContent = text as string;
+  } else if (openSource === 'speech' && speechBubble?.textContent !== '') {
+    // do nothing if the source is speech as we want to leave any existing text present
   } else {
     speechBubble.style.display = 'none';
   }
@@ -182,4 +184,9 @@ window.electron.ipcRenderer.on('toggle-popup', () => {
     openSource = 'hotkey';
     openPopup(ClappyExpression.Hello, '');
   }
+});
+
+window.electron.ipcRenderer.on('toggle-popup-voice', () => {
+  openSource = 'speech';
+  openPopup(ClappyExpression.OffersMicrophone, '');
 });

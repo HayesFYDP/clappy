@@ -44,7 +44,7 @@ export async function recordAudio(clappy: Clappy, maxDurationSeconds: number = 1
       '0.1',
       '3%',
       '1',
-      '2.0',
+      '1.5',
       '3%',
     ];
 
@@ -83,15 +83,13 @@ export async function transcribeAudio(audioPath: string): Promise<string> {
       })();
 
       whisperProcess.on('exit', async () => {
-        console.log('finished whisper');
-
         // Read the generated .txt file
         const txtPath = `${audioPath}.txt`;
         const transcript = await fs.promises.readFile(txtPath, 'utf8');
         console.log('[SPEECH] Transcription text:', transcript);
 
         // Clean up files
-        fs.unlinkSync(txtPath);
+        // fs.unlinkSync(txtPath);
         resolve(transcript.trim());
       });
 
