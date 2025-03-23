@@ -55,7 +55,7 @@ export async function recordAudio(clappy: Clappy, maxDurationSeconds: number = 1
       recordProcess.kill('SIGINT'); // send sox a signal to stop recording
     }, maxDurationSeconds * 1000);
 
-    recordProcess.on('exit', async () => {
+    recordProcess.on('close', async () => {
       clearTimeout(timeoutId);
       console.log('[SPEECH] finished recording');
       resolve(outputPath);
@@ -82,7 +82,7 @@ export async function transcribeAudio(audioPath: string): Promise<string> {
         throw new Error('Unsupported platform for whisper');
       })();
 
-      whisperProcess.on('exit', async () => {
+      whisperProcess.on('close', async () => {
         // Read the generated .txt file
         const txtPath = `${audioPath}.txt`;
         const transcript = await fs.promises.readFile(txtPath, 'utf8');
