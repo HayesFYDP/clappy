@@ -66,15 +66,15 @@ async function run() {
         switch (choice) {
           case '1':
             console.log(`Focusing window: ${selectedWindow.title}`);
-            await wm.focusWindow(selectedWindow.id);
+            await wm.focusWindow(selectedWindow.id).then((result) => console.log(`Focus result: ${result.success}`));
             break;
           case '2':
             console.log(`Minimizing window: ${selectedWindow.title}`);
-            await wm.minimizeWindow(selectedWindow.id);
+            await wm.minimizeWindow(selectedWindow.id).then((result) => console.log(`Minimize result: ${result.success}`));
             break;
           case '3':
             console.log(`Shaking window: ${selectedWindow.title}`);
-            await wm.shakeWindow(selectedWindow.id);
+            await wm.shakeWindow(selectedWindow.id).then((result) => console.log(`Shake result: ${result.success}`));
             break;
           default:
             console.log('Invalid option. Please choose 1-4. This should never trigger.');
