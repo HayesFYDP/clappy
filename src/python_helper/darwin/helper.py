@@ -16,7 +16,7 @@ class NodeIPC:
     payload: dict
 
 # log to file, because stdout is used to communicate with the Electron app
-logger = getLogger(__name__)
+logger = getLogger()
 logger.setLevel(DEBUG)
 fh = FileHandler("python_helper.log")
 fh.setLevel(DEBUG)

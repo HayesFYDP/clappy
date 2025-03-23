@@ -41,8 +41,11 @@ export default class WindowInterventionHandler implements InterventionHandler {
   async minimizeActiveWindow(payload?: MinimizeWindowPayload) {
     const handle = payload?.windowHandle;
 
-    const response = await this.windowManager.minimizeWindow(handle);
-    if (response.success) {
+    const result = await this.windowManager.minimizeWindow(handle).then(response => response.success).catch(err => {
+      console.error('[MINIMIZE_WINDOW] Error minimizing window:', err);
+      return false;
+    });
+    if (result) {
       await this.clappy.interventionHandlers[Interventions.POPUP_CLAPPY]?.popupClappySpecified(
         ClappyExpression.Enraged,
         'I minimized that window for you. Get back to work!',
@@ -59,8 +62,12 @@ export default class WindowInterventionHandler implements InterventionHandler {
   async shakeActiveWindow(payload?: ShakeWindowPayload) {
     const handle = payload?.windowHandle;
 
-    const response = await this.windowManager.shakeWindow(handle);
-    if (response.success) {
+    const success = await this.windowManager.shakeWindow(handle).then(result => result.success).catch(err => {
+      console.error('[SHAKE_WINDOW] Error shaking window:', err);
+      return false;
+    });
+
+    if (success) {
       await this.clappy.interventionHandlers[Interventions.POPUP_CLAPPY]?.popupClappySpecified(
         ClappyExpression.Thwack,
         'Stop being unproductive.',
@@ -89,8 +96,11 @@ export default class WindowInterventionHandler implements InterventionHandler {
       return null;
     }
 
-    const response = await this.windowManager.focusWindow(selectedWindow.id);
-    if (response.success) {
+    const success = await this.windowManager.focusWindow(selectedWindow.id).then(result => result.success).catch(err => {
+      console.error('[FOCUS_WINDOW] Error focusing window:', err);
+      return false;
+    });
+    if (success) {
       await this.clappy.interventionHandlers[Interventions.POPUP_CLAPPY]?.popupClappySpecified(
         ClappyExpression.Suspicious,
         'The window I just focused seems more applicable for completing your task.',
