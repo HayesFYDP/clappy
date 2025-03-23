@@ -45,7 +45,7 @@ def focus_windows(id: int) -> bool:
 def minimize_window(id: int | None) -> bool:
     if id is None:
         active_window = Win32Window.get_foreground()
-        if active_window is not None and not (window.executable.endswith("electron.exe") and "clappy" in window.title):
+        if active_window is not None and not (active_window.executable.endswith("electron.exe") and "clappy" in active_window.title):
             active_window.minimize()
             return True
     else:
