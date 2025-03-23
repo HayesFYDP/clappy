@@ -11,6 +11,7 @@ import bufoThumbsUpIcon from '../../assets/bufo-thumbsup.png';
 import bufoChompIcon from '../../assets/bufo-chomp.gif'; // use as speaking
 import bufoThwackIcon from '../../assets/bufo-thwack.gif';
 import bufoLoadingIcon from '../../assets/bufo-loading.gif';
+import bufoThinkingIcon from '../../assets/bufo-thinking.png';
 
 import { ClappyExpression } from '../main/types';
 import App from './App';
@@ -20,9 +21,17 @@ const root = createRoot(container);
 root.render(<App />);
 
 let isMouseOver = false;
-let openSource: 'hotkey' | 'intervention' | 'speech' | null = null;
+let openSource: 'hotkey' | 'intervention' | 'interaction' | null = null;
 let activeTimeout: ReturnType<typeof setTimeout> | null = null;
 let activePopupTimeout: ReturnType<typeof setTimeout> | null = null;
+
+function closePopup(): void {
+  const popup = document.getElementById('popup') as HTMLElement;
+  popup.classList.remove('visible');
+  setTimeout(() => {
+    popup.style.display = 'none';
+  }, 500); // Wait for the transition before hiding
+}
 
 export default function openPopup(expression: ClappyExpression, text: string | null, removeTextTimeoutMs: number | null = null): void {
   if (activePopupTimeout) {
@@ -33,8 +42,8 @@ export default function openPopup(expression: ClappyExpression, text: string | n
   if (text && text.length > 0) {
     speechBubble.style.display = 'block';
     speechBubble.textContent = text as string;
-  } else if (openSource === 'speech' && speechBubble?.textContent !== '') {
-    // do nothing if the source is speech as we want to leave any existing text present
+  } else if (openSource === 'interaction' && speechBubble?.textContent !== '') {
+    // do nothing if the source is interaction as we want to leave any existing text present
   } else {
     speechBubble.style.display = 'none';
   }
@@ -78,6 +87,9 @@ export default function openPopup(expression: ClappyExpression, text: string | n
     case ClappyExpression.Loading:
       clappyIcon.src = bufoLoadingIcon;
       break;
+    case ClappyExpression.Thinking:
+      clappyIcon.src = bufoThinkingIcon;
+      break;
     default:
       clappyIcon.src = bufoHelloIcon;
   }
@@ -93,8 +105,7 @@ export default function openPopup(expression: ClappyExpression, text: string | n
 
       // double check that the text is the same to prevent changes if the content has changed in the meantime
       if (speechBubbleNew.textContent === text) {
-        speechBubbleNew.style.display = 'none';
-        speechBubbleNew.textContent = '';
+        closePopup();
       }
 
       activePopupTimeout = null;
@@ -105,14 +116,6 @@ export default function openPopup(expression: ClappyExpression, text: string | n
 export function closeSpeechBubble(): void {
   const speechBubble = document.getElementById('speech-bubble') as HTMLElement;
   speechBubble.style.display = 'none';
-}
-
-function closePopup(): void {
-  const popup = document.getElementById('popup') as HTMLElement;
-  popup.classList.remove('visible');
-  setTimeout(() => {
-    popup.style.display = 'none';
-  }, 500); // Wait for the transition before hiding
 }
 
 // function to close the popup only if the user is not hovering over it
@@ -186,7 +189,7 @@ window.electron.ipcRenderer.on('toggle-popup', () => {
   }
 });
 
-window.electron.ipcRenderer.on('toggle-popup-voice', () => {
-  openSource = 'speech';
-  openPopup(ClappyExpression.OffersMicrophone, '');
+window.electron.ipcRenderer.on('open-popup-interact', (expression, text, timeoutMs) => {
+  openSource = 'interaction';
+  openPopup(expression as ClappyExpression, text as string | null, timeoutMs as number | undefined);
 });

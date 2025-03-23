@@ -110,11 +110,13 @@ export default class WindowInterventionHandler implements InterventionHandler {
     const prompt = `You are a helpful productivity assistant that is observing the user's computer screen. ${userTask}.
       Do not ask questions about this objective, simply consider it in light of the productivity records and justification.
 
-      The user has been determined to be currently unproductive. You are given a list of windows that the user has open,
-      and are asked to select a window to focus on to help the user become more productive.
+      The user has been determined to be currently unproductive. You are given a list of windows with the that the user has open,
+      with their titles and executable paths. You are asked to select a window to focus on to help the user become more productive.
 
-      Your goal is to select a window that is most likely related to the user's task. The windows and their associated numeric IDs are:
+      Your goal is to select a window that is most likely related to the user's task. Consider both the executable path and the title of the window.
+      For example, if the executable is a web browser but the title is something unrelated to the user's task, you should prefer to not select that window.
 
+      The windows and their associated numeric IDs are:
       ${windowDescriptions.join('\n')}
 
       Only select one window to focus. Enclosed in <OUTPUT> </OUTPUT> tags, you will output a JSON response that conforms the following schema:

@@ -24,7 +24,7 @@ function Hello() {
 
   const onOpenTextInput = () => {
     closeSpeechBubble();
-    openPopup(ClappyExpression.Happy, "I'm listening..."); // TODO: idk feed the response here or something
+    openPopup(ClappyExpression.Happy, "waiting for your message..."); // TODO: idk feed the response here or something
     setIsTextInputOpen(true);
   };
 
@@ -39,7 +39,6 @@ function Hello() {
 
     window.electron.ipcRenderer.sendMessage('send-text-interaction', message);
 
-    openPopup(ClappyExpression.Loading, "thinking of a reply...");
     setIsTextInputOpen(false);
   };
 

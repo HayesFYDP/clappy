@@ -31,6 +31,11 @@ export default class ClappyMemory {
     return DEFAULT_USER_TASK;
   }
 
+  setUserTask(userTask: string) {
+    this.userTask = userTask;
+    console.log('[MEMORY] userTask updated to:', this.userTask);
+  }
+
   isUserTaskSet(): boolean {
     return this.userTask !== null && this.userTask !== DEFAULT_USER_TASK;
   }
@@ -41,8 +46,6 @@ export default class ClappyMemory {
 
   // returns info about the current memory if enabled, otherwise nothing
   getMemoryInfoString(): string {
-    console.log('[getMemoryInfoString content]', this.memory);
-
     const memoryInfo = this.memory ? `Here is the current memory: <${this.memory}>` : 'There is currently nothing stored in memory.';
 
     if (this.isEnabled()) {

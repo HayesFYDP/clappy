@@ -1,5 +1,6 @@
 import type Clappy from './clappy';
 import { recordAudio, transcribeAudio } from './speechUtil';
+import { ClappyExpression } from './types';
 
 // class to handle text and voice interactions with Clappy
 export default class ClappyInteractionManager {
@@ -14,7 +15,9 @@ export default class ClappyInteractionManager {
   }
 
   async handleTextInteraction(text: string, source: 'text' | 'speech' = 'text'): Promise<void> {
-    console.log(`[TEXT] Received message from ${source}: ${text}`);
+    console.log(`[TEXT] Received message from ${source} (conversation length: ${this.conversationHistory.length}): ${text}`);
+
+    this.clappy.mainWindow?.webContents.send('open-popup-interact', ClappyExpression.Loading, 'thinking of a reply...');
 
     if (this.lastMessageSentTimestamp && Date.now() - this.lastMessageSentTimestamp > 60 * 1000) {
       // if a message was sent more than 60 seconds ago, assume the conversation has ended
@@ -32,10 +35,22 @@ export default class ClappyInteractionManager {
       ? `You have recorded that the user is currently trying to accomplish: <${this.clappy.memory.getUserTask()}>.`
       : 'You have not yet determined what the user is trying to accomplish. Your focus is to record what the user is trying to accomplish in this conversation.';
 
-    const conversationInfoString = this.conversationHistory.length === 1 ? 'The user has just began a conversation with you.' : 'You are currently in a conversation with the user.';
-    const choicePreferencesString = isUserTaskSet ?
-      "Your main objective is to determine what the user is currently trying to accomplish to record it in your memory. You should only use CLARIFY if you are unsure about the user's task."
-      : "Your preference should be to either update the user's task with SET_TASK or update your memory with UPDATE_MEMORY to better help the user in the future. You should only use CLARIFY if you don't have enough information to do either of those. Prefer to avoid using RESPOND unless you are sure none of the other options are appropriate.";
+    const conversationInfoString =
+      this.conversationHistory.length === 1
+        ? 'The user has just began a conversation with you.'
+        : 'You are currently in a conversation with the user.';
+
+    const updateMemoryChoiceInfo = 'Otherwise, your preference is to update your memory with UPDATE_MEMORY to better help the user in the future. For example, if the user tells you that they want to stop being distracted by a program or topic, you should UPDATE_MEMORY with that information.'
+    const choicePreferencesString = !isUserTaskSet
+      ? `Your main objective is to determine what the user is currently trying to accomplish to record it in your memory using SET_TASK.
+        You should use CLARIFY if you are unsure about the user's task or if what the user provided is too vague for you to be a effective assistant.
+        For example, if the user says that they want to get work done, you should use CLARIFY and ask them what kind of work they want to get done.
+        For example, If the user says that they want to complete a task, you should use CLARIFY to obtain more details about the task so that you can accurately determine if what the user is viewing on their screen is related to their task.
+        You want to get enough context so that when you observe the user's screen, you can confidently determine if it is related to their task.`
+      : `You should use SET_TASK if it is clear that the user wishes to change the task they are working on.
+        ${memoryEnabled ? updateMemoryChoiceInfo : ''}
+        You should only use CLARIFY if you don't have enough information to do either of those, or if what the user provided is too vague for you to be a effective assistant.
+        Use RESPOND if you are sure none of the other options are appropriate.`;
 
     const prompt = `You are Clappy, a productivity AI assistant that can analyze a user's screen to determine if they're being productive.
                   ${userTaskString}
@@ -64,9 +79,7 @@ export default class ClappyInteractionManager {
       messages: [
         {
           role: 'user',
-          content: [
-            { type: 'text', text: prompt },
-          ],
+          content: [{ type: 'text', text: prompt }],
         },
       ],
       max_tokens: 500,
@@ -91,13 +104,43 @@ export default class ClappyInteractionManager {
       const { action, content } = outputJson;
 
       console.log(`[INTERACTION] Clappy chose action: ${action} with content: ${content}`);
-      // TODO: handle each action
-    }
 
+      const estimatedSpeechDuration = content.split(' ').length * 450 + 2000; // assume 0.45 seconds per word, plus 2 second buffer
+
+      if (action === 'SET_TASK') {
+        this.clappy.memory.setUserTask(content);
+
+        this.clappy.mainWindow?.webContents.send(
+          'open-popup-interact',
+          ClappyExpression.ThumbsUp,
+          "Thanks for letting me know what you're working on! I'll try to help you stay on task.",
+          estimatedSpeechDuration,
+        );
+        this.conversationHistory.push(`Clappy: Thanks for letting me know what you're working on! I'll try to help you stay on task.`);
+        this.lastMessageSentTimestamp = Date.now() - 30 * 1000; // when a conversation finishes, expire conversation history faster
+      } else if (action === 'UPDATE_MEMORY') {
+        this.clappy.memory.replaceMemory(content);
+
+        this.clappy.mainWindow?.webContents.send(
+          'open-popup-interact',
+          ClappyExpression.Happy,
+          "Thanks for letting me know - I'll remember that.",
+          estimatedSpeechDuration,
+        );
+        this.conversationHistory.push(`Clappy: Thanks for letting me know - I'll remember that.`);
+        this.lastMessageSentTimestamp = Date.now() - 30 * 1000; // when a conversation finishes, expire conversation history faster
+      } else if (action === 'CLARIFY') {
+        this.clappy.mainWindow?.webContents.send('open-popup-interact', ClappyExpression.Thinking, content, estimatedSpeechDuration + 10000);
+        this.conversationHistory.push(`Clappy: ${content}`);
+      } else if (action === 'RESPOND') {
+        this.clappy.mainWindow?.webContents.send('open-popup-interact', ClappyExpression.Happy, content, estimatedSpeechDuration + 10000);
+        this.conversationHistory.push(`Clappy: ${content}`);
+      }
+    }
   }
 
   async startVoiceInteraction(): Promise<void> {
-    this.clappy.mainWindow?.webContents.send('toggle-popup-voice');
+    this.clappy.mainWindow?.webContents.send('open-popup-interact', ClappyExpression.OffersMicrophone, 'listening...');
 
     console.log('[VOICE] Starting voice interaction');
     const audioPath = await recordAudio(this.clappy, 15, true);
