@@ -438,7 +438,7 @@ class Clappy {
   }
 
   async applyIntervention(userTask: string, productive: boolean, confidence: number, justification: string) {
-    if (productive || confidence <= 0.8) { // avoid being too aggressive if we are less confident about the user's productivity
+    if ((productive || confidence <= 0.65) && !this.developmentInterventionEnabled) { // avoid being too aggressive if we are less confident about the user's productivity
       return;
     }
 
