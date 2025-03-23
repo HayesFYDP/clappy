@@ -1,6 +1,9 @@
 /* eslint-disable no-underscore-dangle */
 import type Clappy from "./clappy";
 
+const DEFAULT_USER_TASK = 'Working on a school programming assignment.';
+// const DEFAULT_USER_TASK = 'The user did not provide a specific goal that they are working on, but would like to generally do productive work.';
+
 // class to interact with Clappy's "memory", including both LLM managed memory and other user data
 export default class ClappyMemory {
   clappy: Clappy;
@@ -24,8 +27,12 @@ export default class ClappyMemory {
     if (this.userTask) {
       return this.userTask;
     }
-    return 'Working on a school programming assignment.';
-    // return 'The user did not provide a specific goal that they are working on, but would like to generally do productive work.';
+
+    return DEFAULT_USER_TASK;
+  }
+
+  isUserTaskSet(): boolean {
+    return this.userTask !== null && this.userTask !== DEFAULT_USER_TASK;
   }
 
   replaceMemory(memory: string) {
