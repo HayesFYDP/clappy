@@ -188,6 +188,8 @@ export default class ClappyInteractionManager {
       console.log('[VOICE] Starting voice interaction');
       const audioPath = await recordAudio(this.clappy, 15, true, openClappyMicFunc, this.speechController.signal);
       console.log('[VOICE] Finished recording audio:', audioPath);
+      this.clappy.mainWindow?.webContents.send('open-popup-interact', ClappyExpression.Loading, 'thinking of a reply...');
+
       const transcription = await transcribeAudio(audioPath);
       console.log('[VOICE] Transcription:', transcription);
 
