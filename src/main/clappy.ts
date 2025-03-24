@@ -346,7 +346,6 @@ class Clappy {
                     Then, enclosed in <OUTPUT> </OUTPUT> tags, you will output a JSON response that conforms the following schema:
                     { productive: <TRUE/FALSE>, confidence: <float from 0.0->1.0>, justification: <concise string justification for decision>${this.memory.getMemoryResponseString()} }.`;
 
-    console.log(prompt);
     const response = await (() => {
       if (screenshotPath) {
         // Read the screenshot file and convert to base64
