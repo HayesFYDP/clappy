@@ -41,6 +41,8 @@ class Clappy {
   enabledInterventions: Interventions[];
   interventionHandlers: Partial<InterventionHandlerMap> = {};
 
+  nextEligibleCheckTime: number = 0; // next timestamp where we can check for productivity
+
   constructor(
     enabledInterventions: Interventions[],
     isDevelopment: boolean,
@@ -137,6 +139,12 @@ class Clappy {
       analyticsWindow.on('closed', () => {
         this.analyticsWindow = null;
       });
+    });
+
+    ipcMain.on('popup-closed', () => {
+      // when the popup is closed, add a 10 second buffer before Clappy can intervene
+      console.log('[CORE] Popup closed, adding 10 second buffer');
+      this.nextEligibleCheckTime = Math.max(this.nextEligibleCheckTime, Date.now() + 10 * 1000);
     });
 
     ipcMain.handle('get-settings', () => {
@@ -245,7 +253,7 @@ class Clappy {
 
         setInterval(() => {
           this.manageProductivity();
-        }, 30000);
+        }, 10000);
       }, 10000);
     }
 
@@ -575,9 +583,17 @@ class Clappy {
     })();
 
     if (!selectedIntervention) {
-      console.log('No intervention selected, skipping intervention');
+      console.log('[CORE] No intervention selected, skipping intervention');
       return;
     }
+
+    const clappyPopupOpen = await this.isClappyPopupOpen();
+    if (clappyPopupOpen) {
+      console.log('[CORE] Popup was opened between productivity check and intervention selection, skipping intervention');
+      return;
+    }
+
+    this.nextEligibleCheckTime = Math.max(this.nextEligibleCheckTime, Date.now() + 35 * 1000); // set the next check to be 35 seconds from now
 
     // save the chosen intervention to the database
     await this.prisma.interventionRecord.create({
@@ -600,6 +616,16 @@ class Clappy {
   }
 
   async manageProductivity() {
+    const popupOpen = await this.isClappyPopupOpen();
+    if (popupOpen) {
+      console.log('[CORE] Popup is open, skipping productivity check');
+      return;
+    }
+    if (Date.now() < this.nextEligibleCheckTime) {
+      console.log('[CORE] Not yet time to check productivity');
+      return;
+    }
+
     const screenshotPath = await this.takeScreenshot();
 
     console.log('About to call isproductive');
@@ -618,6 +644,19 @@ class Clappy {
     });
 
     await this.applyIntervention(userTask, productivity.productive, productivity.confidence, productivity.justification);
+  }
+
+  async isClappyPopupOpen(): Promise<boolean> {
+    if (!this.mainWindow) {
+      return false;
+    }
+
+    this.mainWindow.webContents.send('get-is-popup-open');
+    return new Promise((resolve) => {
+      ipcMain.once('get-is-popup-open-response', (_, isOpen) => {
+        resolve(isOpen);
+      });
+    });
   }
 
   // function to assign a handler, mostly here to satisfy typescript typing
