@@ -104,7 +104,7 @@ export default class PopupClappyInterventionHandler implements InterventionHandl
         },
       ],
       max_tokens: 500,
-    });
+    }).catch(_ => null);
 
     const responseText = response?.choices[0].message.content;
     if (!responseText) {
@@ -112,25 +112,30 @@ export default class PopupClappyInterventionHandler implements InterventionHandl
       return defaultResponse;
     }
 
-    const outputStart = responseText.indexOf('<OUTPUT>') + '<OUTPUT>'.length;
-    const outputEnd = responseText.indexOf('</OUTPUT>');
-    const output = responseText.slice(outputStart, outputEnd);
-    const outputJson = JSON.parse(output);
+    try {
+      const outputStart = responseText.indexOf('<OUTPUT>') + '<OUTPUT>'.length;
+      const outputEnd = responseText.indexOf('</OUTPUT>');
+      const output = responseText.slice(outputStart, outputEnd);
+      const outputJson = JSON.parse(output);
 
-    if (!Object.values(ClappyExpression).includes(outputJson.expression)) {
-      console.log('[POPUP_CLAPPY] Invalid expression selected');
+      if (!Object.values(ClappyExpression).includes(outputJson.expression)) {
+        console.log('[POPUP_CLAPPY] Invalid expression selected');
+        return defaultResponse;
+      }
+      if (outputJson.message.length === 0) {
+        console.log('[POPUP_CLAPPY] Empty message selected');
+        return defaultResponse;
+      }
+
+      this.messageHistory.push({ expression: outputJson.expression, message: outputJson.message });
+      if (this.messageHistory.length > 5) {
+        this.messageHistory.shift();
+      }
+
+      return outputJson;
+    } catch {
+      console.log('[POPUP_CLAPPY] Failed to parse clappy message');
       return defaultResponse;
     }
-    if (outputJson.message.length === 0) {
-      console.log('[POPUP_CLAPPY] Empty message selected');
-      return defaultResponse;
-    }
-
-    this.messageHistory.push({ expression: outputJson.expression, message: outputJson.message });
-    if (this.messageHistory.length > 5) {
-      this.messageHistory.shift();
-    }
-
-    return outputJson;
   }
 }

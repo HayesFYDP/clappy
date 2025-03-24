@@ -44,7 +44,8 @@ export default class ClappyInteractionManager {
     const choicePreferencesString = !isUserTaskSet
       ? `Your main objective is to determine what the user is currently trying to accomplish to record it in your memory using SET_TASK.
         You should use CLARIFY if you are unsure about the user's task or if what the user provided is too vague for you to be a effective assistant.
-        You want to get enough context so that when you observe the user's screen, you can confidently determine if it is related to their task.`
+        You want to get enough context so that when you observe the user's screen, you can confidently determine if it is related to their task. 
+        However, avoid being too specific or asking too many questions, as this can be seen as intrusive.`
       : `You should use SET_TASK if it is clear that the user wishes to change the task they are working on.
         Otherwise, your preference is to update your memory with UPDATE_MEMORY to better help the user in the future. For example, if the user tells you that they want to stop being distracted by a program or topic, you should UPDATE_MEMORY with that information.
         You should only use CLARIFY if you don't have enough information to do either of those, or if what the user provided is too vague for you to be a effective assistant.`;

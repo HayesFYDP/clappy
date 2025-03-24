@@ -84,7 +84,7 @@ export default class SpeechInterventionHandler implements InterventionHandler {
         },
       ],
       max_tokens: 500,
-    });
+    }).catch(_ => null);
 
     const responseText = response?.choices[0].message.content;
     if (!responseText) {
@@ -92,22 +92,27 @@ export default class SpeechInterventionHandler implements InterventionHandler {
       return defaultSpeech;
     }
 
-    const outputStart = responseText.indexOf('<OUTPUT>') + '<OUTPUT>'.length;
-    const outputEnd = responseText.indexOf('</OUTPUT>');
-    const output = responseText.slice(outputStart, outputEnd);
-    const outputJson = JSON.parse(output);
+    try {
+      const outputStart = responseText.indexOf('<OUTPUT>') + '<OUTPUT>'.length;
+      const outputEnd = responseText.indexOf('</OUTPUT>');
+      const output = responseText.slice(outputStart, outputEnd);
+      const outputJson = JSON.parse(output);
 
-    if (outputJson.message.length === 0) {
-      console.log('[SPEECH] Empty message selected');
+      if (outputJson.message.length === 0) {
+        console.log('[SPEECH] Empty message selected');
+        return defaultSpeech;
+      }
+
+      this.messageHistory.push(outputJson.message);
+      if (this.messageHistory.length > 5) {
+        this.messageHistory.shift();
+      }
+
+      return outputJson.message;
+    } catch {
+      console.log('[SPEECH] Failed to parse clappy message');
       return defaultSpeech;
     }
-
-    this.messageHistory.push(outputJson.message);
-    if (this.messageHistory.length > 5) {
-      this.messageHistory.shift();
-    }
-
-    return outputJson.message;
   }
 }
 

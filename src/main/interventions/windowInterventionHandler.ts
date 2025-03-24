@@ -157,7 +157,7 @@ export default class WindowInterventionHandler implements InterventionHandler {
         },
       ],
       max_tokens: 500,
-    });
+    }).catch(_ => null);
 
     const responseText = response?.choices[0].message.content;
     if (!responseText) {
@@ -165,20 +165,25 @@ export default class WindowInterventionHandler implements InterventionHandler {
       return null;
     }
 
-    const outputStart = responseText.indexOf('<OUTPUT>') + '<OUTPUT>'.length;
-    const outputEnd = responseText.indexOf('</OUTPUT>');
-    const output = responseText.slice(outputStart, outputEnd);
-    const outputJson = JSON.parse(output);
-    const windowIndex = Number(outputJson.window) - 1;
+    try {
+      const outputStart = responseText.indexOf('<OUTPUT>') + '<OUTPUT>'.length;
+      const outputEnd = responseText.indexOf('</OUTPUT>');
+      const output = responseText.slice(outputStart, outputEnd);
+      const outputJson = JSON.parse(output);
+      const windowIndex = Number(outputJson.window) - 1;
 
-    if (Number.isNaN(windowIndex) || windowIndex < 0 || windowIndex >= windows.length) {
-      console.log('[FOCUS_WINDOW] Invalid window index selected by LLM:', windowIndex);
-      return null;
+      if (Number.isNaN(windowIndex) || windowIndex < 0 || windowIndex >= windows.length) {
+        console.log('[FOCUS_WINDOW] Invalid window index selected by LLM:', windowIndex);
+        return null;
+      }
+
+      const windowToFocus = windows[windowIndex];
+      console.log(`[FOCUS_WINDOW] LLM selected to focus on window: ${windowToFocus.executablePath}: ${windowToFocus.title}`);
+
+      return windowToFocus;
+    } catch {
+      console.log('[FOCUS_WINDOW] Failed to parse LLM response');
+      return null
     }
-
-    const windowToFocus = windows[windowIndex];
-    console.log(`[FOCUS_WINDOW] LLM selected to focus on window: ${windowToFocus.executablePath}: ${windowToFocus.title}`);
-
-    return windowToFocus;
   }
 }

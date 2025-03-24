@@ -336,7 +336,7 @@ class Clappy {
                     You are given that the user is currently trying to accomplish: <${userTask}>. Do not ask questions about this objective, simply consider it in light of the screen contents and window information.
                     ${this.memory.getMemoryInfoString()}
 
-                    ${windowInfoString}${screenshotPath === null ? extraWindowInformationString : ''}
+                    ${screenshotPath === null ? windowInfoString + extraWindowInformationString : ''}
 
                     ${windowReasoningString}
 
@@ -382,7 +382,7 @@ class Clappy {
         ],
         max_tokens: 500,
       });
-    })();
+    })()?.catch(_ => null)
 
     // Extract the response from the chat completion
     const responseText = response?.choices[0].message.content;
@@ -393,18 +393,27 @@ class Clappy {
         justification: 'Failed to analyze screen contents',
       };
     }
-    const outputStart = responseText.indexOf('<OUTPUT>') + '<OUTPUT>'.length;
-    const outputEnd = responseText.indexOf('</OUTPUT>');
 
-    const output = responseText.slice(outputStart, outputEnd);
+    try {
+      const outputStart = responseText.indexOf('<OUTPUT>') + '<OUTPUT>'.length;
+      const outputEnd = responseText.indexOf('</OUTPUT>');
 
-    const outputJson = JSON.parse(output);
+      const output = responseText.slice(outputStart, outputEnd);
 
-    if (outputJson.memory) {
-      this.memory.replaceMemory(outputJson.memory);
+      const outputJson = JSON.parse(output);
+      if (outputJson.memory) {
+        this.memory.replaceMemory(outputJson.memory);
+      }
+  
+      return outputJson;
+    } catch {
+      console.log('Failed to parse JSON output:');
+      return {
+        productive: false,
+        confidence: 0.0,
+        justification: 'Failed to analyze screen contents',
+      };
     }
-
-    return outputJson;
   }
 
   async selectIntervention(validInterventions: Interventions[], userTask: string): Promise<Interventions | null> {
