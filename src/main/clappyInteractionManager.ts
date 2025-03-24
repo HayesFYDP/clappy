@@ -3,7 +3,6 @@ import type Clappy from './clappy';
 import { recordAudio, transcribeAudio } from './speechUtil';
 import { ClappyExpression } from './types';
 
-
 // class to handle text and voice interactions with Clappy
 export default class ClappyInteractionManager {
   clappy: Clappy;
@@ -137,7 +136,12 @@ export default class ClappyInteractionManager {
           if (source === 'speech') {
             say.speak(content);
           }
-          this.clappy.mainWindow?.webContents.send('open-popup-interact', source === 'speech' ? ClappyExpression.Chomp : ClappyExpression.Thinking, content, estimatedSpeechDuration + 10000);
+          this.clappy.mainWindow?.webContents.send(
+            'open-popup-interact',
+            source === 'speech' ? ClappyExpression.Chomp : ClappyExpression.Thinking,
+            content,
+            estimatedSpeechDuration + 10000,
+          );
 
           this.conversationHistory.push(`Clappy: ${content}`);
         }
@@ -150,18 +154,26 @@ export default class ClappyInteractionManager {
         say.speak(reply);
       }
 
-      this.clappy.mainWindow?.webContents.send(
-        'open-popup-interact',
-        ClappyExpression.Despair,
-        reply,
-        10000,
-      );
+      this.clappy.mainWindow?.webContents.send('open-popup-interact', ClappyExpression.Despair, reply, 10000);
     }
   }
 
   async startVoiceInteraction(): Promise<void> {
+    const settings = await this.clappy.prisma.settings.findFirst();
+    const microphoneEnabled = settings?.permissionMicrophone ?? true;
+    if (!microphoneEnabled) {
+      console.log('[VOICE] Microphone permission not granted');
+      this.clappy.mainWindow?.webContents.send(
+        'open-popup-interact',
+        ClappyExpression.Despair,
+        'You turned off microphone access in settings so I am unable to hear you.',
+        10000,
+      );
+      return;
+    }
+
     setTimeout(() => {
-      this.clappy.mainWindow?.webContents.send('open-popup-interact', ClappyExpression.Thinking, 'Listening...');
+      this.clappy.mainWindow?.webContents.send('open-popup-interact', ClappyExpression.OffersMicrophone, 'Listening...');
     }, 1000);
 
     try {
