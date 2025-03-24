@@ -149,7 +149,8 @@ export default class WindowInterventionHandler implements InterventionHandler {
       The windows and their associated numeric IDs are:
       ${windowDescriptions.join('\n')}
 
-      Only select one window to focus. Enclosed in <OUTPUT> </OUTPUT> tags, you will output a JSON response that conforms the following schema:
+      First, reason about each window open and think about whether it may be related to the user's task. Select one window to focus.
+      Then, enclosed in <OUTPUT> </OUTPUT> tags, you will output a JSON response that conforms the following schema:
       { window: "<number between 1 and ${windowDescriptions.length}}>" }
     `;
 
