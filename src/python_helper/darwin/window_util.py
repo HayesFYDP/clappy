@@ -4,6 +4,8 @@ def is_window_important(window: DarwinWindow) -> bool:
     # ignore windows without a title or executable because these are usually system processes
     if not window.title or not window.executable:
         return False
+    if "clappy" in window.title and "Electron" in window.executable:
+        return False
 
     # TODO: ignore ourself (its probably has a title of clappy and Eletron as executable? need to confirm)
     return True
