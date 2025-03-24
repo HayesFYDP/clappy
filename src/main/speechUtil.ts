@@ -65,6 +65,7 @@ export async function recordAudio(
     }
 
     const timeoutId = setTimeout(() => {
+      console.log('[SPEECH] max duration reached, stopping recording');
       recordProcess.kill('SIGINT'); // send sox a signal to stop recording
     }, maxDurationSeconds * 1000);
 
@@ -78,7 +79,7 @@ export async function recordAudio(
 
       // Set up abort event listener
       const abortListener = () => {
-        console.log('[SPEECH] recording aborted by controller');
+        console.log('[SPEECH] recording ending by controller');
         clearTimeout(timeoutId);
         recordProcess.kill('SIGINT');
       };

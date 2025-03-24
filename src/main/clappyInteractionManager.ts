@@ -173,6 +173,12 @@ export default class ClappyInteractionManager {
       return;
     }
 
+    if (this.speechController) {
+      console.log('[VOICE] Voice interaction already in progress, intepreting as a stop recording request');
+      this.speechController.abort();
+      return;
+    }
+
     const openClappyMicFunc = () => {
       this.clappy.mainWindow?.webContents.send('open-popup-interact', ClappyExpression.OffersMicrophone, 'Listening...');
     }
@@ -191,6 +197,8 @@ export default class ClappyInteractionManager {
       const reply = "Sorry, I didn't quite catch what you said. Can you please clarify?";
       say.speak(reply);
       this.clappy.mainWindow?.webContents.send('open-popup-interact', ClappyExpression.Despair, reply, 10000);
+    } finally {
+      this.speechController = null; // reset the speech controller
     }
   }
 }

@@ -187,6 +187,8 @@ class Clappy {
           console.error('Failed to register global shortcut for speech interaction');
         }
 
+        console.log('Global shortcuts F8 (to open Clappy) and F9 (to start speaking) have been registered')
+
         this.createWindow();
         app.on('activate', () => {
           // On macOS it's common to re-create a window in the app when the
