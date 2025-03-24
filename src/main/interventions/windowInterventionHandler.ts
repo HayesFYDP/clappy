@@ -86,6 +86,11 @@ export default class WindowInterventionHandler implements InterventionHandler {
     }
 
     const userWindows = await this.clappy.windowManager.listWindows();
+    if (!userWindows || !userWindows.windows || userWindows.windows.length === 0) {
+      console.log('[FOCUS_WINDOW] No windows found to focus on, skipping intervention');
+      return null;
+    }
+
     const selectedWindow = await this.selectWindowToFocus(userWindows.windows);
 
     if (!selectedWindow) {
@@ -121,15 +126,15 @@ export default class WindowInterventionHandler implements InterventionHandler {
     const windowDescriptions = eligibleWindows.map((window, index) => `${index + 1}. ${window.executablePath}: ${window.title}`);
     // console.log(windowDescriptions);
 
+    if (eligibleWindows.length === 0) {
+      return null;
+    }
+
     if (!this.clappy.openai) {
       const randomWindow = eligibleWindows[Math.floor(Math.random() * eligibleWindows.length)];
 
       console.log(`[FOCUS_WINDOW] OpenAI API not initialized, selecting random window (${randomWindow.title}) to focus on`);
       return randomWindow;
-    }
-
-    if (windows.length === 0) {
-      return null;
     }
 
     const prompt = `You are a helpful productivity assistant that is observing the user's computer screen. ${userTask}.
@@ -157,11 +162,11 @@ export default class WindowInterventionHandler implements InterventionHandler {
         },
       ],
       max_tokens: 500,
-    }).catch(_ => null);
+    }).catch(() => null);
 
     const responseText = response?.choices[0].message.content;
     if (!responseText) {
-      console.log('Failed to select an intervention');
+      console.log('Failed to select a window to focus');
       return null;
     }
 
@@ -172,12 +177,12 @@ export default class WindowInterventionHandler implements InterventionHandler {
       const outputJson = JSON.parse(output);
       const windowIndex = Number(outputJson.window) - 1;
 
-      if (Number.isNaN(windowIndex) || windowIndex < 0 || windowIndex >= windows.length) {
+      if (Number.isNaN(windowIndex) || windowIndex < 0 || windowIndex >= eligibleWindows.length) {
         console.log('[FOCUS_WINDOW] Invalid window index selected by LLM:', windowIndex);
         return null;
       }
 
-      const windowToFocus = windows[windowIndex];
+      const windowToFocus = eligibleWindows[windowIndex];
       console.log(`[FOCUS_WINDOW] LLM selected to focus on window: ${windowToFocus.executablePath}: ${windowToFocus.title}`);
 
       return windowToFocus;
