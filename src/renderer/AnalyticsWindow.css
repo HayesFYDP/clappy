@@ -1,17 +1,17 @@
 :root {
-  --clappy-dark-green: #536C3F;
-  --clappy-light-green: #D7E999;
+  --clappy-dark-green: #536c3f;
+  --clappy-light-green: #d7e999;
   --clappy-less-light-green: #cce677;
   --clappy-darker-green: #394a2c;
   --clappy-light-grey: #91ad7b;
   --clappy-dark-grey: #7b8a6e;
-  --clappy-uncertain-grey: #E0E0E0;
+  --clappy-uncertain-grey: #e0e0e0;
 }
 
 .container {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   margin: 0 auto;
-  color: #536C3F;
+  color: #536c3f;
 }
 
 .title {
@@ -62,7 +62,7 @@
 }
 
 .link {
-  color: #536C3F;
+  color: #536c3f;
   text-decoration: underline;
   margin: 0 5px;
 }
@@ -73,7 +73,7 @@
   align-items: center;
   margin-bottom: 20px;
   padding: 14px 20px;
-  background-color: #D7E999;
+  background-color: #d7e999;
 }
 
 .label {
@@ -139,37 +139,37 @@
 .legend-text {
   font-weight: 600;
   /* lol */
-  background-color: white !important; 
+  background-color: white !important;
 }
 
 .very-productive {
-  background-color: #4CAF50;
-  color: #4CAF50;
+  background-color: #4caf50;
+  color: #4caf50;
 }
 
 .productive {
-  background-color: #81C784;
-  color: #81C784;
+  background-color: #81c784;
+  color: #81c784;
 }
 
 .somewhat-productive {
-  background-color: #FFC107;
-  color: #FFC107;
+  background-color: #ffc107;
+  color: #ffc107;
 }
 
 .uncertain {
-  background-color: #BDBDBD;
-  color: #BDBDBD;
+  background-color: #bdbdbd;
+  color: #bdbdbd;
 }
 
 .not-productive {
-  background-color: #E57373;
-  color: #E57373;
+  background-color: #e57373;
+  color: #e57373;
 }
 
 .statCheckbox {
   margin-right: 10px;
-  background-color: #536C3F;
+  background-color: #536c3f;
 }
 
 label {
@@ -214,7 +214,8 @@ select {
   background-color: var(--clappy-less-light-green);
 }
 
-.graph-container, .table-container {
+.graph-container,
+.table-container {
   padding: 20px;
 }
 
@@ -264,7 +265,7 @@ tr > td > * {
 }
 
 .statCheckbox + label::before {
-  content: "";
+  content: '';
   width: 20px;
   height: 20px;
   border-radius: 4px;
@@ -281,7 +282,7 @@ tr > td > * {
 
 /* Adding the checkmark */
 .statCheckbox:checked + label::before {
-  content: "✓";
+  content: '✓';
   text-align: center;
   color: var(--clappy-light-green);
   background: var(--clappy-dark-green);
@@ -296,7 +297,7 @@ tr > td > * {
   top: 0;
   transform: translateX(-50%);
   cursor: pointer;
-  z-index: 10;  /* Ensures interventions are above productivity segments */
+  z-index: 10; /* Ensures interventions are above productivity segments */
 }
 
 .timelineBar {
@@ -320,4 +321,27 @@ tr > td > * {
   font-size: 10px;
   color: var(--clappy-dark-green);
   white-space: nowrap;
+}
+
+.graph-view-custom-tooltip-container {
+  background-color: white;
+  padding: 10px;
+  border: #ccc 1px solid;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.graph-view-custom-tooltip-label {
+  margin: 0 0 5px 0;
+}
+
+.graph-view-custom-tooltip-intro {
+  margin: 0;
+  font-weight: bold;
+}
+
+.graph-view-custom-tooltip-value {
+  margin: 5px 0 0 0;
+  color: color;
+  font-size: '12px';
 }

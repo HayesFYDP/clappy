@@ -48,6 +48,14 @@ function formatDate(date: string) {
   return dateFormatted;
 }
 
+const scoreLabels = {
+  1: 'not-productive',
+  2: 'uncertain',
+  3: 'somewhat-productive',
+  4: 'productive',
+  5: 'very-productive',
+};
+
 const statuses: ProductivityHistoryRecord['status'][] = [
   'very-productive',
   'productive',
@@ -188,20 +196,94 @@ function CustomXAxisTick({ x, y, payload }: { x: number; y: number; payload: any
 function GraphView({ analytics, timeFilter }: { analytics: ClappyAnalytics; timeFilter: TimeFilter }) {
   const statsData = calculateProductivityStatsLineGraph(analytics.sessions, timeFilter);
 
+  const productivityLabels: Record<number, string> = {
+    1: 'not productive',
+    2: 'uncertain',
+    3: 'somewhat productive',
+    4: 'productive',
+    5: 'very productive',
+  };
+
+  const scoreColors: { [key: number]: string } = {
+    1: getColorForStatus('not-productive'),
+    2: getColorForStatus('uncertain'),
+    3: getColorForStatus('somewhat-productive'),
+    4: getColorForStatus('productive'),
+    5: getColorForStatus('very-productive'),
+  };
+
+  const CustomYAxisTick = ({ x, y, payload }: { x: number; y: number; payload: any }) => {
+    const value = payload.value;
+    return (
+      <text x={x - 5} y={y} textAnchor="end" fill={scoreColors[value] || '#536C3F'} fontWeight="bold" fontSize="12px">
+        {productivityLabels[value] || ''}
+      </text>
+    );
+  };
+
+  const CustomDot = (props: any) => {
+    const { cx, cy, value } = props;
+    const scoreValue = Math.round(value);
+    const color = scoreColors[scoreValue] || '#536C3F';
+
+    return <circle cx={cx} cy={cy} r={5} fill={color} stroke="#FFFFFF" strokeWidth={1} />;
+  };
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      const value = payload[0].value;
+      const roundedValue = Math.round(value);
+      const color = scoreColors[roundedValue] || '#536C3F';
+      const productivityText = productivityLabels[roundedValue] || '';
+
+      return (
+        <div className="graph-view-custom-tooltip-container">
+          <p className="graph-view-custom-tooltip-label">{`Date: ${label}`}</p>
+          <p
+            className="graph-view-custom-tooltip-intro"
+            style={{
+              color: color,
+            }}
+          >
+            {`Average Productivity: ${productivityText}`}
+          </p>
+          <p
+            className="graph-view-custom-tooltip-value"
+            style={{
+              color: color,
+            }}
+          >
+            {`Score: ${value.toFixed(2)}`}
+          </p>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <div className="graph-container">
-      <ResponsiveContainer width="100%" height={400}>
-        <LineChart data={statsData} margin={{ bottom: 30 }}>
+      <ResponsiveContainer width="100%" height={370}>
+        <LineChart data={statsData} margin={{ bottom: 0, left: 130 }}>
           <XAxis
             dataKey="date"
             padding={{ left: 50, right: 50 }}
             label={{ value: 'Date', position: 'insideBottom', offset: -20, fill: '#7b8a6e' }}
             stroke="#536C3F"
-            tick={CustomXAxisTick} // Use the custom tick component
+            tick={CustomXAxisTick}
           />
-          <YAxis domain={[0, 5]} tickCount={6} allowDataOverflow ticks={[0, 1, 2, 3, 4, 5]} stroke="#536C3F" tick={{ fill: '#536C3F' }} />
-          <Tooltip formatter={(value) => [value, 'Average Productivity Score']} contentStyle={{ color: '#536C3F' }} />
-          <Line type="linear" dataKey="avgProductivityScore" stroke="#536C3F" strokeWidth={2} />
+          <YAxis
+            domain={[0, 5]}
+            tickCount={6}
+            allowDataOverflow
+            ticks={[1, 2, 3, 4, 5]}
+            stroke="#536C3F"
+            tick={CustomYAxisTick}
+            width={10}
+          />
+          <Tooltip content={<CustomTooltip />} />
+          <Line type="linear" dataKey="avgProductivityScore" stroke="#536C3F" strokeWidth={2} dot={<CustomDot />} />
         </LineChart>
       </ResponsiveContainer>
     </div>

@@ -79,7 +79,7 @@ const getStoredSettings = async (): Promise<ClappySetting[]> => {
       descriptions: [
         'Clappy needs to take screenshots to see what is on your screen',
         'User microphone is required to verbally talk with Clappy',
-        'Window control is required for interventions to interact with other windows'
+        'Window control is required for interventions to interact with other windows',
       ],
     },
   ];
