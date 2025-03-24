@@ -102,6 +102,13 @@ export async function recordAudio(
 
 export async function transcribeAudio(audioPath: string): Promise<string> {
   return new Promise((resolve, reject) => {
+    // first, check if the file exists and exit early if it does not
+    if (!fs.existsSync(audioPath)) {
+      console.log('[SPEECH] Audio file does not exist- this is probably because nothing was said', audioPath);
+      resolve('(silence)');
+      return;
+    }
+
     const currentPath = process.cwd();
     process.chdir('./whisper.cpp');
 
@@ -122,6 +129,11 @@ export async function transcribeAudio(audioPath: string): Promise<string> {
       whisperProcess.on('close', async () => {
         // Read the generated .txt file
         const txtPath = `${audioPath}.txt`;
+        if (!fs.existsSync(txtPath)) {
+          console.log('[SPEECH] Transcription file does not exist:', txtPath);
+          throw new Error('[SPEECH] Transcription file was not created');
+        }
+
         const transcript = await fs.promises.readFile(txtPath, 'utf8');
         console.log('[SPEECH] Transcription text:', transcript);
 
