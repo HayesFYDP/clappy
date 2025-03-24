@@ -6,7 +6,6 @@ import {
   ShakeWindowPayload,
   FocusWindowPayload,
 } from './types';
-import WindowManager from './windowManager';
 import type Clappy from '../clappy';
 import { ClappyExpression } from '../types';
 import { WindowInfo } from './windowTypes';
@@ -15,10 +14,8 @@ export default class WindowInterventionHandler implements InterventionHandler {
   supportedInterventions = [Interventions.MINIMIZE_WINDOW, Interventions.SHAKE_WINDOW, Interventions.FOCUS_WINDOW] as const;
 
   clappy: Clappy;
-  windowManager: WindowManager;
 
   constructor(clappy: Clappy) {
-    this.windowManager = new WindowManager();
     this.clappy = clappy;
   }
 
@@ -41,7 +38,7 @@ export default class WindowInterventionHandler implements InterventionHandler {
   async minimizeActiveWindow(payload?: MinimizeWindowPayload) {
     const handle = payload?.windowHandle;
 
-    const result = await this.windowManager.minimizeWindow(handle).then(response => response.success).catch(err => {
+    const result = await this.clappy.windowManager.minimizeWindow(handle).then(response => response.success).catch(err => {
       console.error('[MINIMIZE_WINDOW] Error minimizing window:', err);
       return false;
     });
@@ -62,7 +59,7 @@ export default class WindowInterventionHandler implements InterventionHandler {
   async shakeActiveWindow(payload?: ShakeWindowPayload) {
     const handle = payload?.windowHandle;
 
-    const success = await this.windowManager.shakeWindow(handle).then(result => result.success).catch(err => {
+    const success = await this.clappy.windowManager.shakeWindow(handle).then(result => result.success).catch(err => {
       console.error('[SHAKE_WINDOW] Error shaking window:', err);
       return false;
     });
@@ -85,10 +82,10 @@ export default class WindowInterventionHandler implements InterventionHandler {
     const handle = payload?.windowHandle;
 
     if (handle) {
-      return this.windowManager.focusWindow(handle);
+      return this.clappy.windowManager.focusWindow(handle);
     }
 
-    const userWindows = await this.windowManager.listWindows();
+    const userWindows = await this.clappy.windowManager.listWindows();
     const selectedWindow = await this.selectWindowToFocus(userWindows.windows);
 
     if (!selectedWindow) {
@@ -96,7 +93,7 @@ export default class WindowInterventionHandler implements InterventionHandler {
       return null;
     }
 
-    const success = await this.windowManager.focusWindow(selectedWindow.id).then(result => result.success).catch(err => {
+    const success = await this.clappy.windowManager.focusWindow(selectedWindow.id).then(result => result.success).catch(err => {
       console.error('[FOCUS_WINDOW] Error focusing window:', err);
       return false;
     });

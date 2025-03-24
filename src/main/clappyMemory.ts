@@ -46,9 +46,9 @@ export default class ClappyMemory {
 
   // returns info about the current memory if enabled, otherwise nothing
   getMemoryInfoString(): string {
-    const memoryInfo = this.memory ? `Here is the current memory: <${this.memory}>` : 'There is currently nothing stored in memory.';
-
     if (this.isEnabled()) {
+      const memoryInfo = this.memory ? `Here is the current memory: <${this.memory}>` : 'There is currently nothing stored in memory.';
+
       return `You have access to a memory field that persists between calls. This allows you to remember important information or patterns from previous observations.
             Here is the current memory: <${memoryInfo}>.
             You can update this memory with important insights or patterns you observe.`

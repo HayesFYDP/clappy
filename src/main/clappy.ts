@@ -19,8 +19,11 @@ import { INTERVENTION_HANDLERS, InterventionHandlerMap } from './interventions/i
 import { createInterventionHandler, InterventionDescriptions, Interventions } from './interventions/types';
 import { ClappyExpression, ProductivityAnalysis } from './types';
 import { resolveHtmlPath } from './util';
+import WindowManager from './interventions/windowManager';
 import ClappyMemory from './clappyMemory';
 import ClappyInteractionManager from './clappyInteractionManager';
+
+const WINDOW_CONTROL_REQUIRED_INTERVENTIONS = [Interventions.SHAKE_WINDOW, Interventions.MINIMIZE_WINDOW, Interventions.FOCUS_WINDOW];
 
 class Clappy {
   prisma: PrismaClient;
@@ -29,7 +32,7 @@ class Clappy {
   developmentInterventionEnabled: boolean; // randomly select interventions in development mode
   memory: ClappyMemory; // Clappy's memory used to store more persistent information
   interactionManager: ClappyInteractionManager; // used to handle interactions (text and voice) with Clappy
-  // memory: string = 'empty memory, do not use this in reasoning'; // Persistent memory field for LLM
+  windowManager: WindowManager; // used to manage windows on the desktop
 
   mainWindow: BrowserWindow | null = null;
   settingsWindow: BrowserWindow | null = null;
@@ -38,15 +41,21 @@ class Clappy {
   enabledInterventions: Interventions[];
   interventionHandlers: Partial<InterventionHandlerMap> = {};
 
-  constructor(enabledInterventions: Interventions[], isDevelopment: boolean, developmentInterventionEnabled: boolean, memoryEnabled: boolean) {
+  constructor(
+    enabledInterventions: Interventions[],
+    isDevelopment: boolean,
+    developmentInterventionEnabled: boolean,
+    memoryEnabled: boolean,
+  ) {
     this.isDevelopment = isDevelopment;
     this.developmentInterventionEnabled = developmentInterventionEnabled;
     this.enabledInterventions = enabledInterventions;
     console.log(`Enabled interventions: ${enabledInterventions}`);
-    console.log(`>> Globally, interventions are ${(!this.isDevelopment || this.developmentInterventionEnabled) ? 'ENABLED' : 'DISABLED'}`);
+    console.log(`>> Globally, interventions are ${!this.isDevelopment || this.developmentInterventionEnabled ? 'ENABLED' : 'DISABLED'}`);
 
     this.interactionManager = new ClappyInteractionManager(this);
     this.memory = new ClappyMemory(this, memoryEnabled);
+    this.windowManager = new WindowManager();
 
     // Initialize Prisma client for database access
     this.prisma = new PrismaClient();
@@ -270,6 +279,13 @@ class Clappy {
   }
 
   async takeScreenshot() {
+    const settings = await this.prisma.settings.findFirst();
+    const screenshotEnabled = settings?.permissionScreenshot ?? true;
+    if (!screenshotEnabled) {
+      console.log('Screenshot permission is disabled');
+      return null;
+    }
+
     try {
       const sources = await desktopCapturer.getSources({
         types: ['screen'],
@@ -290,11 +306,37 @@ class Clappy {
     }
   }
 
-  async isProductive(screenshotPath: string, userTask: string): Promise<ProductivityAnalysis> {
+  async isProductive(screenshotPath: string | null, userTask: string): Promise<ProductivityAnalysis> {
+    const windows = await this.windowManager.listWindows();
+    const focusedWindow = windows.windows.find((window) => window.isFocused);
+    const windowInfoString = focusedWindow
+      ? `The user is currently focused on the window with "${focusedWindow.title}" and executable path "${focusedWindow.executablePath}".`
+      : 'The user is currently not interacting with any windows.';
+
+    const windowReasoningString =
+      screenshotPath !== null
+        ? "First, you will start by analyzing these contents and discussing with yourself if the contents of the screen match the user's intended tasks."
+        : "First, you will start by analyzing the provided information about the user's open and focused windows and discuss with yourself if the window information match the user's intended tasks.";
+
+    const extraWindowInformation = windows.windows
+      .filter((window) => !window.isFocused)
+      .map((window) => {
+        return `Title: "${window.title}", Executable path: "${window.executablePath}"`;
+      });
+
+    // to avoid distracting from the screenshot, only show the extra window information if no screenshot is provided
+    const extraWindowInformationString =
+      extraWindowInformation.length > 0
+        ? `\nThe user also has the following windows open:\n${extraWindowInformation.join('\n')}`
+        : '\nThe user has no other windows open.';
+
     const prompt = `You are Clappy, a productivity AI assistant analyzing a user's screen to determine if they're being productive.'
-                    You are given that the user is currently trying to accomplish: <${userTask}>. Do not ask questions about this objective, simply consider it in light of the screen contents.
+                    You are given that the user is currently trying to accomplish: <${userTask}>. Do not ask questions about this objective, simply consider it in light of the screen contents and window information.
                     ${this.memory.getMemoryInfoString()}
-                    First, you will start by analyzing these contents and discussing with yourself if the contents of the screen match the user's intended tasks.
+
+                    ${windowInfoString}${screenshotPath === null ? extraWindowInformationString : ''}
+
+                    ${windowReasoningString}
 
                     Consider:
                     1) Is the current activity directly contributing to the user's goal?
@@ -304,26 +346,41 @@ class Clappy {
                     Then, enclosed in <OUTPUT> </OUTPUT> tags, you will output a JSON response that conforms the following schema:
                     { productive: <TRUE/FALSE>, confidence: <float from 0.0->1.0>, justification: <concise string justification for decision>${this.memory.getMemoryResponseString()} }.`;
 
-    // Read the screenshot file and convert to base64
-    const imageBuffer = fs.readFileSync(screenshotPath);
-    const base64Image = imageBuffer.toString('base64');
+    const response = await (() => {
+      if (screenshotPath) {
+        // Read the screenshot file and convert to base64
+        const imageBuffer = fs.readFileSync(screenshotPath);
+        const base64Image = imageBuffer.toString('base64');
 
-    const response = await this.openai?.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'user',
-          content: [
-            { type: 'text', text: prompt },
+        return this.openai?.chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages: [
             {
-              type: 'image_url',
-              image_url: { url: `data:image/png;base64,${base64Image}` },
+              role: 'user',
+              content: [
+                { type: 'text', text: prompt },
+                {
+                  type: 'image_url',
+                  image_url: { url: `data:image/png;base64,${base64Image}` },
+                },
+              ],
             },
           ],
-        },
-      ],
-      max_tokens: 500,
-    });
+          max_tokens: 500,
+        });
+      }
+      // If no screenshot is provided, just use the prompt
+      return this.openai?.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'user',
+            content: [{ type: 'text', text: prompt }],
+          },
+        ],
+        max_tokens: 500,
+      });
+    })();
 
     // Extract the response from the chat completion
     const responseText = response?.choices[0].message.content;
@@ -348,7 +405,7 @@ class Clappy {
     return outputJson;
   }
 
-  async selectIntervention(userTask: string): Promise<Interventions | null> {
+  async selectIntervention(validInterventions: Interventions[], userTask: string): Promise<Interventions | null> {
     // select an intervention using LLM prompting
     // first, query the database for the last 5 productivity records
     const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
@@ -383,18 +440,19 @@ class Clappy {
       take: 10,
     });
 
-    const lastInterventionString = lastInterventions.length > 0
-      ? `In the past 10 minutes, the following interventions were taken (most recent first): ${lastInterventions.map(intervention => intervention.intervention).join(', ')}
+    const lastInterventionString =
+      lastInterventions.length > 0
+        ? `In the past 10 minutes, the following interventions were taken (most recent first): ${lastInterventions.map((intervention) => intervention.intervention).join(', ')}
          The last intervention was taken ${DateTime.fromJSDate(lastInterventions[0].date).toRelative()}.`
-      : 'No interventions were taken in the last 10 minutes.';
+        : 'No interventions were taken in the last 10 minutes.';
 
-    const interventionOptions = this.enabledInterventions
+    const interventionOptions = validInterventions
       .map((intervention) => {
         return `${intervention}: ${InterventionDescriptions[intervention as keyof typeof InterventionDescriptions]}`;
       })
       .join('\n');
 
-    const llmChoices = this.enabledInterventions.join('/');
+    const llmChoices = validInterventions.join('/');
     console.log('LLM choices:', llmChoices);
 
     const prompt = `You are a helpful productivity assistant that is observing the user's computer screen.
@@ -469,26 +527,46 @@ class Clappy {
       } else {
         return;
       }
+    }
 
+    const settings = await this.prisma.settings.findFirst();
+    const windowControlEnabled = settings?.permissionWindowControl ?? true;
+
+    const eligibleInterventions = this.enabledInterventions.filter((intervention) => {
+      // if the intervention is a window control intervention, check if the user has given permission
+      if (WINDOW_CONTROL_REQUIRED_INTERVENTIONS.includes(intervention) && !windowControlEnabled) {
+        return false;
+      }
+      return true;
+    });
+
+    if (eligibleInterventions.length === 0) {
+      console.log('No eligible interventions available');
+      return;
     }
 
     // use an IIFE to select an intervention based on whether LLM is enabled
     const selectedIntervention = await (async () => {
       // if LLM is enabled, first attempt to select an intervention using LLM
       if (this.openai) {
-        const llmIntervention = await this.selectIntervention(userTask);
+        const llmIntervention = await this.selectIntervention(eligibleInterventions, userTask);
         if (llmIntervention) {
           console.log('LLM intervention selected:', llmIntervention);
           return llmIntervention;
         }
       }
 
-      // if LLM is disabled or an invalid intervention was selected, select a random intervention
-      const randomIntervention = this.enabledInterventions[Math.floor(Math.random() * this.enabledInterventions.length)];
+      // if LLM is disabled or an error occured, select a random intervention
+      const randomIntervention = eligibleInterventions[Math.floor(Math.random() * eligibleInterventions.length)];
       console.log('Random intervention selected:', randomIntervention);
 
       return randomIntervention;
     })();
+
+    if (!selectedIntervention) {
+      console.log('No intervention selected, skipping intervention');
+      return;
+    }
 
     // save the chosen intervention to the database
     await this.prisma.interventionRecord.create({
@@ -513,26 +591,22 @@ class Clappy {
   async manageProductivity() {
     const screenshotPath = await this.takeScreenshot();
 
-    if (screenshotPath) {
-      console.log('About to call isproductive');
-      const userTask = this.memory.getUserTask();
-      const productivity = await this.isProductive(screenshotPath, userTask);
-      console.log('Productivity:', productivity);
+    console.log('About to call isproductive');
+    const userTask = this.memory.getUserTask();
+    const productivity = await this.isProductive(screenshotPath, userTask);
+    console.log('Productivity:', productivity);
 
-      // Save the productivity analysis to the database (excluding memory field)
-      await this.prisma.productivityRecord.create({
-        data: {
-          date: new Date(),
-          isProductive: productivity.productive,
-          confidence: productivity.confidence,
-          justification: productivity.justification,
-        },
-      });
+    // Save the productivity analysis to the database (excluding memory field)
+    await this.prisma.productivityRecord.create({
+      data: {
+        date: new Date(),
+        isProductive: productivity.productive,
+        confidence: productivity.confidence,
+        justification: productivity.justification,
+      },
+    });
 
-      await this.applyIntervention(userTask, productivity.productive, productivity.confidence, productivity.justification);
-    } else {
-      console.log('No screenshot path recevied');
-    }
+    await this.applyIntervention(userTask, productivity.productive, productivity.confidence, productivity.justification);
   }
 
   // function to assign a handler, mostly here to satisfy typescript typing
