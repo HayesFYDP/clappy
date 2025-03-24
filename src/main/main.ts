@@ -10,7 +10,7 @@ if (process.env.NODE_ENV === 'production') {
   sourceMapSupport.install();
 }
 
-const IS_DEVELOPMENT = true; // TODO: Set this to false when deploying or take as an arg
+const IS_DEVELOPMENT = false; // TODO: Set this to false when deploying or take as an arg
 // if set to true, will randomly select interventions when IS_DEVELOPMENT is true; otherwise, no interventions will be taken
 const DEVELOPMENT_INTERVENTION_ENABLED = false;
 const MEMORY_ENABLED = false; // whether or not to use memory - in theory we get better reasoning but it uses a lot more tokens

@@ -30,6 +30,8 @@ function closePopup(): void {
   popup.classList.remove('visible');
   setTimeout(() => {
     popup.style.display = 'none';
+
+    window.electron.ipcRenderer.sendMessage('popup-closed');
   }, 500); // Wait for the transition before hiding
 }
 
@@ -196,4 +198,10 @@ window.electron.ipcRenderer.on('toggle-popup', () => {
 window.electron.ipcRenderer.on('open-popup-interact', (expression, text, timeoutMs) => {
   openSource = 'interaction';
   openPopup(expression as ClappyExpression, text as string | null, timeoutMs as number | undefined);
+});
+
+window.electron.ipcRenderer.on('get-is-popup-open', () => {
+  const popup = document.getElementById('popup');
+  const isOpen = popup?.style.display !== 'none' || false;
+  window.electron.ipcRenderer.sendMessage('get-is-popup-open-response', isOpen);
 });
