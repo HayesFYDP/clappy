@@ -8,6 +8,7 @@ export default class ClappyInteractionManager {
   clappy: Clappy;
   lastMessageSentTimestamp: number | null; // timestamp of the last message sent to Clappy
   conversationHistory: string[]; // store conversation history in memory; each message should begin with "User: " or "Clappy: "
+  speechController: AbortController | null = null; // controller to abort speech recognition, if this is not null then the speech recognition is in progress
 
   constructor(clappy: Clappy) {
     this.clappy = clappy;
@@ -172,13 +173,14 @@ export default class ClappyInteractionManager {
       return;
     }
 
-    setTimeout(() => {
+    const openClappyMicFunc = () => {
       this.clappy.mainWindow?.webContents.send('open-popup-interact', ClappyExpression.OffersMicrophone, 'Listening...');
-    }, 1000);
+    }
+    this.speechController = new AbortController();
 
     try {
       console.log('[VOICE] Starting voice interaction');
-      const audioPath = await recordAudio(this.clappy, 15, true);
+      const audioPath = await recordAudio(this.clappy, 15, true, openClappyMicFunc, this.speechController.signal);
       console.log('[VOICE] Finished recording audio:', audioPath);
       const transcription = await transcribeAudio(audioPath);
       console.log('[VOICE] Transcription:', transcription);
