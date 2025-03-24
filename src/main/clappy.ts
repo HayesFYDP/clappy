@@ -17,7 +17,7 @@ import os from 'os';
 import path from 'path';
 import { INTERVENTION_HANDLERS, InterventionHandlerMap } from './interventions/interventionHandlers';
 import { createInterventionHandler, InterventionDescriptions, Interventions } from './interventions/types';
-import { ProductivityAnalysis } from './types';
+import { ClappyExpression, ProductivityAnalysis } from './types';
 import { resolveHtmlPath } from './util';
 import WindowManager from './interventions/windowManager';
 import ClappyMemory from './clappyMemory';
@@ -254,6 +254,9 @@ class Clappy {
       mainWindow.show();
       // Add mouse event listeners
       mainWindow.webContents.send('add-mouse-event-listeners');
+
+      // Upon startup, popup Clappy asking what the user is trying to accomplish
+      mainWindow.webContents.send('open-popup-interact', ClappyExpression.Happy, 'Hello! What are you trying to accomplish today?');
     });
 
     mainWindow.on('closed', () => {
