@@ -24,10 +24,16 @@
 }
 
 .navLinks {
-  width: 68%;
+  margin: 0 auto;
   display: flex;
-  justify-content: space-between;
+  justify-content: space-between; /* This spaces the content to opposite ends */
+  align-items: center;
   padding: 10px 20px;
+}
+
+.navButtons {
+  display: flex;
+  gap: 16px;
 }
 
 .navLink {
@@ -41,12 +47,9 @@
   border-top: 2px solid var(--clappy-dark-green);
   border-left: 2px solid var(--clappy-dark-green);
   font-weight: 500;
-
   border-radius: 7px;
   cursor: pointer;
-
   background-color: var(--clappy-light-green);
-
   display: flex;
   gap: 8px;
   align-items: center;
@@ -59,6 +62,27 @@
 .navLink-active {
   background-color: var(--clappy-less-light-green);
   font-weight: bold;
+}
+
+.analytics-range-select {
+  height: 46.4px;
+  width: 160px;
+  text-align: center;
+  padding: 10px 16px;
+  font-size: 15px;
+  border-right: 5px solid var(--clappy-dark-green);
+  border-bottom: 5px solid var(--clappy-dark-green);
+  border-top: 2px solid var(--clappy-dark-green);
+  border-left: 2px solid var(--clappy-dark-green);
+  font-weight: 700;
+  color: var(--clappy-dark-green);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  border-radius: 7px;
+  cursor: pointer;
+  background-color: #f9ffeb;
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .link {
@@ -78,10 +102,6 @@
 
 .label {
   margin-right: 20px;
-}
-
-.select {
-  margin-left: 5px;
 }
 
 .filters {
@@ -183,35 +203,12 @@ label {
   margin-bottom: 20px;
 }
 
-select {
-  width: 140px;
-  padding: 3px 6px;
-  border-radius: 6px;
-  text-align: left;
-  background: var(--clappy-light-green);
-  font-size: 15px;
-  color: var(--clappy-dark-green);
-
-  border-right: 2.5px solid var(--clappy-dark-green);
-  border-bottom: 2.5px solid var(--clappy-dark-green);
-  border-top: 1px solid var(--clappy-dark-green);
-  border-left: 1px solid var(--clappy-dark-green);
-
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="%23536C3F"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>')
-    no-repeat right 10px center;
-  background-size: 14px;
-  cursor: pointer;
-}
-
-.select:focus {
+.analytics-range-select:focus {
   outline: none;
 }
 
-.select:hover {
-  background-color: var(--clappy-less-light-green);
+.analytics-range-select:hover {
+  background-color: white;
 }
 
 .graph-container,
