@@ -18,10 +18,10 @@ const MEMORY_ENABLED = false; // whether or not to use memory - in theory we get
 // these should be ordered from least to most intrusive
 const ENABLED_INTERVENTIONS: Interventions[] = [
   Interventions.POPUP_CLAPPY,
-  // Interventions.SPEAK_CLAPPY,
-  // Interventions.SHAKE_WINDOW,
-  // Interventions.MINIMIZE_WINDOW,
-  // Interventions.FOCUS_WINDOW,
+  Interventions.SPEAK_CLAPPY,
+  Interventions.SHAKE_WINDOW,
+  Interventions.MINIMIZE_WINDOW,
+  Interventions.FOCUS_WINDOW,
 ];
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
