@@ -224,6 +224,7 @@ function GraphView({ analytics, timeFilter }: { analytics: ClappyAnalytics; time
 
   const CustomYAxisTick = ({ x, y, payload }: { x: number; y: number; payload: any }) => {
     const value = payload.value;
+
     return (
       <text x={x - 5} y={y} textAnchor="end" fill={scoreColors[value] || '#536C3F'} fontWeight="bold" fontSize="12px">
         {productivityLabels[value] || ''}
@@ -262,9 +263,7 @@ function GraphView({ analytics, timeFilter }: { analytics: ClappyAnalytics; time
             style={{
               color: color,
             }}
-          >
-            {`Score: ${value.toFixed(2)}`}
-          </p>
+          ></p>
         </div>
       );
     }
@@ -274,7 +273,7 @@ function GraphView({ analytics, timeFilter }: { analytics: ClappyAnalytics; time
 
   return (
     <div className="graph-container">
-      <ResponsiveContainer width="100%" height={370}>
+      <ResponsiveContainer width="100%" height={420}>
         <LineChart data={statsData} margin={{ bottom: 0, left: 130 }}>
           <XAxis
             dataKey="date"
@@ -527,54 +526,29 @@ function AnalyticsWindow() {
     <div className="container">
       <div className="navLinks-wrapper">
         <div className="navLinks">
-          <div className={`navLink ${currentView === 'graph' ? 'navLink-active' : ''}`} onClick={() => setCurrentView('graph')}>
-            <TbGraphFilled />
-            Graph View
+          <div className="navButtons">
+            <div className={`navLink ${currentView === 'graph' ? 'navLink-active' : ''}`} onClick={() => setCurrentView('graph')}>
+              <TbGraphFilled />
+              Graph View
+            </div>
+            <div className={`navLink ${currentView === 'timeline' ? 'navLink-active' : ''}`} onClick={() => setCurrentView('timeline')}>
+              <IoTime />
+              Timeline View
+            </div>
+            <div className={`navLink ${currentView === 'table' ? 'navLink-active' : ''}`} onClick={() => setCurrentView('table')}>
+              <FaTableList />
+              Table View
+            </div>
           </div>
-          <div className={`navLink ${currentView === 'timeline' ? 'navLink-active' : ''}`} onClick={() => setCurrentView('timeline')}>
-            <IoTime />
-            Timeline View
-          </div>
-          <div className={`navLink ${currentView === 'table' ? 'navLink-active' : ''}`} onClick={() => setCurrentView('table')}>
-            <FaTableList />
-            Table View
-          </div>
-        </div>
-      </div>
-      <div className="controls">
-        <label className="label" htmlFor="timeRange">
-          Time Range:
-          <select id="timeRange" className="select" value={timeRange} onChange={(e) => setTimeRange(e.target.value as TimeFilter)}>
+
+          <select id="timeRange" className="analytics-range-select" value={timeRange} onChange={(e) => setTimeRange(e.target.value)}>
             <option value="last week">last week</option>
             <option value="last month">last month</option>
             <option value="last year">last year</option>
           </select>
-        </label>
-        <div className="filters">
-          <span>Filters: </span>
-          <div style={{ marginRight: 10 }}>
-            <input
-              type="checkbox"
-              id="productiveCheckbox"
-              className="statCheckbox"
-              checked={productiveFilter}
-              onChange={() => setProductiveFilter(!productiveFilter)}
-            />
-            <label htmlFor="productiveCheckbox">Only Productive Time</label>
-          </div>
-
-          <div>
-            <input
-              type="checkbox"
-              id="sortByTask"
-              className="statCheckbox"
-              checked={sortByTask}
-              onChange={() => setSortByTask(!sortByTask)}
-            />
-            <label htmlFor="sortByTask">Sort by Task</label>
-          </div>
         </div>
       </div>
+
       {currentView === 'graph' && <GraphView analytics={analytics} timeFilter={timeRange} />}
       {currentView === 'timeline' && <TimelineView analytics={analytics} timeFilter={timeRange} />}
       {currentView === 'table' && <TableView analytics={analytics} timeFilter={timeRange} />}
