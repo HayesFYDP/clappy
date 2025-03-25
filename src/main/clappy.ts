@@ -235,16 +235,16 @@ class Clappy {
     });
 
     // Group productivity records by date (year-month-day)
-    const productivityByDate = new Map<string, {date:Date;isProductive:boolean;confidence:number;}[]>(); 
+    const productivityByDate = new Map<string, {date:Date;isProductive:boolean;confidence:number;}[]>();
     productivityRecords.forEach(record => {
       const { date, isProductive, confidence } = record;
       const dateEDT = DateTime.fromJSDate(date).setZone('America/New_York');
       const dateKey = date.toISOString().split('T')[0];
-      
+
       if (!productivityByDate.has(dateKey)) {
         productivityByDate.set(dateKey, []);
       }
-      
+
       productivityByDate.get(dateKey)?.push({
         date: dateEDT.toJSDate(),
         isProductive,
@@ -254,16 +254,16 @@ class Clappy {
 
     // Group intervention records by date
     const interventionsByDate = new Map<string, InterventionRecord[]>();
-    
+
     interventionRecords.forEach(record => {
-      const { date, intervention } = record;  
-      const dateEDT = DateTime.fromJSDate(date).setZone('America/New_York');  
+      const { date, intervention } = record;
+      const dateEDT = DateTime.fromJSDate(date).setZone('America/New_York');
       const dateKey = date.toISOString().split('T')[0];
-      
+
       if (!interventionsByDate.has(dateKey)) {
         interventionsByDate.set(dateKey, []);
       }
-      
+
       interventionsByDate.get(dateKey)?.push({
         time: dateEDT.toJSDate(),
         action: intervention.toLowerCase().replaceAll('_', ' ')
@@ -279,24 +279,24 @@ class Clappy {
         const minutes = record.date.getMinutes();
         // Round down to nearest 30-minute interval
         const intervalMinutes = Math.floor(minutes / 30) * 30;
-        
+
         // Create a new Date object for the interval start
         const intervalDate = new Date(record.date);
         intervalDate.setMinutes(intervalMinutes);
         intervalDate.setSeconds(0);
         intervalDate.setMilliseconds(0);
-        
+
         // Use the interval start time as the key
         const key = intervalDate.toISOString();
-        
+
         // Initialize the array for this interval if it doesn't exist
         if (!result[key]) {
           result[key] = [];
         }
-        
+
         // Add the current item to its interval group
         result[key].push(record);
-        
+
         return result;
       }, {} as Record<string, {date:Date;isProductive:boolean;confidence:number}[]>);
 
@@ -309,7 +309,7 @@ class Clappy {
           const productivityScore = isProductive ? confidence : -confidence;
           return sum + productivityScore;
         }, 0) / group.length;
-        const statuses: ("very-productive" | "productive" | "somewhat-productive" | "uncertain" | "not-productive")[] = 
+        const statuses: ("very-productive" | "productive" | "somewhat-productive" | "uncertain" | "not-productive")[] =
           ['very-productive', 'productive', 'somewhat-productive', 'uncertain', 'not-productive'];
         const bar = [0.6, 0.3, 0.0, -0.3, -1.0];
         const status = statuses[bar.findIndex((threshold) => averageProductivity >= threshold)];
@@ -469,6 +469,27 @@ class Clappy {
             ${windowReasoningString}`;
   }
 
+  async getBlacklistedAppDescriptions(): Promise<string> {
+    const settings = await this.prisma.settings.findFirst();
+    const blacklistPrograms = settings?.blacklistPrograms;
+    const blacklistSites = settings?.blacklistSites;
+
+    const blacklistDescriptions = [];
+    if (blacklistPrograms) {
+      blacklistDescriptions.push(`The user has the following programs blacklisted: <${blacklistPrograms}>`);
+    }
+    if (blacklistSites) {
+      blacklistDescriptions.push(`The user has the following sites blacklisted: <${blacklistSites}>`);
+    }
+
+    if (blacklistDescriptions.length === 0) {
+      return '';
+    }
+
+    blacklistDescriptions.push('The user should not be accessing anything on the blacklist, and should be considered unproductive if they are.');
+    return blacklistDescriptions.join('\n');
+  }
+
   async isProductive(screenshotPath: string | null, userTask: string): Promise<ProductivityAnalysis> {
     const analysisErrorResponse: ProductivityAnalysis = {
       productive: false,
@@ -481,11 +502,14 @@ class Clappy {
       return analysisErrorResponse;
     }
 
+    const blacklistInfo = await this.getBlacklistedAppDescriptions().catch(() => '');
+
     const prompt = `You are Clappy, a productivity AI assistant analyzing a user's screen to determine if they're being productive.'
                     You are given that the user is currently trying to accomplish: <${userTask}>. Do not ask questions about this objective, simply consider it in light of the screen contents and window information.
                     ${this.memory.getMemoryInfoString()}
 
                     ${windowDescription}
+                    ${blacklistInfo}
 
                     Consider:
                     1) Is the current activity directly contributing to the user's goal?
