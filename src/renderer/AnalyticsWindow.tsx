@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
-import React from 'react';
+import React, { useEffect } from 'react';
 import { FaTableList } from 'react-icons/fa6';
 import { IoTime } from 'react-icons/io5';
 import { TbGraphFilled } from 'react-icons/tb';
@@ -9,6 +9,7 @@ import { Tooltip as ReactTooltip } from 'react-tooltip'; // Renamed Tooltip from
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import bufoThwackIcon from '../../assets/bufo-thwack.gif';
 import { ClappyAnalytics, ProductivityHistoryRecord, SessionAnalytics } from './analyticsHistory';
+import DefaultAnalytics from './defaultAnalytics';
 import './AnalyticsWindow.css';
 
 function getColorForStatus(status: ProductivityHistoryRecord['status']): string {
@@ -46,6 +47,19 @@ function formatDate(date: string) {
   }
 
   return dateFormatted;
+}
+
+/** Grab the analytics from the main process (Electron) */
+async function getAnalytics(): Promise<ClappyAnalytics> {
+  const analytics: ClappyAnalytics | null = await window.electron.ipcRenderer.invoke('get-analytics');
+  if (!analytics) return DefaultAnalytics
+
+  // Merge with default analytics
+  const thisDate = 25;
+  const filteredAnalytics = analytics.sessions.filter((session) => session.date.getDate() === thisDate);
+  const defaultAnalyticsFiltered = DefaultAnalytics.sessions.filter((session) => session.date.getDate() !== thisDate);
+  analytics.sessions = [...filteredAnalytics, ...defaultAnalyticsFiltered];
+  return analytics;
 }
 
 const scoreLabels = {
@@ -159,10 +173,6 @@ function calculateProductivityStatsLineGraph(sessions: SessionAnalytics[], timeF
       };
     });
 }
-
-type AnalyticsWindowProps = {
-  analytics: ClappyAnalytics;
-};
 
 function CustomXAxisTick({ x, y, payload }: { x: number; y: number; payload: any }) {
   const formattedTick = payload.value.replace('(Today)', '\n(Today)'); // Ensure correct wrapping
@@ -494,12 +504,25 @@ function TableView({ analytics, timeFilter }: { analytics: ClappyAnalytics; time
   );
 }
 
-function AnalyticsWindow({ analytics }: AnalyticsWindowProps) {
+function AnalyticsWindow() {
+  const [analytics, setAnalytics] = React.useState<ClappyAnalytics>(DefaultAnalytics);
   const [currentView, setCurrentView] = React.useState<'graph' | 'timeline' | 'table'>('timeline');
   const [timeRange, setTimeRange] = React.useState<'last week' | 'last month' | 'last year'>('last week');
   const [productiveFilter, setProductiveFilter] = React.useState(false);
   const [sortByTask, setSortByTask] = React.useState(false);
 
+  /** Load analytics from Electron on mount */
+  useEffect(() => {
+    (async () => {
+      try {
+        const storedAnalytics = await getAnalytics();
+        setAnalytics(storedAnalytics);
+      } catch (error) {
+        console.error('Error loading analytics:', error);
+      }
+    })();
+  }, []);
+  
   return (
     <div className="container">
       <div className="navLinks-wrapper">
