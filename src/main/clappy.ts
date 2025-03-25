@@ -620,7 +620,15 @@ class Clappy {
     // apply the intervention
     const handler = this.interventionHandlers[selectedIntervention];
     if (handler) {
-      await handler.handleIntervention(selectedIntervention, { userTask, justification });
+      try {
+        const success = await handler.handleIntervention(selectedIntervention, { userTask, justification });
+        if (success) {
+          // on a successful intervention application, add 15 seconds to the next eligible check time
+          this.nextEligibleCheckTime += 15 * 1000;
+        }
+      } catch (e) {
+        console.error('Error applying intervention:', e);
+      }
     } else {
       console.error(
         'No handler found for intervention (did you forget to add the handler to interventionHandlers.ts?):',

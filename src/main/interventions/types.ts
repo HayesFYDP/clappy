@@ -64,7 +64,7 @@ export type InterventionPayloadMap = {
 export interface InterventionHandler {
   supportedInterventions: readonly Interventions[]; // list of interventions that this handler supports
 
-  handleIntervention<T extends Interventions>(intervention: T, payload?: InterventionPayloadMap[T]): Promise<void>;
+  handleIntervention<T extends Interventions>(intervention: T, payload?: InterventionPayloadMap[T]): Promise<boolean>;
 }
 
 export type InterventionHandlerConstructor = new (clappy: Clappy) => InterventionHandler;
