@@ -184,14 +184,18 @@ window.electron.ipcRenderer.on('close-popup-intervention', () => {
   }
 });
 
-window.electron.ipcRenderer.on('toggle-popup', () => {
+window.electron.ipcRenderer.on('toggle-popup', (shouldAskForUserTask) => {
   const popup = document.getElementById('popup') as HTMLElement;
   if (popup.classList.contains('visible')) {
     closePopup();
     openSource = null;
   } else {
     openSource = 'hotkey';
-    openPopup(ClappyExpression.Hello, '');
+    if (shouldAskForUserTask) {
+      openPopup(ClappyExpression.Happy, 'Hello! What are you trying to accomplish today?')
+    } else {
+      openPopup(ClappyExpression.Hello, '');
+    }
   }
 });
 
