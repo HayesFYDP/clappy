@@ -14,6 +14,7 @@ export type Channels =
   | 'popup-closed'
   | 'get-settings'
   | 'set-settings'
+  | 'get-analytics'
   | 'send-text-interaction'
   | 'get-is-popup-open'
   | 'get-is-popup-open-response';

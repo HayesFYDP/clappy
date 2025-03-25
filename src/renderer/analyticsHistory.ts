@@ -6,7 +6,7 @@ export type ProductivityHistoryRecord = {
 
 export type InterventionRecord = {
   time: Date;
-  action: 'notify' | 'minimize-window';
+  action: string;
 };
 
 export type SessionAnalytics = {

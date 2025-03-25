@@ -22,6 +22,7 @@ import { resolveHtmlPath } from './util';
 import WindowManager from './interventions/windowManager';
 import ClappyMemory from './clappyMemory';
 import ClappyInteractionManager from './clappyInteractionManager';
+import { ProductivityHistoryRecord, InterventionRecord, SessionAnalytics, ClappyAnalytics } from '../renderer/analyticsHistory';
 
 const WINDOW_CONTROL_REQUIRED_INTERVENTIONS = [Interventions.SHAKE_WINDOW, Interventions.MINIMIZE_WINDOW, Interventions.FOCUS_WINDOW];
 
@@ -159,6 +160,10 @@ class Clappy {
       });
     });
 
+    ipcMain.handle('get-analytics', async () => {
+      return this.getAnalytics();
+    });
+
     ipcMain.on('send-text-interaction', async (event, text) => {
       this.interactionManager.handleTextInteraction(text);
     });
@@ -214,6 +219,116 @@ class Clappy {
         });
       })
       .catch(console.log);
+  }
+
+  async getAnalytics(): Promise<ClappyAnalytics> {
+    // Get all productivity records and intervention records, sorted by timestamp
+    const productivityRecords = await this.prisma.productivityRecord.findMany({
+      orderBy: {
+        date: 'asc',
+      }
+    });
+    const interventionRecords = await this.prisma.interventionRecord.findMany({
+      orderBy: {
+        date: 'asc',
+      }
+    });
+
+    // Group productivity records by date (year-month-day)
+    const productivityByDate = new Map<string, {date:Date;isProductive:boolean;confidence:number;}[]>(); 
+    productivityRecords.forEach(record => {
+      const { date, isProductive, confidence } = record;
+      const dateEDT = DateTime.fromJSDate(date).setZone('America/New_York');
+      const dateKey = date.toISOString().split('T')[0];
+      
+      if (!productivityByDate.has(dateKey)) {
+        productivityByDate.set(dateKey, []);
+      }
+      
+      productivityByDate.get(dateKey)?.push({
+        date: dateEDT.toJSDate(),
+        isProductive,
+        confidence
+      });
+    });
+
+    // Group intervention records by date
+    const interventionsByDate = new Map<string, InterventionRecord[]>();
+    
+    interventionRecords.forEach(record => {
+      const { date, intervention } = record;  
+      const dateEDT = DateTime.fromJSDate(date).setZone('America/New_York');  
+      const dateKey = date.toISOString().split('T')[0];
+      
+      if (!interventionsByDate.has(dateKey)) {
+        interventionsByDate.set(dateKey, []);
+      }
+      
+      interventionsByDate.get(dateKey)?.push({
+        time: dateEDT.toJSDate(),
+        action: intervention.toLowerCase().replaceAll('_', ' ')
+      });
+    });
+
+    const sessions: SessionAnalytics[] = [];
+
+    // Group productivity data into 15-minute intervals
+    productivityByDate.forEach((records, dateKey) => {
+      const groupedData = records.reduce((result, record) => {
+        // Create a timestamp for the start of the 30-minute interval
+        const minutes = record.date.getMinutes();
+        // Round down to nearest 30-minute interval
+        const intervalMinutes = Math.floor(minutes / 30) * 30;
+        
+        // Create a new Date object for the interval start
+        const intervalDate = new Date(record.date);
+        intervalDate.setMinutes(intervalMinutes);
+        intervalDate.setSeconds(0);
+        intervalDate.setMilliseconds(0);
+        
+        // Use the interval start time as the key
+        const key = intervalDate.toISOString();
+        
+        // Initialize the array for this interval if it doesn't exist
+        if (!result[key]) {
+          result[key] = [];
+        }
+        
+        // Add the current item to its interval group
+        result[key].push(record);
+        
+        return result;
+      }, {} as Record<string, {date:Date;isProductive:boolean;confidence:number}[]>);
+
+      // Convert the object to an array of groups if needed
+      const groupedArray: ProductivityHistoryRecord[] = Object.values(groupedData).map((group) => {
+        const startTime = group[0].date;
+        const endTime = group[group.length - 1].date;
+        const averageProductivity = group.reduce((sum, record) => {
+          const { isProductive, confidence } = record;
+          const productivityScore = isProductive ? confidence : -confidence;
+          return sum + productivityScore;
+        }, 0) / group.length;
+        const statuses: ("very-productive" | "productive" | "somewhat-productive" | "uncertain" | "not-productive")[] = 
+          ['very-productive', 'productive', 'somewhat-productive', 'uncertain', 'not-productive'];
+        const bar = [0.6, 0.3, 0.0, -0.3, -1.0];
+        const status = statuses[bar.findIndex((threshold) => averageProductivity >= threshold)];
+        return {
+          startTime,
+          endTime,
+          status
+        };
+      });
+      sessions.push({
+        date: new Date(dateKey),
+        productivity: groupedArray,
+        interventions: interventionsByDate.get(dateKey) ?? []
+      });
+    });
+
+    return {
+      sessions
+    };
   }
 
   createWindow() {
