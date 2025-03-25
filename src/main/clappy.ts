@@ -355,13 +355,15 @@ class Clappy {
   }
 
   async isProductive(screenshotPath: string | null, userTask: string): Promise<ProductivityAnalysis> {
+    const analysisErrorResponse: ProductivityAnalysis = {
+      productive: false,
+      confidence: 0.0,
+      justification: 'Failed to analyze screen contents',
+    };
+
     const windowDescription = await this.getOpenWindowDescriptions(screenshotPath !== null).catch(() => null);
     if (!windowDescription) {
-      return {
-        productive: false,
-        confidence: 0.0,
-        justification: 'Failed to analyze screen contents',
-      };
+      return analysisErrorResponse;
     }
 
     const prompt = `You are Clappy, a productivity AI assistant analyzing a user's screen to determine if they're being productive.'
@@ -417,11 +419,7 @@ class Clappy {
     // Extract the response from the chat completion
     const responseText = response?.choices[0].message.content;
     if (!responseText) {
-      return {
-        productive: false,
-        confidence: 0.0,
-        justification: 'Failed to analyze screen contents',
-      };
+      return analysisErrorResponse;
     }
 
     try {
@@ -438,11 +436,7 @@ class Clappy {
       return outputJson;
     } catch {
       console.log('Failed to parse JSON output:');
-      return {
-        productive: false,
-        confidence: 0.0,
-        justification: 'Failed to analyze screen contents',
-      };
+      return analysisErrorResponse;
     }
   }
 
@@ -615,8 +609,6 @@ class Clappy {
       return;
     }
 
-    this.nextEligibleCheckTime = Math.max(this.nextEligibleCheckTime, Date.now() + 35 * 1000); // set the next check to be 35 seconds from now
-
     // save the chosen intervention to the database
     await this.prisma.interventionRecord.create({
       data: {
@@ -647,6 +639,9 @@ class Clappy {
       console.log('[CORE] Not yet time to check productivity');
       return;
     }
+
+    // set the next check to be at least 25 seconds from now
+    this.nextEligibleCheckTime = Math.max(this.nextEligibleCheckTime, Date.now() + 25 * 1000);
 
     const screenshotPath = await this.takeScreenshot();
 
