@@ -130,6 +130,11 @@ export async function transcribeAudio(audioPath: string): Promise<string> {
         // Read the generated .txt file
         const txtPath = `${audioPath}.txt`;
 
+        if (!fs.existsSync(txtPath)) {
+          console.log('[SPEECH] Transcription file does not exist:', txtPath);
+          throw new Error('[SPEECH] Transcription file was not created');
+        }
+
         const transcript = await fs.promises.readFile(txtPath, 'utf8');
         console.log('[SPEECH] Transcription text:', transcript);
 
