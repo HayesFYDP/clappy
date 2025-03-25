@@ -11,9 +11,13 @@ export type Channels =
   | 'add-mouse-event-listeners'
   | 'open-settings-window'
   | 'open-analytics-window'
+  | 'popup-closed'
   | 'get-settings'
   | 'set-settings'
-  | 'send-text-interaction';
+  | 'get-analytics'
+  | 'send-text-interaction'
+  | 'get-is-popup-open'
+  | 'get-is-popup-open-response';
 
 const electronHandler = {
   ipcRenderer: {

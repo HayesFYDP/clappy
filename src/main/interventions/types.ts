@@ -19,10 +19,10 @@ export enum Interventions {
 // descriptions of each intervention used for LLM reasoning, ordered from least to most intense
 export const InterventionDescriptions: Record<Interventions, string> = {
   [Interventions.POPUP_CLAPPY]: "Have a character appear on the right side of the user's screen with an expression and message reminding them to be productive.",
+  [Interventions.SPEAK_CLAPPY]: 'Have a character speak a message out loud reminding the user to be productive.',
   [Interventions.SHAKE_WINDOW]: "Shake the user's current active window.",
   [Interventions.MINIMIZE_WINDOW]: "Minimize the user's current active window.",
   [Interventions.FOCUS_WINDOW]: 'Put another (more productive) window into focus.',
-  [Interventions.SPEAK_CLAPPY]: 'Have a character speak a message out loud.',
 };
 
 type GenericInterventionPayload = {
@@ -64,7 +64,7 @@ export type InterventionPayloadMap = {
 export interface InterventionHandler {
   supportedInterventions: readonly Interventions[]; // list of interventions that this handler supports
 
-  handleIntervention<T extends Interventions>(intervention: T, payload?: InterventionPayloadMap[T]): Promise<void>;
+  handleIntervention<T extends Interventions>(intervention: T, payload?: InterventionPayloadMap[T]): Promise<boolean>;
 }
 
 export type InterventionHandlerConstructor = new (clappy: Clappy) => InterventionHandler;

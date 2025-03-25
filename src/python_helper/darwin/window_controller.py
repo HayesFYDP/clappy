@@ -47,8 +47,7 @@ def focus_windows(id: int) -> bool:
 def minimize_window(id: int | None) -> bool:
     if id is None:
         active_window = DarwinWindow.get_foreground()
-        # TODO: check if window is clappy
-        if active_window is not None:
+        if active_window is not None and not ("clappy" in active_window.title and "Electron" in active_window.executable):
             active_window.minimize()
             return True
         elif active_window is not None:
@@ -78,7 +77,9 @@ def shake_window(id: int | None) -> bool:
         logger.debug("could not shake window because it is None")
         return False
 
-    # TODO: check if window is clappy
+    if "clappy" in window.title and "Electron" in window.executable:
+        logger.debug("skipping window shake because it is clappy (with title: %s and executable: %s)", window.title, window.executable)
+        return False
 
     was_maximized = False
 

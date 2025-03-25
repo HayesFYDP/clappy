@@ -30,6 +30,8 @@ function closePopup(): void {
   popup.classList.remove('visible');
   setTimeout(() => {
     popup.style.display = 'none';
+
+    window.electron.ipcRenderer.sendMessage('popup-closed');
   }, 500); // Wait for the transition before hiding
 }
 
@@ -182,18 +184,28 @@ window.electron.ipcRenderer.on('close-popup-intervention', () => {
   }
 });
 
-window.electron.ipcRenderer.on('toggle-popup', () => {
+window.electron.ipcRenderer.on('toggle-popup', (shouldAskForUserTask) => {
   const popup = document.getElementById('popup') as HTMLElement;
   if (popup.classList.contains('visible')) {
     closePopup();
     openSource = null;
   } else {
     openSource = 'hotkey';
-    openPopup(ClappyExpression.Hello, '');
+    if (shouldAskForUserTask) {
+      openPopup(ClappyExpression.Happy, 'Hello! What are you trying to accomplish today?')
+    } else {
+      openPopup(ClappyExpression.Hello, '');
+    }
   }
 });
 
 window.electron.ipcRenderer.on('open-popup-interact', (expression, text, timeoutMs) => {
   openSource = 'interaction';
   openPopup(expression as ClappyExpression, text as string | null, timeoutMs as number | undefined);
+});
+
+window.electron.ipcRenderer.on('get-is-popup-open', () => {
+  const popup = document.getElementById('popup');
+  const isOpen = popup?.style.display !== 'none' || false;
+  window.electron.ipcRenderer.sendMessage('get-is-popup-open-response', isOpen);
 });

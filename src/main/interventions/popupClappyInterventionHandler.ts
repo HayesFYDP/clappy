@@ -21,18 +21,17 @@ export default class PopupClappyInterventionHandler implements InterventionHandl
     this.messageHistory = [];
   }
 
-  async handleIntervention<T extends Interventions>(intervention: T, payload?: InterventionPayloadMap[T]): Promise<void> {
+  async handleIntervention<T extends Interventions>(intervention: T, payload?: InterventionPayloadMap[T]): Promise<boolean> {
     switch (intervention) {
       case Interventions.POPUP_CLAPPY:
-        await this.popupClappy(payload as PopupClappyPayload);
-        break;
+        return this.popupClappy(payload as PopupClappyPayload);
       default:
         throw new Error(`PopupClappyInterventionHandler received unsupported intervention: ${intervention}`);
     }
   }
 
   // make Clappy appear on the right side of a user's screen, using an LLM to determine Clappy's expression
-  async popupClappy(payload?: PopupClappyPayload) {
+  async popupClappy(payload?: PopupClappyPayload): Promise<boolean> {
     const timeoutMs = payload?.timeoutMs ?? 10000;
 
     // if the user provided an expression, use it; message is optional because it will just hide the speech option
@@ -46,11 +45,11 @@ export default class PopupClappyInterventionHandler implements InterventionHandl
   }
 
   // make Clappy appear on the right side of a user's screen with a specific expression and text
-  async popupClappySpecified(expression: ClappyExpression, text: string, timeoutMs = 10000) {
+  async popupClappySpecified(expression: ClappyExpression, text: string, timeoutMs = 10000): Promise<boolean> {
     const mainWindow = this.clappy.getMainWindow();
     if (mainWindow === null) {
       console.error('Main window is not available, cannot popup clappy');
-      return;
+      return false;
     }
 
     console.log(`[POPUP_CLAPPY] Displaying ${expression} Clappy popup: ${text}`);
@@ -59,6 +58,7 @@ export default class PopupClappyInterventionHandler implements InterventionHandl
     setTimeout(() => {
       mainWindow.webContents.send('close-popup-intervention');
     }, timeoutMs);
+    return true;
   }
 
   async determineClappyMessage(payload?: PopupClappyPayload): Promise<{ expression: ClappyExpression; message: string }> {
@@ -104,7 +104,7 @@ export default class PopupClappyInterventionHandler implements InterventionHandl
         },
       ],
       max_tokens: 500,
-    });
+    }).catch(() => null);
 
     const responseText = response?.choices[0].message.content;
     if (!responseText) {
@@ -112,25 +112,30 @@ export default class PopupClappyInterventionHandler implements InterventionHandl
       return defaultResponse;
     }
 
-    const outputStart = responseText.indexOf('<OUTPUT>') + '<OUTPUT>'.length;
-    const outputEnd = responseText.indexOf('</OUTPUT>');
-    const output = responseText.slice(outputStart, outputEnd);
-    const outputJson = JSON.parse(output);
+    try {
+      const outputStart = responseText.indexOf('<OUTPUT>') + '<OUTPUT>'.length;
+      const outputEnd = responseText.indexOf('</OUTPUT>');
+      const output = responseText.slice(outputStart, outputEnd);
+      const outputJson = JSON.parse(output);
 
-    if (!Object.values(ClappyExpression).includes(outputJson.expression)) {
-      console.log('[POPUP_CLAPPY] Invalid expression selected');
+      if (!Object.values(ClappyExpression).includes(outputJson.expression)) {
+        console.log('[POPUP_CLAPPY] Invalid expression selected');
+        return defaultResponse;
+      }
+      if (outputJson.message.length === 0) {
+        console.log('[POPUP_CLAPPY] Empty message selected');
+        return defaultResponse;
+      }
+
+      this.messageHistory.push({ expression: outputJson.expression, message: outputJson.message });
+      if (this.messageHistory.length > 5) {
+        this.messageHistory.shift();
+      }
+
+      return outputJson;
+    } catch {
+      console.log('[POPUP_CLAPPY] Failed to parse clappy message');
       return defaultResponse;
     }
-    if (outputJson.message.length === 0) {
-      console.log('[POPUP_CLAPPY] Empty message selected');
-      return defaultResponse;
-    }
-
-    this.messageHistory.push({ expression: outputJson.expression, message: outputJson.message });
-    if (this.messageHistory.length > 5) {
-      this.messageHistory.shift();
-    }
-
-    return outputJson;
   }
 }

@@ -22,6 +22,7 @@ import { resolveHtmlPath } from './util';
 import WindowManager from './interventions/windowManager';
 import ClappyMemory from './clappyMemory';
 import ClappyInteractionManager from './clappyInteractionManager';
+import { ProductivityHistoryRecord, InterventionRecord, SessionAnalytics, ClappyAnalytics } from '../renderer/analyticsHistory';
 
 const WINDOW_CONTROL_REQUIRED_INTERVENTIONS = [Interventions.SHAKE_WINDOW, Interventions.MINIMIZE_WINDOW, Interventions.FOCUS_WINDOW];
 
@@ -40,6 +41,8 @@ class Clappy {
 
   enabledInterventions: Interventions[];
   interventionHandlers: Partial<InterventionHandlerMap> = {};
+
+  nextEligibleCheckTime: number = 0; // next timestamp where we can check for productivity
 
   constructor(
     enabledInterventions: Interventions[],
@@ -139,6 +142,12 @@ class Clappy {
       });
     });
 
+    ipcMain.on('popup-closed', () => {
+      // when the popup is closed, add a 10 second buffer before Clappy can intervene
+      console.log('[CORE] Popup closed, adding 10 second buffer');
+      this.nextEligibleCheckTime = Math.max(this.nextEligibleCheckTime, Date.now() + 10 * 1000);
+    });
+
     ipcMain.handle('get-settings', () => {
       return this.prisma.settings.findFirst();
     });
@@ -149,6 +158,10 @@ class Clappy {
         update: settings,
         create: settings,
       });
+    });
+
+    ipcMain.handle('get-analytics', async () => {
+      return this.getAnalytics();
     });
 
     ipcMain.on('send-text-interaction', async (event, text) => {
@@ -172,20 +185,30 @@ class Clappy {
       .whenReady()
       .then(() => {
         const shortcutSuccessTogglePopup = globalShortcut.register('F8', () => {
-          console.log('F8 is pressed');
-          this.mainWindow?.webContents.send('toggle-popup');
+          console.log('[SHORTCUT] F8 is pressed');
+          this.mainWindow?.webContents.send('toggle-popup', !this.memory.isUserTaskSet());
         });
         if (!shortcutSuccessTogglePopup) {
           console.error('Failed to register global shortcut for toggle popup');
         }
 
         const shortcutSuccessSpeech = globalShortcut.register('F9', () => {
-          console.log('F9 is pressed');
+          console.log('[SHORTCUT] F9 is pressed');
           this.interactionManager.startVoiceInteraction();
         });
         if (!shortcutSuccessSpeech) {
           console.error('Failed to register global shortcut for speech interaction');
         }
+
+        const shortcutResetState = globalShortcut.register('F4', () => {
+          console.log('[SHORTCUT] F4 is pressed');
+          this.resetState();
+        });
+        if (!shortcutResetState) {
+          console.error('Failed to register global shortcut for speech interaction');
+        }
+
+        console.log('Global shortcuts F4 (to reset), F8 (to open Clappy) and F9 (to start speaking) have been registered');
 
         this.createWindow();
         app.on('activate', () => {
@@ -204,6 +227,116 @@ class Clappy {
         });
       })
       .catch(console.log);
+  }
+
+  async getAnalytics(): Promise<ClappyAnalytics> {
+    // Get all productivity records and intervention records, sorted by timestamp
+    const productivityRecords = await this.prisma.productivityRecord.findMany({
+      orderBy: {
+        date: 'asc',
+      }
+    });
+    const interventionRecords = await this.prisma.interventionRecord.findMany({
+      orderBy: {
+        date: 'asc',
+      }
+    });
+
+    // Group productivity records by date (year-month-day)
+    const productivityByDate = new Map<string, {date:Date;isProductive:boolean;confidence:number;}[]>();
+    productivityRecords.forEach(record => {
+      const { date, isProductive, confidence } = record;
+      const dateEDT = DateTime.fromJSDate(date).setZone('America/New_York');
+      const dateKey = date.toISOString().split('T')[0];
+
+      if (!productivityByDate.has(dateKey)) {
+        productivityByDate.set(dateKey, []);
+      }
+
+      productivityByDate.get(dateKey)?.push({
+        date: dateEDT.toJSDate(),
+        isProductive,
+        confidence
+      });
+    });
+
+    // Group intervention records by date
+    const interventionsByDate = new Map<string, InterventionRecord[]>();
+
+    interventionRecords.forEach(record => {
+      const { date, intervention } = record;
+      const dateEDT = DateTime.fromJSDate(date).setZone('America/New_York');
+      const dateKey = date.toISOString().split('T')[0];
+
+      if (!interventionsByDate.has(dateKey)) {
+        interventionsByDate.set(dateKey, []);
+      }
+
+      interventionsByDate.get(dateKey)?.push({
+        time: dateEDT.toJSDate(),
+        action: intervention.toLowerCase().replaceAll('_', ' ')
+      });
+    });
+
+    const sessions: SessionAnalytics[] = [];
+
+    // Group productivity data into 15-minute intervals
+    productivityByDate.forEach((records, dateKey) => {
+      const groupedData = records.reduce((result, record) => {
+        // Create a timestamp for the start of the 30-minute interval
+        const minutes = record.date.getMinutes();
+        // Round down to nearest 30-minute interval
+        const intervalMinutes = Math.floor(minutes / 30) * 30;
+
+        // Create a new Date object for the interval start
+        const intervalDate = new Date(record.date);
+        intervalDate.setMinutes(intervalMinutes);
+        intervalDate.setSeconds(0);
+        intervalDate.setMilliseconds(0);
+
+        // Use the interval start time as the key
+        const key = intervalDate.toISOString();
+
+        // Initialize the array for this interval if it doesn't exist
+        if (!result[key]) {
+          result[key] = [];
+        }
+
+        // Add the current item to its interval group
+        result[key].push(record);
+
+        return result;
+      }, {} as Record<string, {date:Date;isProductive:boolean;confidence:number}[]>);
+
+      // Convert the object to an array of groups if needed
+      const groupedArray: ProductivityHistoryRecord[] = Object.values(groupedData).map((group) => {
+        const startTime = group[0].date;
+        const endTime = group[group.length - 1].date;
+        const averageProductivity = group.reduce((sum, record) => {
+          const { isProductive, confidence } = record;
+          const productivityScore = isProductive ? confidence : -confidence;
+          return sum + productivityScore;
+        }, 0) / group.length;
+        const statuses: ("very-productive" | "productive" | "somewhat-productive" | "uncertain" | "not-productive")[] =
+          ['very-productive', 'productive', 'somewhat-productive', 'uncertain', 'not-productive'];
+        const bar = [0.6, 0.3, 0.0, -0.3, -1.0];
+        const status = statuses[bar.findIndex((threshold) => averageProductivity >= threshold)];
+        return {
+          startTime,
+          endTime,
+          status
+        };
+      });
+      sessions.push({
+        date: new Date(dateKey),
+        productivity: groupedArray,
+        interventions: interventionsByDate.get(dateKey) ?? []
+      });
+    });
+
+    return {
+      sessions
+    };
   }
 
   createWindow() {
@@ -243,7 +376,7 @@ class Clappy {
 
         setInterval(() => {
           this.manageProductivity();
-        }, 30000);
+        }, 10000);
       }, 10000);
     }
 
@@ -306,17 +439,27 @@ class Clappy {
     }
   }
 
-  async isProductive(screenshotPath: string | null, userTask: string): Promise<ProductivityAnalysis> {
+  // get descriptions about the user's windows if no screenshot exists, otherwise return generic instruction
+  async getOpenWindowDescriptions(screenshotExists: boolean): Promise<string> {
+    const defaultDescription =
+      "First, you will start by analyzing these contents and discussing with yourself if the contents of the screen match the user's intended tasks.";
+
+    if (screenshotExists) {
+      return defaultDescription;
+    }
+
     const windows = await this.windowManager.listWindows();
+    if (!windows || !windows.windows || windows.windows.length === 0) {
+      return defaultDescription;
+    }
+
     const focusedWindow = windows.windows.find((window) => window.isFocused);
     const windowInfoString = focusedWindow
       ? `The user is currently focused on the window with "${focusedWindow.title}" and executable path "${focusedWindow.executablePath}".`
       : 'The user is currently not interacting with any windows.';
 
     const windowReasoningString =
-      screenshotPath !== null
-        ? "First, you will start by analyzing these contents and discussing with yourself if the contents of the screen match the user's intended tasks."
-        : "First, you will start by analyzing the provided information about the user's open and focused windows and discuss with yourself if the window information match the user's intended tasks.";
+      "First, you will start by analyzing the provided information about the user's open and focused windows and discuss with yourself if the window information match the user's intended tasks.";
 
     const extraWindowInformation = windows.windows
       .filter((window) => !window.isFocused)
@@ -324,19 +467,57 @@ class Clappy {
         return `Title: "${window.title}", Executable path: "${window.executablePath}"`;
       });
 
-    // to avoid distracting from the screenshot, only show the extra window information if no screenshot is provided
+    // to avoid distracting from the screenshot, only provide the extra window information if no screenshot exists
     const extraWindowInformationString =
       extraWindowInformation.length > 0
         ? `\nThe user also has the following windows open:\n${extraWindowInformation.join('\n')}`
         : '\nThe user has no other windows open.';
 
+    return `${windowInfoString + extraWindowInformationString}
+            ${windowReasoningString}`;
+  }
+
+  async getBlacklistedAppDescriptions(): Promise<string> {
+    const settings = await this.prisma.settings.findFirst();
+    const blacklistPrograms = settings?.blacklistPrograms;
+    const blacklistSites = settings?.blacklistSites;
+
+    const blacklistDescriptions = [];
+    if (blacklistPrograms) {
+      blacklistDescriptions.push(`The user has the following programs blacklisted: <${blacklistPrograms}>`);
+    }
+    if (blacklistSites) {
+      blacklistDescriptions.push(`The user has the following sites blacklisted: <${blacklistSites}>`);
+    }
+
+    if (blacklistDescriptions.length === 0) {
+      return '';
+    }
+
+    blacklistDescriptions.push('The user should not be accessing anything on the blacklist, and should be considered unproductive if they are.');
+    return blacklistDescriptions.join('\n');
+  }
+
+  async isProductive(screenshotPath: string | null, userTask: string): Promise<ProductivityAnalysis> {
+    const analysisErrorResponse: ProductivityAnalysis = {
+      productive: false,
+      confidence: 0.0,
+      justification: 'Failed to analyze screen contents',
+    };
+
+    const windowDescription = await this.getOpenWindowDescriptions(screenshotPath !== null).catch(() => null);
+    if (!windowDescription) {
+      return analysisErrorResponse;
+    }
+
+    const blacklistInfo = await this.getBlacklistedAppDescriptions().catch(() => '');
+
     const prompt = `You are Clappy, a productivity AI assistant analyzing a user's screen to determine if they're being productive.'
                     You are given that the user is currently trying to accomplish: <${userTask}>. Do not ask questions about this objective, simply consider it in light of the screen contents and window information.
                     ${this.memory.getMemoryInfoString()}
 
-                    ${windowInfoString}${screenshotPath === null ? extraWindowInformationString : ''}
-
-                    ${windowReasoningString}
+                    ${windowDescription}
+                    ${blacklistInfo}
 
                     Consider:
                     1) Is the current activity directly contributing to the user's goal?
@@ -380,29 +561,30 @@ class Clappy {
         ],
         max_tokens: 500,
       });
-    })();
+    })()?.catch(() => null);
 
     // Extract the response from the chat completion
     const responseText = response?.choices[0].message.content;
     if (!responseText) {
-      return {
-        productive: false,
-        confidence: 0.0,
-        justification: 'Failed to analyze screen contents',
-      };
-    }
-    const outputStart = responseText.indexOf('<OUTPUT>') + '<OUTPUT>'.length;
-    const outputEnd = responseText.indexOf('</OUTPUT>');
-
-    const output = responseText.slice(outputStart, outputEnd);
-
-    const outputJson = JSON.parse(output);
-
-    if (outputJson.memory) {
-      this.memory.replaceMemory(outputJson.memory);
+      return analysisErrorResponse;
     }
 
-    return outputJson;
+    try {
+      const outputStart = responseText.indexOf('<OUTPUT>') + '<OUTPUT>'.length;
+      const outputEnd = responseText.indexOf('</OUTPUT>');
+
+      const output = responseText.slice(outputStart, outputEnd);
+
+      const outputJson = JSON.parse(output);
+      if (outputJson.memory) {
+        this.memory.replaceMemory(outputJson.memory);
+      }
+
+      return outputJson;
+    } catch {
+      console.log('Failed to parse JSON output:');
+      return analysisErrorResponse;
+    }
   }
 
   async selectIntervention(validInterventions: Interventions[], userTask: string): Promise<Interventions | null> {
@@ -564,7 +746,13 @@ class Clappy {
     })();
 
     if (!selectedIntervention) {
-      console.log('No intervention selected, skipping intervention');
+      console.log('[CORE] No intervention selected, skipping intervention');
+      return;
+    }
+
+    const clappyPopupOpen = await this.isClappyPopupOpen();
+    if (clappyPopupOpen) {
+      console.log('[CORE] Popup was opened between productivity check and intervention selection, skipping intervention');
       return;
     }
 
@@ -579,7 +767,15 @@ class Clappy {
     // apply the intervention
     const handler = this.interventionHandlers[selectedIntervention];
     if (handler) {
-      await handler.handleIntervention(selectedIntervention, { userTask, justification });
+      try {
+        const success = await handler.handleIntervention(selectedIntervention, { userTask, justification });
+        if (success) {
+          // on a successful intervention application, add 15 seconds to the next eligible check time
+          this.nextEligibleCheckTime += 15 * 1000;
+        }
+      } catch (e) {
+        console.error('Error applying intervention:', e);
+      }
     } else {
       console.error(
         'No handler found for intervention (did you forget to add the handler to interventionHandlers.ts?):',
@@ -589,12 +785,29 @@ class Clappy {
   }
 
   async manageProductivity() {
+    const popupOpen = await this.isClappyPopupOpen();
+    if (popupOpen) {
+      console.log('[CORE] Popup is open, skipping productivity check');
+      return;
+    }
+    if (Date.now() < this.nextEligibleCheckTime) {
+      console.log('[CORE] Not yet time to check productivity');
+      return;
+    }
+    if (!this.memory.isUserTaskSet()) {
+      console.log('[CORE] User task is not set, skipping productivity check');
+      return;
+    }
+
+    // set the next check to be at least 25 seconds from now
+    this.nextEligibleCheckTime = Math.max(this.nextEligibleCheckTime, Date.now() + 25 * 1000);
+
     const screenshotPath = await this.takeScreenshot();
 
-    console.log('About to call isproductive');
+    console.log('[CORE] Analyzing user productivity');
     const userTask = this.memory.getUserTask();
     const productivity = await this.isProductive(screenshotPath, userTask);
-    console.log('Productivity:', productivity);
+    console.log('[CORE] Productivity result:', productivity);
 
     // Save the productivity analysis to the database (excluding memory field)
     await this.prisma.productivityRecord.create({
@@ -607,6 +820,25 @@ class Clappy {
     });
 
     await this.applyIntervention(userTask, productivity.productive, productivity.confidence, productivity.justification);
+  }
+
+  async isClappyPopupOpen(): Promise<boolean> {
+    if (!this.mainWindow) {
+      return false;
+    }
+
+    this.mainWindow.webContents.send('get-is-popup-open');
+    return new Promise((resolve) => {
+      ipcMain.once('get-is-popup-open-response', (_, isOpen) => {
+        resolve(isOpen);
+      });
+    });
+  }
+
+  resetState() {
+    this.memory.resetState();
+    this.interactionManager.resetState();
+    this.nextEligibleCheckTime = 0;
   }
 
   // function to assign a handler, mostly here to satisfy typescript typing

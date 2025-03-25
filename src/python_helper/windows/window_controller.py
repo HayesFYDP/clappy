@@ -77,7 +77,7 @@ def shake_window(id: int | None) -> bool:
         return False
 
     if (window.executable.endswith("electron.exe") and "clappy" in window.title):
-        logger.debug("could not shake window with title: %s and executable: %s", window.title, window.executable)
+        logger.debug("skipping shaking clappy window with title: %s and executable: %s", window.title, window.executable)
         return False
 
     was_maximized = False
