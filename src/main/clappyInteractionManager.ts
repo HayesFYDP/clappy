@@ -215,4 +215,11 @@ export default class ClappyInteractionManager {
       this.speechController = null; // reset the speech controller
     }
   }
+
+  resetState() {
+    this.conversationHistory = [];
+    this.lastMessageSentTimestamp = null;
+    this.speechController = null; // reset the speech controller
+    console.log('[INTERACTION] reset');
+  }
 }

@@ -185,22 +185,30 @@ class Clappy {
       .whenReady()
       .then(() => {
         const shortcutSuccessTogglePopup = globalShortcut.register('F8', () => {
-          console.log('F8 is pressed');
-          this.mainWindow?.webContents.send('toggle-popup');
+          console.log('[SHORTCUT] F8 is pressed');
+          this.mainWindow?.webContents.send('toggle-popup', !this.memory.isUserTaskSet());
         });
         if (!shortcutSuccessTogglePopup) {
           console.error('Failed to register global shortcut for toggle popup');
         }
 
         const shortcutSuccessSpeech = globalShortcut.register('F9', () => {
-          console.log('F9 is pressed');
+          console.log('[SHORTCUT] F9 is pressed');
           this.interactionManager.startVoiceInteraction();
         });
         if (!shortcutSuccessSpeech) {
           console.error('Failed to register global shortcut for speech interaction');
         }
 
-        console.log('Global shortcuts F8 (to open Clappy) and F9 (to start speaking) have been registered');
+        const shortcutResetState = globalShortcut.register('F4', () => {
+          console.log('[SHORTCUT] F4 is pressed');
+          this.resetState();
+        });
+        if (!shortcutResetState) {
+          console.error('Failed to register global shortcut for speech interaction');
+        }
+
+        console.log('Global shortcuts F4 (to reset), F8 (to open Clappy) and F9 (to start speaking) have been registered');
 
         this.createWindow();
         app.on('activate', () => {
@@ -786,16 +794,20 @@ class Clappy {
       console.log('[CORE] Not yet time to check productivity');
       return;
     }
+    if (!this.memory.isUserTaskSet()) {
+      console.log('[CORE] User task is not set, skipping productivity check');
+      return;
+    }
 
     // set the next check to be at least 25 seconds from now
     this.nextEligibleCheckTime = Math.max(this.nextEligibleCheckTime, Date.now() + 25 * 1000);
 
     const screenshotPath = await this.takeScreenshot();
 
-    console.log('About to call isproductive');
+    console.log('[CORE] Analyzing user productivity');
     const userTask = this.memory.getUserTask();
     const productivity = await this.isProductive(screenshotPath, userTask);
-    console.log('Productivity:', productivity);
+    console.log('[CORE] Productivity result:', productivity);
 
     // Save the productivity analysis to the database (excluding memory field)
     await this.prisma.productivityRecord.create({
@@ -821,6 +833,12 @@ class Clappy {
         resolve(isOpen);
       });
     });
+  }
+
+  resetState() {
+    this.memory.resetState();
+    this.interactionManager.resetState();
+    this.nextEligibleCheckTime = 0;
   }
 
   // function to assign a handler, mostly here to satisfy typescript typing
