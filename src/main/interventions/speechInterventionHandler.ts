@@ -14,17 +14,16 @@ export default class SpeechInterventionHandler implements InterventionHandler {
     this.messageHistory = [];
   }
 
-  async handleIntervention<T extends Interventions>(intervention: T, payload?: InterventionPayloadMap[T]): Promise<void> {
+  async handleIntervention<T extends Interventions>(intervention: T, payload?: InterventionPayloadMap[T]): Promise<boolean> {
     switch (intervention) {
       case Interventions.SPEAK_CLAPPY:
-        await this.speakClappy(payload);
-        break;
+        return this.speakClappy(payload);
       default:
         throw new Error(`SpeechInterventionHandler received unsupported intervention: ${intervention}`);
     }
   }
 
-  async speakClappy(payload?: SpeakClappyPayload) {
+  async speakClappy(payload?: SpeakClappyPayload): Promise<boolean> {
     const message = payload?.message ?? (await this.determineClappySpeech(payload));
     const estimatedSpeechDuration = message.split(' ').length * 450 + 2000; // assume 0.45 seconds per word, plus 2 second buffer
 
@@ -34,6 +33,8 @@ export default class SpeechInterventionHandler implements InterventionHandler {
       estimatedSpeechDuration,
     );
     await this.speak(message);
+
+    return true;
   }
 
   async speak(message: string) {
@@ -84,7 +85,7 @@ export default class SpeechInterventionHandler implements InterventionHandler {
         },
       ],
       max_tokens: 500,
-    }).catch(_ => null);
+    }).catch(() => null);
 
     const responseText = response?.choices[0].message.content;
     if (!responseText) {

@@ -200,7 +200,7 @@ class Clappy {
           console.error('Failed to register global shortcut for speech interaction');
         }
 
-        console.log('Global shortcuts F8 (to open Clappy) and F9 (to start speaking) have been registered')
+        console.log('Global shortcuts F8 (to open Clappy) and F9 (to start speaking) have been registered');
 
         this.createWindow();
         app.on('activate', () => {
@@ -431,17 +431,27 @@ class Clappy {
     }
   }
 
-  async isProductive(screenshotPath: string | null, userTask: string): Promise<ProductivityAnalysis> {
+  // get descriptions about the user's windows if no screenshot exists, otherwise return generic instruction
+  async getOpenWindowDescriptions(screenshotExists: boolean): Promise<string> {
+    const defaultDescription =
+      "First, you will start by analyzing these contents and discussing with yourself if the contents of the screen match the user's intended tasks.";
+
+    if (screenshotExists) {
+      return defaultDescription;
+    }
+
     const windows = await this.windowManager.listWindows();
+    if (!windows || !windows.windows || windows.windows.length === 0) {
+      return defaultDescription;
+    }
+
     const focusedWindow = windows.windows.find((window) => window.isFocused);
     const windowInfoString = focusedWindow
       ? `The user is currently focused on the window with "${focusedWindow.title}" and executable path "${focusedWindow.executablePath}".`
       : 'The user is currently not interacting with any windows.';
 
     const windowReasoningString =
-      screenshotPath !== null
-        ? "First, you will start by analyzing these contents and discussing with yourself if the contents of the screen match the user's intended tasks."
-        : "First, you will start by analyzing the provided information about the user's open and focused windows and discuss with yourself if the window information match the user's intended tasks.";
+      "First, you will start by analyzing the provided information about the user's open and focused windows and discuss with yourself if the window information match the user's intended tasks.";
 
     const extraWindowInformation = windows.windows
       .filter((window) => !window.isFocused)
@@ -449,19 +459,33 @@ class Clappy {
         return `Title: "${window.title}", Executable path: "${window.executablePath}"`;
       });
 
-    // to avoid distracting from the screenshot, only show the extra window information if no screenshot is provided
+    // to avoid distracting from the screenshot, only provide the extra window information if no screenshot exists
     const extraWindowInformationString =
       extraWindowInformation.length > 0
         ? `\nThe user also has the following windows open:\n${extraWindowInformation.join('\n')}`
         : '\nThe user has no other windows open.';
 
+    return `${windowInfoString + extraWindowInformationString}
+            ${windowReasoningString}`;
+  }
+
+  async isProductive(screenshotPath: string | null, userTask: string): Promise<ProductivityAnalysis> {
+    const analysisErrorResponse: ProductivityAnalysis = {
+      productive: false,
+      confidence: 0.0,
+      justification: 'Failed to analyze screen contents',
+    };
+
+    const windowDescription = await this.getOpenWindowDescriptions(screenshotPath !== null).catch(() => null);
+    if (!windowDescription) {
+      return analysisErrorResponse;
+    }
+
     const prompt = `You are Clappy, a productivity AI assistant analyzing a user's screen to determine if they're being productive.'
                     You are given that the user is currently trying to accomplish: <${userTask}>. Do not ask questions about this objective, simply consider it in light of the screen contents and window information.
                     ${this.memory.getMemoryInfoString()}
 
-                    ${screenshotPath === null ? windowInfoString + extraWindowInformationString : ''}
-
-                    ${windowReasoningString}
+                    ${windowDescription}
 
                     Consider:
                     1) Is the current activity directly contributing to the user's goal?
@@ -505,16 +529,12 @@ class Clappy {
         ],
         max_tokens: 500,
       });
-    })()?.catch(_ => null)
+    })()?.catch(() => null);
 
     // Extract the response from the chat completion
     const responseText = response?.choices[0].message.content;
     if (!responseText) {
-      return {
-        productive: false,
-        confidence: 0.0,
-        justification: 'Failed to analyze screen contents',
-      };
+      return analysisErrorResponse;
     }
 
     try {
@@ -527,15 +547,11 @@ class Clappy {
       if (outputJson.memory) {
         this.memory.replaceMemory(outputJson.memory);
       }
-  
+
       return outputJson;
     } catch {
       console.log('Failed to parse JSON output:');
-      return {
-        productive: false,
-        confidence: 0.0,
-        justification: 'Failed to analyze screen contents',
-      };
+      return analysisErrorResponse;
     }
   }
 
@@ -708,8 +724,6 @@ class Clappy {
       return;
     }
 
-    this.nextEligibleCheckTime = Math.max(this.nextEligibleCheckTime, Date.now() + 35 * 1000); // set the next check to be 35 seconds from now
-
     // save the chosen intervention to the database
     await this.prisma.interventionRecord.create({
       data: {
@@ -721,7 +735,15 @@ class Clappy {
     // apply the intervention
     const handler = this.interventionHandlers[selectedIntervention];
     if (handler) {
-      await handler.handleIntervention(selectedIntervention, { userTask, justification });
+      try {
+        const success = await handler.handleIntervention(selectedIntervention, { userTask, justification });
+        if (success) {
+          // on a successful intervention application, add 15 seconds to the next eligible check time
+          this.nextEligibleCheckTime += 15 * 1000;
+        }
+      } catch (e) {
+        console.error('Error applying intervention:', e);
+      }
     } else {
       console.error(
         'No handler found for intervention (did you forget to add the handler to interventionHandlers.ts?):',
@@ -740,6 +762,9 @@ class Clappy {
       console.log('[CORE] Not yet time to check productivity');
       return;
     }
+
+    // set the next check to be at least 25 seconds from now
+    this.nextEligibleCheckTime = Math.max(this.nextEligibleCheckTime, Date.now() + 25 * 1000);
 
     const screenshotPath = await this.takeScreenshot();
 

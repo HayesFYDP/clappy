@@ -19,29 +19,27 @@ export default class WindowInterventionHandler implements InterventionHandler {
     this.clappy = clappy;
   }
 
-  async handleIntervention<T extends Interventions>(intervention: T, payload?: InterventionPayloadMap[T]): Promise<void> {
+  async handleIntervention<T extends Interventions>(intervention: T, payload?: InterventionPayloadMap[T]): Promise<boolean> {
     switch (intervention) {
       case Interventions.MINIMIZE_WINDOW:
-        await this.minimizeActiveWindow(payload as MinimizeWindowPayload);
-        break;
+        return this.minimizeActiveWindow(payload as MinimizeWindowPayload);
       case Interventions.SHAKE_WINDOW:
-        await this.shakeActiveWindow(payload as ShakeWindowPayload);
-        break;
+        return this.shakeActiveWindow(payload as ShakeWindowPayload);
       case Interventions.FOCUS_WINDOW:
-        await this.focusWindow(payload as FocusWindowPayload);
-        break;
+        return this.focusWindow(payload as FocusWindowPayload);
       default:
         throw new Error(`WindowInterventionHandler received unsupported intervention: ${intervention}`);
     }
   }
 
-  async minimizeActiveWindow(payload?: MinimizeWindowPayload) {
+  async minimizeActiveWindow(payload?: MinimizeWindowPayload): Promise<boolean> {
     const handle = payload?.windowHandle;
 
     const result = await this.clappy.windowManager.minimizeWindow(handle).then(response => response.success).catch(err => {
       console.error('[MINIMIZE_WINDOW] Error minimizing window:', err);
       return false;
     });
+
     if (result) {
       await this.clappy.interventionHandlers[Interventions.POPUP_CLAPPY]?.popupClappySpecified(
         ClappyExpression.Enraged,
@@ -51,12 +49,14 @@ export default class WindowInterventionHandler implements InterventionHandler {
     } else {
       const windowInfo = payload?.windowHandle ? `the window with handle: ${handle}` : 'the active window';
       console.log(`[MINIMIZE_WINDOW] Failed to minimize ${windowInfo}`);
+
+      return false;
     }
 
-    return null;
+    return true;
   }
 
-  async shakeActiveWindow(payload?: ShakeWindowPayload) {
+  async shakeActiveWindow(payload?: ShakeWindowPayload): Promise<boolean> {
     const handle = payload?.windowHandle;
 
     const success = await this.clappy.windowManager.shakeWindow(handle).then(result => result.success).catch(err => {
@@ -73,35 +73,37 @@ export default class WindowInterventionHandler implements InterventionHandler {
     } else {
       const windowInfo = payload?.windowHandle ? `the window with handle: ${handle}` : 'the active window';
       console.log(`[SHAKE_WINDOW] Failed to shake ${windowInfo}`);
+      return false;
     }
 
-    return null;
+    return true;
   }
 
-  async focusWindow(payload?: FocusWindowPayload) {
+  async focusWindow(payload?: FocusWindowPayload): Promise<boolean> {
     const handle = payload?.windowHandle;
 
     if (handle) {
-      return this.clappy.windowManager.focusWindow(handle);
+      return this.clappy.windowManager.focusWindow(handle).then(result => result.success).catch(() => false);
     }
 
     const userWindows = await this.clappy.windowManager.listWindows();
     if (!userWindows || !userWindows.windows || userWindows.windows.length === 0) {
       console.log('[FOCUS_WINDOW] No windows found to focus on, skipping intervention');
-      return null;
+      return false;
     }
 
     const selectedWindow = await this.selectWindowToFocus(userWindows.windows);
 
     if (!selectedWindow) {
       console.log('[FOCUS_WINDOW] No window selected to focus on, skipping intervention');
-      return null;
+      return false;
     }
 
     const success = await this.clappy.windowManager.focusWindow(selectedWindow.id).then(result => result.success).catch(err => {
       console.error('[FOCUS_WINDOW] Error focusing window:', err);
       return false;
     });
+
     if (success) {
       await this.clappy.interventionHandlers[Interventions.POPUP_CLAPPY]?.popupClappySpecified(
         ClappyExpression.Suspicious,
@@ -109,10 +111,11 @@ export default class WindowInterventionHandler implements InterventionHandler {
         6000
       )
     } else {
-      return console.log(`[FOCUS_WINDOW] Failed to focus window with title: ${selectedWindow.title} and executable path: ${selectedWindow.executablePath}`);
+      console.log(`[FOCUS_WINDOW] Failed to focus window with title: ${selectedWindow.title} and executable path: ${selectedWindow.executablePath}`);
+      return false;
     }
 
-    return null;
+    return true;
   }
 
   async selectWindowToFocus(windows: WindowInfo[], payload?: MinimizeWindowPayload): Promise<WindowInfo | null> {
@@ -120,7 +123,6 @@ export default class WindowInterventionHandler implements InterventionHandler {
       payload?.userTask !== undefined
         ? `You are given that the user is currently trying to accomplish: ${payload.userTask}`
         : 'The user did not provide a specific goal that they are working on, but would like to generally do productive work.';
-
 
     const eligibleWindows = windows.filter(window => !window.isFocused); // only consider windows that are not currently focused
     const windowDescriptions = eligibleWindows.map((window, index) => `${index + 1}. ${window.executablePath}: ${window.title}`);
@@ -189,7 +191,7 @@ export default class WindowInterventionHandler implements InterventionHandler {
       return windowToFocus;
     } catch {
       console.log('[FOCUS_WINDOW] Failed to parse LLM response');
-      return null
+      return null;
     }
   }
 }
